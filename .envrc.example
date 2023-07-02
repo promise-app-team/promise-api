@@ -1,3 +1,5 @@
 export TZ=''
 export NODE_ENV=''
 export PORT=''
+
+export NODE_TLS_REJECT_UNAUTHORIZED='0'
