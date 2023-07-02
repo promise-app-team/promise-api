@@ -17,4 +17,5 @@ async function bootstrap() {
 
   Logger.log(`Server running on ${await app.getUrl()}`, 'Bootstrap');
 }
+
 bootstrap();
