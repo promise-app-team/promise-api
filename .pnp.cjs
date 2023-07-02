@@ -35,6 +35,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@nestjs/platform-fastify", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:10.0.4"],\
             ["@nestjs/schematics", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:10.0.1"],\
             ["@nestjs/testing", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:10.0.4"],\
+            ["@prisma/client", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:4.16.2"],\
             ["@types/jest", "npm:29.5.2"],\
             ["@types/node", "npm:20.3.3"],\
             ["@types/supertest", "npm:2.0.12"],\
@@ -46,6 +47,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["eslint-plugin-prettier", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:4.2.1"],\
             ["jest", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:29.5.0"],\
             ["prettier", "npm:2.8.8"],\
+            ["prisma", "npm:4.16.2"],\
             ["reflect-metadata", "npm:0.1.13"],\
             ["rxjs", "npm:7.8.1"],\
             ["source-map-support", "npm:0.5.21"],\
@@ -1877,6 +1879,47 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/@pkgjs-parseargs-npm-0.11.0-cd2a3fe948-6ad6a00fc4.zip/node_modules/@pkgjs/parseargs/",\
           "packageDependencies": [\
             ["@pkgjs/parseargs", "npm:0.11.0"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["@prisma/client", [\
+        ["npm:4.16.2", {\
+          "packageLocation": "./.yarn/unplugged/@prisma-client-virtual-aa84ca49db/node_modules/@prisma/client/",\
+          "packageDependencies": [\
+            ["@prisma/client", "npm:4.16.2"]\
+          ],\
+          "linkType": "SOFT"\
+        }],\
+        ["virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:4.16.2", {\
+          "packageLocation": "./.yarn/unplugged/@prisma-client-virtual-aa84ca49db/node_modules/@prisma/client/",\
+          "packageDependencies": [\
+            ["@prisma/client", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:4.16.2"],\
+            ["@prisma/engines-version", "npm:4.16.1-1.4bc8b6e1b66cb932731fb1bdbbc550d1e010de81"],\
+            ["@types/prisma", null],\
+            ["prisma", "npm:4.16.2"]\
+          ],\
+          "packagePeers": [\
+            "@types/prisma",\
+            "prisma"\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["@prisma/engines", [\
+        ["npm:4.16.2", {\
+          "packageLocation": "./.yarn/unplugged/@prisma-engines-npm-4.16.2-778c25af73/node_modules/@prisma/engines/",\
+          "packageDependencies": [\
+            ["@prisma/engines", "npm:4.16.2"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["@prisma/engines-version", [\
+        ["npm:4.16.1-1.4bc8b6e1b66cb932731fb1bdbbc550d1e010de81", {\
+          "packageLocation": "./.yarn/cache/@prisma-engines-version-npm-4.16.1-1.4bc8b6e1b66cb932731fb1bdbbc550d1e010de81-fe5a2da6a4-b42c6abe7c.zip/node_modules/@prisma/engines-version/",\
+          "packageDependencies": [\
+            ["@prisma/engines-version", "npm:4.16.1-1.4bc8b6e1b66cb932731fb1bdbbc550d1e010de81"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -7053,6 +7096,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["prisma", [\
+        ["npm:4.16.2", {\
+          "packageLocation": "./.yarn/unplugged/prisma-npm-4.16.2-be3807378a/node_modules/prisma/",\
+          "packageDependencies": [\
+            ["prisma", "npm:4.16.2"],\
+            ["@prisma/engines", "npm:4.16.2"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["process", [\
         ["npm:0.11.10", {\
           "packageLocation": "./.yarn/cache/process-npm-0.11.10-aeb3b641ae-bfcce49814.zip/node_modules/process/",\
@@ -7083,6 +7136,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@nestjs/platform-fastify", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:10.0.4"],\
             ["@nestjs/schematics", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:10.0.1"],\
             ["@nestjs/testing", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:10.0.4"],\
+            ["@prisma/client", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:4.16.2"],\
             ["@types/jest", "npm:29.5.2"],\
             ["@types/node", "npm:20.3.3"],\
             ["@types/supertest", "npm:2.0.12"],\
@@ -7094,6 +7148,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["eslint-plugin-prettier", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:4.2.1"],\
             ["jest", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:29.5.0"],\
             ["prettier", "npm:2.8.8"],\
+            ["prisma", "npm:4.16.2"],\
             ["reflect-metadata", "npm:0.1.13"],\
             ["rxjs", "npm:7.8.1"],\
             ["source-map-support", "npm:0.5.21"],\
