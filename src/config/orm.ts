@@ -8,16 +8,22 @@ const DB_DATABASE = process.env.DB_DATABASE;
 const DB_PASSWORD = process.env.DB_PASSWORD;
 
 const logger = new Logger('TypeOrm');
-const config: TypeOrmModuleOptions = {
+const typeormConfig: TypeOrmModuleOptions = {
   type: 'mysql',
   host: DB_HOST,
   port: +DB_PORT,
   username: DB_USERNAME,
   password: DB_PASSWORD,
   database: DB_DATABASE,
-  entities: ['dist/**/*.entity.js'],
-  logger: logger.log.bind(logger),
+
+  logging: false,
+  synchronize: false,
   autoLoadEntities: true,
+  logger: logger.log.bind(logger),
+  entities: ['dist/**/*.entity.js'],
+  migrations: ['dist/migrations/*.js'],
+  migrationsTableName: '_migrations',
+  migrationsTransactionMode: 'all',
 };
 
-export default config;
+export default typeormConfig;

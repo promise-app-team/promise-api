@@ -32,15 +32,21 @@ $ yarn run start:dev
 $ yarn run start:prod
 ```
 
-### Testing
+### Database Migration
 
 ```bash
-# unit tests
-$ yarn run test
+# generate migration file
+$ yarn run migration:new <migration-name>
 
-# e2e tests
-$ yarn run test:e2e
+# run migration
+$ yarn run migration:up
 
-# test coverage
-$ yarn run test:cov
+# revert last migration
+$ yarn run migration:down
+
+# revert migrations
+$ yarn run migration:down <number-of-migrations>
+
+# list migrations
+$ yarn run migration:list
 ```
