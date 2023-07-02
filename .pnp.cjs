@@ -28,6 +28,9 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         [null, {\
           "packageLocation": "./",\
           "packageDependencies": [\
+            ["@mikro-orm/core", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.7.12"],\
+            ["@mikro-orm/mysql", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.7.12"],\
+            ["@mikro-orm/nestjs", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.2.0"],\
             ["@nestjs/cli", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:10.1.0"],\
             ["@nestjs/common", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:10.0.4"],\
             ["@nestjs/config", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:3.0.0"],\
@@ -1553,6 +1556,194 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["@mikro-orm/core", [\
+        ["npm:5.7.12", {\
+          "packageLocation": "./.yarn/cache/@mikro-orm-core-npm-5.7.12-0abad4c213-13908c997e.zip/node_modules/@mikro-orm/core/",\
+          "packageDependencies": [\
+            ["@mikro-orm/core", "npm:5.7.12"]\
+          ],\
+          "linkType": "SOFT"\
+        }],\
+        ["virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.7.12", {\
+          "packageLocation": "./.yarn/__virtual__/@mikro-orm-core-virtual-ecb81a32f1/0/cache/@mikro-orm-core-npm-5.7.12-0abad4c213-13908c997e.zip/node_modules/@mikro-orm/core/",\
+          "packageDependencies": [\
+            ["@mikro-orm/core", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.7.12"],\
+            ["@mikro-orm/better-sqlite", null],\
+            ["@mikro-orm/entity-generator", null],\
+            ["@mikro-orm/mariadb", null],\
+            ["@mikro-orm/migrations", null],\
+            ["@mikro-orm/migrations-mongodb", null],\
+            ["@mikro-orm/mongodb", null],\
+            ["@mikro-orm/mysql", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.7.12"],\
+            ["@mikro-orm/postgresql", null],\
+            ["@mikro-orm/seeder", null],\
+            ["@mikro-orm/sqlite", null],\
+            ["@types/mikro-orm__better-sqlite", null],\
+            ["@types/mikro-orm__entity-generator", null],\
+            ["@types/mikro-orm__mariadb", null],\
+            ["@types/mikro-orm__migrations", null],\
+            ["@types/mikro-orm__migrations-mongodb", null],\
+            ["@types/mikro-orm__mongodb", null],\
+            ["@types/mikro-orm__mysql", null],\
+            ["@types/mikro-orm__postgresql", null],\
+            ["@types/mikro-orm__seeder", null],\
+            ["@types/mikro-orm__sqlite", null],\
+            ["acorn-loose", "npm:8.3.0"],\
+            ["acorn-walk", "npm:8.2.0"],\
+            ["dotenv", "npm:16.1.4"],\
+            ["fs-extra", "npm:11.1.1"],\
+            ["globby", "npm:11.1.0"],\
+            ["mikro-orm", "npm:5.7.12"],\
+            ["reflect-metadata", "npm:0.1.13"]\
+          ],\
+          "packagePeers": [\
+            "@mikro-orm/better-sqlite",\
+            "@mikro-orm/entity-generator",\
+            "@mikro-orm/mariadb",\
+            "@mikro-orm/migrations-mongodb",\
+            "@mikro-orm/migrations",\
+            "@mikro-orm/mongodb",\
+            "@mikro-orm/mysql",\
+            "@mikro-orm/postgresql",\
+            "@mikro-orm/seeder",\
+            "@mikro-orm/sqlite",\
+            "@types/mikro-orm__better-sqlite",\
+            "@types/mikro-orm__entity-generator",\
+            "@types/mikro-orm__mariadb",\
+            "@types/mikro-orm__migrations-mongodb",\
+            "@types/mikro-orm__migrations",\
+            "@types/mikro-orm__mongodb",\
+            "@types/mikro-orm__mysql",\
+            "@types/mikro-orm__postgresql",\
+            "@types/mikro-orm__seeder",\
+            "@types/mikro-orm__sqlite"\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["@mikro-orm/knex", [\
+        ["npm:5.7.12", {\
+          "packageLocation": "./.yarn/cache/@mikro-orm-knex-npm-5.7.12-0469ec52b5-7feaca1eda.zip/node_modules/@mikro-orm/knex/",\
+          "packageDependencies": [\
+            ["@mikro-orm/knex", "npm:5.7.12"]\
+          ],\
+          "linkType": "SOFT"\
+        }],\
+        ["virtual:ec7e1a5322218ab529b434f03fd589d8f79d5d8da69fd8f08dc6f4b929a3d1b204f02597cf890e2fe62cc34f82805f8432ca0c4da4428a052bad76b8723a3bd4#npm:5.7.12", {\
+          "packageLocation": "./.yarn/__virtual__/@mikro-orm-knex-virtual-63e80d0bbc/0/cache/@mikro-orm-knex-npm-5.7.12-0469ec52b5-7feaca1eda.zip/node_modules/@mikro-orm/knex/",\
+          "packageDependencies": [\
+            ["@mikro-orm/knex", "virtual:ec7e1a5322218ab529b434f03fd589d8f79d5d8da69fd8f08dc6f4b929a3d1b204f02597cf890e2fe62cc34f82805f8432ca0c4da4428a052bad76b8723a3bd4#npm:5.7.12"],\
+            ["@mikro-orm/core", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.7.12"],\
+            ["@mikro-orm/entity-generator", null],\
+            ["@mikro-orm/migrations", null],\
+            ["@types/better-sqlite3", null],\
+            ["@types/mikro-orm__core", null],\
+            ["@types/mikro-orm__entity-generator", null],\
+            ["@types/mikro-orm__migrations", null],\
+            ["@types/mssql", null],\
+            ["@types/mysql", null],\
+            ["@types/mysql2", null],\
+            ["@types/pg", null],\
+            ["@types/sqlite3", null],\
+            ["better-sqlite3", null],\
+            ["fs-extra", "npm:11.1.1"],\
+            ["knex", "virtual:63e80d0bbc64022aaab4f03283c648e10d113f6e52fe973bc027f9bf4b4a9cc1588a3197cb73bf4488e09a12f8e0954cc530ee02d4158755ae007cd003980ddc#npm:2.4.2"],\
+            ["mssql", null],\
+            ["mysql", null],\
+            ["mysql2", "npm:3.3.3"],\
+            ["pg", null],\
+            ["sqlite3", null],\
+            ["sqlstring", "npm:2.3.3"]\
+          ],\
+          "packagePeers": [\
+            "@mikro-orm/core",\
+            "@mikro-orm/entity-generator",\
+            "@mikro-orm/migrations",\
+            "@types/better-sqlite3",\
+            "@types/mikro-orm__core",\
+            "@types/mikro-orm__entity-generator",\
+            "@types/mikro-orm__migrations",\
+            "@types/mssql",\
+            "@types/mysql2",\
+            "@types/mysql",\
+            "@types/pg",\
+            "@types/sqlite3",\
+            "better-sqlite3",\
+            "mssql",\
+            "mysql2",\
+            "mysql",\
+            "pg",\
+            "sqlite3"\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["@mikro-orm/mysql", [\
+        ["npm:5.7.12", {\
+          "packageLocation": "./.yarn/cache/@mikro-orm-mysql-npm-5.7.12-cbf9ae1dc2-e671ae5429.zip/node_modules/@mikro-orm/mysql/",\
+          "packageDependencies": [\
+            ["@mikro-orm/mysql", "npm:5.7.12"]\
+          ],\
+          "linkType": "SOFT"\
+        }],\
+        ["virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.7.12", {\
+          "packageLocation": "./.yarn/__virtual__/@mikro-orm-mysql-virtual-ec7e1a5322/0/cache/@mikro-orm-mysql-npm-5.7.12-cbf9ae1dc2-e671ae5429.zip/node_modules/@mikro-orm/mysql/",\
+          "packageDependencies": [\
+            ["@mikro-orm/mysql", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.7.12"],\
+            ["@mikro-orm/core", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.7.12"],\
+            ["@mikro-orm/entity-generator", null],\
+            ["@mikro-orm/knex", "virtual:ec7e1a5322218ab529b434f03fd589d8f79d5d8da69fd8f08dc6f4b929a3d1b204f02597cf890e2fe62cc34f82805f8432ca0c4da4428a052bad76b8723a3bd4#npm:5.7.12"],\
+            ["@mikro-orm/migrations", null],\
+            ["@mikro-orm/seeder", null],\
+            ["@types/mikro-orm__core", null],\
+            ["@types/mikro-orm__entity-generator", null],\
+            ["@types/mikro-orm__migrations", null],\
+            ["@types/mikro-orm__seeder", null],\
+            ["mysql2", "npm:3.3.3"]\
+          ],\
+          "packagePeers": [\
+            "@mikro-orm/core",\
+            "@mikro-orm/entity-generator",\
+            "@mikro-orm/migrations",\
+            "@mikro-orm/seeder",\
+            "@types/mikro-orm__core",\
+            "@types/mikro-orm__entity-generator",\
+            "@types/mikro-orm__migrations",\
+            "@types/mikro-orm__seeder"\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["@mikro-orm/nestjs", [\
+        ["npm:5.2.0", {\
+          "packageLocation": "./.yarn/cache/@mikro-orm-nestjs-npm-5.2.0-33365b2e0e-7f81a17b6c.zip/node_modules/@mikro-orm/nestjs/",\
+          "packageDependencies": [\
+            ["@mikro-orm/nestjs", "npm:5.2.0"]\
+          ],\
+          "linkType": "SOFT"\
+        }],\
+        ["virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.2.0", {\
+          "packageLocation": "./.yarn/__virtual__/@mikro-orm-nestjs-virtual-1b53377918/0/cache/@mikro-orm-nestjs-npm-5.2.0-33365b2e0e-7f81a17b6c.zip/node_modules/@mikro-orm/nestjs/",\
+          "packageDependencies": [\
+            ["@mikro-orm/nestjs", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.2.0"],\
+            ["@mikro-orm/core", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.7.12"],\
+            ["@nestjs/common", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:10.0.4"],\
+            ["@nestjs/core", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:10.0.4"],\
+            ["@types/mikro-orm__core", null],\
+            ["@types/nestjs__common", null],\
+            ["@types/nestjs__core", null]\
+          ],\
+          "packagePeers": [\
+            "@mikro-orm/core",\
+            "@nestjs/common",\
+            "@nestjs/core",\
+            "@types/mikro-orm__core",\
+            "@types/nestjs__common",\
+            "@types/nestjs__core"\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["@nestjs/cli", [\
         ["npm:10.1.0", {\
           "packageLocation": "./.yarn/cache/@nestjs-cli-npm-10.1.0-b875c0e922-61d65ffc0a.zip/node_modules/@nestjs/cli/",\
@@ -2664,6 +2855,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["acorn-loose", [\
+        ["npm:8.3.0", {\
+          "packageLocation": "./.yarn/cache/acorn-loose-npm-8.3.0-9f8cbd04cc-3418a20bde.zip/node_modules/acorn-loose/",\
+          "packageDependencies": [\
+            ["acorn-loose", "npm:8.3.0"],\
+            ["acorn", "npm:8.9.0"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["acorn-walk", [\
         ["npm:8.2.0", {\
           "packageLocation": "./.yarn/cache/acorn-walk-npm-8.2.0-2f2cac3177-1715e76c01.zip/node_modules/acorn-walk/",\
@@ -3519,6 +3720,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["colorette", [\
+        ["npm:2.0.19", {\
+          "packageLocation": "./.yarn/cache/colorette-npm-2.0.19-f73dfe6a4e-888cf5493f.zip/node_modules/colorette/",\
+          "packageDependencies": [\
+            ["colorette", "npm:2.0.19"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["combined-stream", [\
         ["npm:1.0.8", {\
           "packageLocation": "./.yarn/cache/combined-stream-npm-1.0.8-dc14d4a63a-49fa4aeb49.zip/node_modules/combined-stream/",\
@@ -3541,6 +3751,13 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/commander-npm-4.1.1-22a0fe921b-d7b9913ff9.zip/node_modules/commander/",\
           "packageDependencies": [\
             ["commander", "npm:4.1.1"]\
+          ],\
+          "linkType": "HARD"\
+        }],\
+        ["npm:9.5.0", {\
+          "packageLocation": "./.yarn/cache/commander-npm-9.5.0-993b3f2434-c7a3e27aa5.zip/node_modules/commander/",\
+          "packageDependencies": [\
+            ["commander", "npm:9.5.0"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -3757,6 +3974,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/delegates-npm-1.0.0-9b1942d75f-a51744d9b5.zip/node_modules/delegates/",\
           "packageDependencies": [\
             ["delegates", "npm:1.0.0"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["denque", [\
+        ["npm:2.1.0", {\
+          "packageLocation": "./.yarn/cache/denque-npm-2.1.0-578d0b6297-1d4ae1d05e.zip/node_modules/denque/",\
+          "packageDependencies": [\
+            ["denque", "npm:2.1.0"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -4115,6 +4341,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/eslint-visitor-keys-npm-3.4.1-a5d0a58208-f05121d868.zip/node_modules/eslint-visitor-keys/",\
           "packageDependencies": [\
             ["eslint-visitor-keys", "npm:3.4.1"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["esm", [\
+        ["npm:3.2.25", {\
+          "packageLocation": "./.yarn/cache/esm-npm-3.2.25-762b3ebd40-978aabe2de.zip/node_modules/esm/",\
+          "packageDependencies": [\
+            ["esm", "npm:3.2.25"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -4630,6 +4865,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["universalify", "npm:2.0.0"]\
           ],\
           "linkType": "HARD"\
+        }],\
+        ["npm:11.1.1", {\
+          "packageLocation": "./.yarn/cache/fs-extra-npm-11.1.1-ca44602180-fb883c6824.zip/node_modules/fs-extra/",\
+          "packageDependencies": [\
+            ["fs-extra", "npm:11.1.1"],\
+            ["graceful-fs", "npm:4.2.11"],\
+            ["jsonfile", "npm:6.1.0"],\
+            ["universalify", "npm:2.0.0"]\
+          ],\
+          "linkType": "HARD"\
         }]\
       ]],\
       ["fs-minipass", [\
@@ -4704,6 +4949,16 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["generate-function", [\
+        ["npm:2.3.1", {\
+          "packageLocation": "./.yarn/cache/generate-function-npm-2.3.1-c839dc559c-652f083de2.zip/node_modules/generate-function/",\
+          "packageDependencies": [\
+            ["generate-function", "npm:2.3.1"],\
+            ["is-property", "npm:1.0.2"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["gensync", [\
         ["npm:1.0.0-beta.2", {\
           "packageLocation": "./.yarn/cache/gensync-npm-1.0.0-beta.2-224666d72f-a7437e58c6.zip/node_modules/gensync/",\
@@ -4757,6 +5012,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/get-stream-npm-6.0.1-83e51a4642-e04ecece32.zip/node_modules/get-stream/",\
           "packageDependencies": [\
             ["get-stream", "npm:6.0.1"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["getopts", [\
+        ["npm:2.3.0", {\
+          "packageLocation": "./.yarn/cache/getopts-npm-2.3.0-4b1830217c-bbb5fcef8d.zip/node_modules/getopts/",\
+          "packageDependencies": [\
+            ["getopts", "npm:2.3.0"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -5172,6 +5436,13 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["interpret", "npm:1.4.0"]\
           ],\
           "linkType": "HARD"\
+        }],\
+        ["npm:2.2.0", {\
+          "packageLocation": "./.yarn/cache/interpret-npm-2.2.0-3603a544e1-f51efef7cb.zip/node_modules/interpret/",\
+          "packageDependencies": [\
+            ["interpret", "npm:2.2.0"]\
+          ],\
+          "linkType": "HARD"\
         }]\
       ]],\
       ["ip", [\
@@ -5290,6 +5561,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/is-path-inside-npm-3.0.3-2ea0ef44fd-abd50f0618.zip/node_modules/is-path-inside/",\
           "packageDependencies": [\
             ["is-path-inside", "npm:3.0.3"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["is-property", [\
+        ["npm:1.0.2", {\
+          "packageLocation": "./.yarn/cache/is-property-npm-1.0.2-6eac53b30e-33b661a369.zip/node_modules/is-property/",\
+          "packageDependencies": [\
+            ["is-property", "npm:1.0.2"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -6050,6 +6330,66 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["knex", [\
+        ["npm:2.4.2", {\
+          "packageLocation": "./.yarn/cache/knex-npm-2.4.2-a7caf35691-cfb6436c0e.zip/node_modules/knex/",\
+          "packageDependencies": [\
+            ["knex", "npm:2.4.2"]\
+          ],\
+          "linkType": "SOFT"\
+        }],\
+        ["virtual:63e80d0bbc64022aaab4f03283c648e10d113f6e52fe973bc027f9bf4b4a9cc1588a3197cb73bf4488e09a12f8e0954cc530ee02d4158755ae007cd003980ddc#npm:2.4.2", {\
+          "packageLocation": "./.yarn/__virtual__/knex-virtual-01901fea6b/0/cache/knex-npm-2.4.2-a7caf35691-cfb6436c0e.zip/node_modules/knex/",\
+          "packageDependencies": [\
+            ["knex", "virtual:63e80d0bbc64022aaab4f03283c648e10d113f6e52fe973bc027f9bf4b4a9cc1588a3197cb73bf4488e09a12f8e0954cc530ee02d4158755ae007cd003980ddc#npm:2.4.2"],\
+            ["@types/better-sqlite3", null],\
+            ["@types/mysql", null],\
+            ["@types/mysql2", null],\
+            ["@types/pg", null],\
+            ["@types/pg-native", null],\
+            ["@types/sqlite3", null],\
+            ["@types/tedious", null],\
+            ["better-sqlite3", null],\
+            ["colorette", "npm:2.0.19"],\
+            ["commander", "npm:9.5.0"],\
+            ["debug", "virtual:352060d453a801a0fd16b073afb56a2607e33f96a5ff7faf9351853a737843ea6ad854442954d36ef1f89461751ed94f005ea67c746b39723d1da041a244f7d2#npm:4.3.4"],\
+            ["escalade", "npm:3.1.1"],\
+            ["esm", "npm:3.2.25"],\
+            ["get-package-type", "npm:0.1.0"],\
+            ["getopts", "npm:2.3.0"],\
+            ["interpret", "npm:2.2.0"],\
+            ["lodash", "npm:4.17.21"],\
+            ["mysql", null],\
+            ["mysql2", "npm:3.3.3"],\
+            ["pg", null],\
+            ["pg-connection-string", "npm:2.5.0"],\
+            ["pg-native", null],\
+            ["rechoir", "npm:0.8.0"],\
+            ["resolve-from", "npm:5.0.0"],\
+            ["sqlite3", null],\
+            ["tarn", "npm:3.0.2"],\
+            ["tedious", null],\
+            ["tildify", "npm:2.0.0"]\
+          ],\
+          "packagePeers": [\
+            "@types/better-sqlite3",\
+            "@types/mysql2",\
+            "@types/mysql",\
+            "@types/pg-native",\
+            "@types/pg",\
+            "@types/sqlite3",\
+            "@types/tedious",\
+            "better-sqlite3",\
+            "mysql2",\
+            "mysql",\
+            "pg-native",\
+            "pg",\
+            "sqlite3",\
+            "tedious"\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["leven", [\
         ["npm:3.1.0", {\
           "packageLocation": "./.yarn/cache/leven-npm-3.1.0-b7697736a3-638401d534.zip/node_modules/leven/",\
@@ -6156,6 +6496,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["long", [\
+        ["npm:5.2.3", {\
+          "packageLocation": "./.yarn/cache/long-npm-5.2.3-61dddb7586-885ede7c3d.zip/node_modules/long/",\
+          "packageDependencies": [\
+            ["long", "npm:5.2.3"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["lru-cache", [\
         ["npm:10.0.0", {\
           "packageLocation": "./.yarn/cache/lru-cache-npm-10.0.0-256d74bb20-18f101675f.zip/node_modules/lru-cache/",\
@@ -6184,6 +6533,13 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/lru-cache-npm-7.18.3-e68be5b11c-e550d77238.zip/node_modules/lru-cache/",\
           "packageDependencies": [\
             ["lru-cache", "npm:7.18.3"]\
+          ],\
+          "linkType": "HARD"\
+        }],\
+        ["npm:8.0.5", {\
+          "packageLocation": "./.yarn/cache/lru-cache-npm-8.0.5-bb030cd93e-87d72196d8.zip/node_modules/lru-cache/",\
+          "packageDependencies": [\
+            ["lru-cache", "npm:8.0.5"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -6304,6 +6660,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["micromatch", "npm:4.0.5"],\
             ["braces", "npm:3.0.2"],\
             ["picomatch", "npm:2.3.1"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["mikro-orm", [\
+        ["npm:5.7.12", {\
+          "packageLocation": "./.yarn/cache/mikro-orm-npm-5.7.12-b20f75fcf1-bf121f5407.zip/node_modules/mikro-orm/",\
+          "packageDependencies": [\
+            ["mikro-orm", "npm:5.7.12"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -6515,6 +6880,33 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/mute-stream-npm-0.0.8-489a7d6c2b-ff48d251fc.zip/node_modules/mute-stream/",\
           "packageDependencies": [\
             ["mute-stream", "npm:0.0.8"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["mysql2", [\
+        ["npm:3.3.3", {\
+          "packageLocation": "./.yarn/cache/mysql2-npm-3.3.3-d2fe8cf512-99bf73dc68.zip/node_modules/mysql2/",\
+          "packageDependencies": [\
+            ["mysql2", "npm:3.3.3"],\
+            ["denque", "npm:2.1.0"],\
+            ["generate-function", "npm:2.3.1"],\
+            ["iconv-lite", "npm:0.6.3"],\
+            ["long", "npm:5.2.3"],\
+            ["lru-cache", "npm:8.0.5"],\
+            ["named-placeholders", "npm:1.1.3"],\
+            ["seq-queue", "npm:0.0.5"],\
+            ["sqlstring", "npm:2.3.3"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["named-placeholders", [\
+        ["npm:1.1.3", {\
+          "packageLocation": "./.yarn/cache/named-placeholders-npm-1.1.3-1b385febe5-7834adc91e.zip/node_modules/named-placeholders/",\
+          "packageDependencies": [\
+            ["named-placeholders", "npm:1.1.3"],\
+            ["lru-cache", "npm:7.18.3"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -6927,6 +7319,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["pg-connection-string", [\
+        ["npm:2.5.0", {\
+          "packageLocation": "./.yarn/cache/pg-connection-string-npm-2.5.0-1ee5de9ab9-a6f3a068f7.zip/node_modules/pg-connection-string/",\
+          "packageDependencies": [\
+            ["pg-connection-string", "npm:2.5.0"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["picocolors", [\
         ["npm:1.0.0", {\
           "packageLocation": "./.yarn/cache/picocolors-npm-1.0.0-d81e0b1927-a2e8092dd8.zip/node_modules/picocolors/",\
@@ -7076,6 +7477,9 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./",\
           "packageDependencies": [\
             ["promise-api", "workspace:."],\
+            ["@mikro-orm/core", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.7.12"],\
+            ["@mikro-orm/mysql", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.7.12"],\
+            ["@mikro-orm/nestjs", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.2.0"],\
             ["@nestjs/cli", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:10.1.0"],\
             ["@nestjs/common", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:10.0.4"],\
             ["@nestjs/config", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:3.0.0"],\
@@ -7263,6 +7667,14 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/rechoir-npm-0.6.2-0df5f171ec-fe76bf9c21.zip/node_modules/rechoir/",\
           "packageDependencies": [\
             ["rechoir", "npm:0.6.2"],\
+            ["resolve", "patch:resolve@npm%3A1.22.3#~builtin<compat/resolve>::version=1.22.3&hash=c3c19d"]\
+          ],\
+          "linkType": "HARD"\
+        }],\
+        ["npm:0.8.0", {\
+          "packageLocation": "./.yarn/cache/rechoir-npm-0.8.0-fb660b3bc8-ad3caed8af.zip/node_modules/rechoir/",\
+          "packageDependencies": [\
+            ["rechoir", "npm:0.8.0"],\
             ["resolve", "patch:resolve@npm%3A1.22.3#~builtin<compat/resolve>::version=1.22.3&hash=c3c19d"]\
           ],\
           "linkType": "HARD"\
@@ -7529,6 +7941,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["seq-queue", [\
+        ["npm:0.0.5", {\
+          "packageLocation": "./.yarn/cache/seq-queue-npm-0.0.5-d5064d9793-f8695a6cb6.zip/node_modules/seq-queue/",\
+          "packageDependencies": [\
+            ["seq-queue", "npm:0.0.5"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["serialize-javascript", [\
         ["npm:6.0.1", {\
           "packageLocation": "./.yarn/cache/serialize-javascript-npm-6.0.1-fac87289ed-3c4f4cb61d.zip/node_modules/serialize-javascript/",\
@@ -7726,6 +8147,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/sprintf-js-npm-1.0.3-73f0a322fa-19d79aec21.zip/node_modules/sprintf-js/",\
           "packageDependencies": [\
             ["sprintf-js", "npm:1.0.3"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["sqlstring", [\
+        ["npm:2.3.3", {\
+          "packageLocation": "./.yarn/cache/sqlstring-npm-2.3.3-2db6939570-1e7e2d51c3.zip/node_modules/sqlstring/",\
+          "packageDependencies": [\
+            ["sqlstring", "npm:2.3.3"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -7943,6 +8373,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["tarn", [\
+        ["npm:3.0.2", {\
+          "packageLocation": "./.yarn/cache/tarn-npm-3.0.2-4324dc10b0-27a69658f0.zip/node_modules/tarn/",\
+          "packageDependencies": [\
+            ["tarn", "npm:3.0.2"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["terser", [\
         ["npm:5.18.2", {\
           "packageLocation": "./.yarn/cache/terser-npm-5.18.2-13ba9d1497-5098841253.zip/node_modules/terser/",\
@@ -8031,6 +8470,15 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageLocation": "./.yarn/cache/through-npm-2.3.8-df5f72a16e-a38c3e0598.zip/node_modules/through/",\
           "packageDependencies": [\
             ["through", "npm:2.3.8"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["tildify", [\
+        ["npm:2.0.0", {\
+          "packageLocation": "./.yarn/cache/tildify-npm-2.0.0-324bfdd523-0f5fee9362.zip/node_modules/tildify/",\
+          "packageDependencies": [\
+            ["tildify", "npm:2.0.0"]\
           ],\
           "linkType": "HARD"\
         }]\
