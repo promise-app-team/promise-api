@@ -1,16 +1,16 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import typeormConfig from '@/config/orm';
+import { typeormConfig } from '@/config/orm';
 import { ConfigModule } from '@nestjs/config';
-import env from '@/config/env';
-import { PromiseModule } from '@/modules/promise/promise.module';
+import { envConfig } from '@/config/env';
+import { AuthProvider } from './modules/auth/auth.provider';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ load: [env] }),
+    ConfigModule.forRoot({ load: [envConfig] }),
     TypeOrmModule.forRoot(typeormConfig),
-    PromiseModule,
+    AuthProvider,
   ],
   controllers: [AppController],
 })

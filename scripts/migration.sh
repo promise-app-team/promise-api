@@ -19,7 +19,7 @@ function new() {
     exit 1
   }
 
-  output="$(typeorm migration:create ./src/migrations/$name)"
+  output="$(typeorm migration:create ./src/database/migrations/$name)"
   abs_path="$(cut -d ' ' -f2 <<<$output)"
   prettier --write $abs_path >/dev/null
   sed -i '' 's/queryRunner/runner/g' $abs_path

@@ -2,4 +2,10 @@ export TZ=''
 export NODE_ENV=''
 export PORT=''
 
+export DB_HOST=''
+export DB_PORT=''
+export DB_USERNAME=''
+export DB_DATABASE=''
+export DB_PASSWORD=''
+
 export NODE_TLS_REJECT_UNAUTHORIZED='0'

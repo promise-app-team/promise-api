@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-@Entity()
+@Entity({ name: 'pm_users' })
 export class User {
   @PrimaryGeneratedColumn()
   id!: number;
@@ -8,7 +8,7 @@ export class User {
   @Column()
   username!: string;
 
-  @Column({ name: 'profile_url' })
+  @Column({ name: 'profile_url', nullable: true })
   profileUrl!: string;
 
   @Column({ type: 'timestamp', name: 'created_at' })
@@ -16,4 +16,7 @@ export class User {
 
   @Column({ type: 'timestamp', name: 'updated_at' })
   updatedAt!: number;
+
+  @Column({ type: 'timestamp', name: 'deleted_at', nullable: true })
+  deletedAt?: number;
 }

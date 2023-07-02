@@ -9,8 +9,10 @@
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "cSpell.words": [
     "autoincrement",
+    "dtos",
     "fastify",
     "inno",
+    "kakao",
     "mikro",
     "nestjs",
     "typeorm"

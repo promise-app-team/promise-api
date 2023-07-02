@@ -50,3 +50,7 @@ $ yarn run migration:down <number-of-migrations>
 # list migrations
 $ yarn run migration:list
 ```
+
+## Project Structure
+
+TODO
