@@ -1,20 +1,17 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import typeormConfig from '@/config/orm';
 import { ConfigModule } from '@nestjs/config';
 import env from '@/config/env';
-import { MikroOrmModule } from '@mikro-orm/nestjs';
-import config from '@/config/orm';
+import { PromiseModule } from '@/modules/promise/promise.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      load: [env],
-    }),
-    MikroOrmModule.forRoot(config),
+    ConfigModule.forRoot({ load: [env] }),
+    TypeOrmModule.forRoot(typeormConfig),
+    PromiseModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}

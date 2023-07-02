@@ -3,16 +3,16 @@ import { ConfigService } from '@nestjs/config';
 
 @Controller()
 export class AppController {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly config: ConfigService) {}
 
   @Get()
   async pong() {
     return {
       message: 'Promise API',
-      version: this.configService.get('API_VERSION'),
-      build: this.configService.get('BUILD'),
-      env: this.configService.get('NODE_ENV'),
-      tz: this.configService.get('TZ'),
+      version: this.config.get('API_VERSION'),
+      build: this.config.get('BUILD'),
+      env: this.config.get('NODE_ENV'),
+      tz: this.config.get('TZ'),
     };
   }
 }
