@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "nest": "nest",
+    "mikro-orm": "mikro-orm",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
@@ -33,6 +34,8 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
+    "@mikro-orm/cli": "^5.7.12",
+    "@mikro-orm/migrations": "^5.7.12",
     "@nestjs/cli": "^10.1.0",
     "@nestjs/schematics": "^10.0.1",
     "@nestjs/testing": "^10.0.4",
@@ -70,6 +73,13 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "mikro-orm": {
+    "useTsNode": true,
+    "configPaths": [
+      "./src/config/orm.ts",
+      "./dist/config/orm.js"
+    ]
   },
   "packageManager": "yarn@3.6.1"
 }

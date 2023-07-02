@@ -8,10 +8,10 @@
   "typescript.tsdk": ".yarn/sdks/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "cSpell.words": [
-    "datamodel",
-    "datasource",
+    "autoincrement",
     "fastify",
-    "nestjs",
-    "postmigrate"
+    "inno",
+    "mikro",
+    "nestjs"
   ]
 }
