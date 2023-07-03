@@ -2,6 +2,8 @@
 
 Promise API Server
 
+**[How do I access https on localhost?](/https/README.md)**
+
 ## Development
 
 This project is using [yarn berry](https://github.com/yarnpkg/berry) as the package manager.
@@ -16,9 +18,12 @@ $ yarn install # or yarn
 
 Use [direnv](https://github.com/direnv/direnv) to manager environment variables
 
+>⚠️ If you configure your server to use HTTPS, you should set `HTTPS='true'` in your `.envrc` file.
+
 1. Copy `.envrc.example` file and rename `.envrc`.
 2. Set environment variables according to your local env.
 3. Run `$ direnv allow` in your terminal so that enable environment variables.
+4. Every time `.envrc` file is changed, run `$ direnv allow` again.
 
 ### Running API Server
 
@@ -30,15 +35,25 @@ $ yarn run start:dev
 $ yarn run start:prod
 ```
 
-### Testing
+### Database Migration
 
 ```bash
-# unit tests
-$ yarn run test
+# generate migration file
+$ yarn run migration:new <migration-name>
 
-# e2e tests
-$ yarn run test:e2e
+# run migration
+$ yarn run migration:up
 
-# test coverage
-$ yarn run test:cov
+# revert last migration
+$ yarn run migration:down
+
+# revert migrations
+$ yarn run migration:down <number-of-migrations>
+
+# list migrations
+$ yarn run migration:list
 ```
+
+## Project Structure
+
+TODO

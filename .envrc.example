@@ -1,3 +1,20 @@
-export TZ=''
-export NODE_ENV=''
-export PORT=''
+export TZ='Asia/Seoul'
+export NODE_ENV='local'
+export PORT='8080'
+export HTTPS='false'
+
+export JWT_SECRET_KEY='42'
+
+# https://github.com/vercel/ms#ms
+export JWT_ACCESS_EXPIRES_IN='15m'
+export JWT_REFRESH_EXPIRES_IN='7d'
+
+export DB_HOST=''
+export DB_PORT=''
+export DB_USERNAME=''
+export DB_PASSWORD=''
+export DB_DATABASE=''
+
+export TYPEORM_VERBOSE='false'
+
+export KAKAO_REST_API_KEY=''
