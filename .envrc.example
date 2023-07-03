@@ -1,11 +1,14 @@
-export TZ=''
-export NODE_ENV=''
-export PORT=''
+export TZ='Asia/Seoul'
+export NODE_ENV='local'
+export PORT='8080'
+export HTTPS='false'
 
 export DB_HOST=''
 export DB_PORT=''
 export DB_USERNAME=''
-export DB_DATABASE=''
 export DB_PASSWORD=''
+export DB_DATABASE=''
 
-export NODE_TLS_REJECT_UNAUTHORIZED='0'
+export TYPEORM_VERBOSE='false'
+
+export KAKAO_REST_API_KEY='d957fe93f39254e70df345a09caaecf7'

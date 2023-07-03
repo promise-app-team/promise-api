@@ -13,7 +13,7 @@ export function typeormConfig(config: ConfigService): TypeOrmModuleOptions {
     password: config.get('DB_PASSWORD'),
     database: config.get('DB_DATABASE'),
 
-    logging: false,
+    logging: config.get('TYPEORM_VERBOSE') === 'true' ? 'all' : ['error'],
     synchronize: false,
     autoLoadEntities: true,
     logger: logger.log.bind(logger),
