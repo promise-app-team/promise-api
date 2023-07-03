@@ -13,10 +13,10 @@ export function typeormConfig(config: ConfigService): TypeOrmModuleOptions {
     password: config.get('DB_PASSWORD'),
     database: config.get('DB_DATABASE'),
 
-    logging: config.get('TYPEORM_VERBOSE') === 'true' ? 'all' : ['error'],
     synchronize: false,
     autoLoadEntities: true,
     logger: logger.log.bind(logger),
+    logging: config.get('TYPEORM_VERBOSE') === 'true' ? 'all' : ['error'],
     entities: ['dist/**/*.entity.js'],
     migrations: ['dist/database/migrations/*.js'],
     migrationsTableName: '_migrations',

@@ -42,5 +42,12 @@ function list() {
   typeorm migration:show -d $datasource
 }
 
-[[ -z "$command" ]] && warn && exit 1
-$command ${@:2} 2>/dev/null || warn && exit 1
+if [[ -z "$command" ]]; then
+  warn && exit 1
+fi
+
+if [[ $(type -t $command) == function ]]; then
+  $command ${@:2} 2>/dev/null
+else
+  warn && exit 1
+fi

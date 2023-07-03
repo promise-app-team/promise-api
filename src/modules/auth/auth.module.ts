@@ -6,8 +6,8 @@ import { User } from './entities/user.entity';
 import { OAuthController } from './controllers/oauth.controller';
 import { OAuthService } from './services/oauth.service';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
 import { KakaoStrategy } from './strategies/kakao.strategy';
+import { JwtService } from '@nestjs/jwt';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User])],
