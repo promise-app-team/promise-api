@@ -8,6 +8,7 @@ import { OAuthService } from './services/oauth.service';
 import { ConfigService } from '@nestjs/config';
 import { KakaoStrategy } from './strategies/kakao.strategy';
 import { JwtService } from '@nestjs/jwt';
+import { GoogleStrategy } from './strategies/google.strategy';
 
 @Module({
   imports: [TypeOrmModule.forFeature([User])],
@@ -18,6 +19,7 @@ import { JwtService } from '@nestjs/jwt';
     ConfigService,
     JwtService,
     KakaoStrategy,
+    GoogleStrategy,
   ],
 })
 export class AuthModule {}

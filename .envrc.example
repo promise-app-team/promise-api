@@ -18,3 +18,5 @@ export DB_DATABASE=''
 export TYPEORM_VERBOSE='false'
 
 export KAKAO_REST_API_KEY=''
+export GOOGLE_CLIENT_ID=''
+export GOOGLE_SECRET_KEY=''
