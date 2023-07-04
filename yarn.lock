@@ -741,6 +741,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/passport-apple@npm:^1.1.1":
+  version: 1.1.1
+  resolution: "@types/passport-apple@npm:1.1.1"
+  dependencies:
+    "@types/express": "*"
+    "@types/passport": "*"
+    "@types/passport-oauth2": "*"
+  checksum: 15350ea7194bfcd0e98823a12e68f7e0945c1916b77879e247de00136c22726fc23761db184490bc0f94ac6cc728f4fc5aa236f8c058070d38dcd9f9eb46666f
+  languageName: node
+  linkType: hard
+
 "@types/passport-google-oauth20@npm:^2":
   version: 2.0.11
   resolution: "@types/passport-google-oauth20@npm:2.0.11"
@@ -3429,7 +3440,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"jsonwebtoken@npm:9.0.0":
+"jsonwebtoken@npm:9.0.0, jsonwebtoken@npm:^9.0.0":
   version: 9.0.0
   resolution: "jsonwebtoken@npm:9.0.0"
   dependencies:
@@ -4238,6 +4249,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"passport-apple@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "passport-apple@npm:2.0.2"
+  dependencies:
+    jsonwebtoken: ^9.0.0
+    passport-oauth2: ^1.6.1
+  checksum: d1150ad5b9ba610258963272c2f39322d9778f935756900e699784a864531178451ebe0aa2f994df3e30ae1ee249ee2336e8dcf1b8765b55f9d25efd0cf3053a
+  languageName: node
+  linkType: hard
+
 "passport-google-oauth20@npm:^2.0.0":
   version: 2.0.0
   resolution: "passport-google-oauth20@npm:2.0.0"
@@ -4257,7 +4278,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"passport-oauth2@npm:1.x.x":
+"passport-oauth2@npm:1.x.x, passport-oauth2@npm:^1.6.1":
   version: 1.7.0
   resolution: "passport-oauth2@npm:1.7.0"
   dependencies:
@@ -4442,6 +4463,7 @@ __metadata:
     "@types/express": ^4
     "@types/node": 20.3.3
     "@types/passport": ^0
+    "@types/passport-apple": ^1.1.1
     "@types/passport-google-oauth20": ^2
     "@types/passport-kakao": ^1
     "@typescript-eslint/eslint-plugin": ^5.60.1
@@ -4454,6 +4476,7 @@ __metadata:
     joi: ^17.9.2
     mysql2: ^3.4.3
     passport: ^0.6.0
+    passport-apple: ^2.0.2
     passport-google-oauth20: ^2.0.0
     passport-kakao: ^1.0.1
     prettier: ^2.8.8

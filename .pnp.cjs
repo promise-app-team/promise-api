@@ -41,6 +41,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/express", "npm:4.17.17"],\
             ["@types/node", "npm:20.3.3"],\
             ["@types/passport", "npm:0.4.7"],\
+            ["@types/passport-apple", "npm:1.1.1"],\
             ["@types/passport-google-oauth20", "npm:2.0.11"],\
             ["@types/passport-kakao", "npm:1.0.0"],\
             ["@typescript-eslint/eslint-plugin", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.60.1"],\
@@ -53,6 +54,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["joi", "npm:17.9.2"],\
             ["mysql2", "npm:3.4.3"],\
             ["passport", "npm:0.6.0"],\
+            ["passport-apple", "npm:2.0.2"],\
             ["passport-google-oauth20", "npm:2.0.0"],\
             ["passport-kakao", "npm:1.0.1"],\
             ["prettier", "npm:2.8.8"],\
@@ -1104,6 +1106,18 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [\
             ["@types/passport", "npm:1.0.12"],\
             ["@types/express", "npm:4.17.17"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
+      ["@types/passport-apple", [\
+        ["npm:1.1.1", {\
+          "packageLocation": "./.yarn/cache/@types-passport-apple-npm-1.1.1-276c457cf8-15350ea719.zip/node_modules/@types/passport-apple/",\
+          "packageDependencies": [\
+            ["@types/passport-apple", "npm:1.1.1"],\
+            ["@types/express", "npm:4.17.17"],\
+            ["@types/passport", "npm:1.0.12"],\
+            ["@types/passport-oauth2", "npm:1.4.12"]\
           ],\
           "linkType": "HARD"\
         }]\
@@ -5210,6 +5224,17 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"\
         }]\
       ]],\
+      ["passport-apple", [\
+        ["npm:2.0.2", {\
+          "packageLocation": "./.yarn/cache/passport-apple-npm-2.0.2-f8d98ff7e4-d1150ad5b9.zip/node_modules/passport-apple/",\
+          "packageDependencies": [\
+            ["passport-apple", "npm:2.0.2"],\
+            ["jsonwebtoken", "npm:9.0.0"],\
+            ["passport-oauth2", "npm:1.7.0"]\
+          ],\
+          "linkType": "HARD"\
+        }]\
+      ]],\
       ["passport-google-oauth20", [\
         ["npm:2.0.0", {\
           "packageLocation": "./.yarn/cache/passport-google-oauth20-npm-2.0.0-4187da29c8-1d34f4c2da.zip/node_modules/passport-google-oauth20/",\
@@ -5436,6 +5461,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["@types/express", "npm:4.17.17"],\
             ["@types/node", "npm:20.3.3"],\
             ["@types/passport", "npm:0.4.7"],\
+            ["@types/passport-apple", "npm:1.1.1"],\
             ["@types/passport-google-oauth20", "npm:2.0.11"],\
             ["@types/passport-kakao", "npm:1.0.0"],\
             ["@typescript-eslint/eslint-plugin", "virtual:bcf77d1f766239d58534562b17b26962f555c95378e7ea7222ebb9143f26c13557d82731a60c6101bfc3c41a26dcc341fd056b8a46370e9a0032078ebcca2c3e#npm:5.60.1"],\
@@ -5448,6 +5474,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["joi", "npm:17.9.2"],\
             ["mysql2", "npm:3.4.3"],\
             ["passport", "npm:0.6.0"],\
+            ["passport-apple", "npm:2.0.2"],\
             ["passport-google-oauth20", "npm:2.0.0"],\
             ["passport-kakao", "npm:1.0.1"],\
             ["prettier", "npm:2.8.8"],\
