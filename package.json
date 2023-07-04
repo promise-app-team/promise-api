@@ -17,6 +17,7 @@
     "lint": "eslint **/*.ts --fix"
   },
   "dependencies": {
+    "@arendajaelu/nestjs-passport-apple": "^1.0.4",
     "@nestjs/common": "^10.0.4",
     "@nestjs/config": "^3.0.0",
     "@nestjs/core": "^10.0.4",

@@ -6,7 +6,7 @@ export class CreateUsersTable1688321455649 implements MigrationInterface {
       [
         'CREATE TABLE `pm_users` (',
         '  `id` int unsigned not null auto_increment,',
-        '  `username` varchar(80) not null,',
+        '  `username` varchar(80) null default null,',
         '  `profile_url` text,',
         '  `provider` varchar(10) null default null,',
         '  `provider_id` varchar(100) null default null,',

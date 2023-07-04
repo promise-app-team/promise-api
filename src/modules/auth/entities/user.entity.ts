@@ -3,6 +3,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 export enum Provider {
   Kakao = 'KAKAO',
   Google = 'GOOGLE',
+  Apple = 'APPLE',
 }
 
 @Entity({ name: 'pm_users' })
@@ -10,8 +11,8 @@ export class User {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column()
-  username!: string;
+  @Column({ nullable: true })
+  username!: string | null;
 
   @Column({ name: 'profile_url', nullable: true })
   profileUrl!: string | null;
