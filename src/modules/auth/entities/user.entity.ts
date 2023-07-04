@@ -2,6 +2,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum Provider {
   Kakao = 'KAKAO',
+  Google = 'GOOGLE',
 }
 
 @Entity({ name: 'pm_users' })

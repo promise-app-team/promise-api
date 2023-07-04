@@ -1,6 +1,7 @@
 # HTTPS on localhost
 
-https://api.promise.local
+- https://api.promise.local
+- https://api.local.promise.co
 
 ## Usage
 
@@ -19,7 +20,7 @@ https://api.promise.local
     $ make run
     ```
 
-4. Open https://api.promise.local in your browser.
+4. Open https://api.local.promise.co in your browser.
 5. Run commands below to uninstall: (It will ask you for a password.)
 
     ```sh
