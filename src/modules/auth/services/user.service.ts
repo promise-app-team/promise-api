@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DeepPartial, Repository } from 'typeorm';
 import { Provider, User } from '../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { getUnixTime } from 'date-fns';
 
 @Injectable()
 export class UserService {
@@ -20,5 +21,11 @@ export class UserService {
 
   async create(user: DeepPartial<User>) {
     return this.userRepo.save(this.userRepo.create(user));
+  }
+
+  async delete(user: User) {
+    return this.userRepo.save(
+      this.userRepo.merge(user, { deletedAt: getUnixTime(new Date()) }),
+    );
   }
 }
