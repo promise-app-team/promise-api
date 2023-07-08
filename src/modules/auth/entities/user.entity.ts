@@ -1,3 +1,5 @@
+import { timestamp } from '@/utils/typeorm/transformers/timestamp';
+import { ApiHideProperty } from '@nestjs/swagger';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum Provider {
@@ -20,19 +22,28 @@ export class User {
   @Column('enum', { enum: Provider, nullable: true })
   provider!: Provider | null;
 
+  @ApiHideProperty()
   @Column({ name: 'provider_id', nullable: true })
   providerId!: string | null;
 
-  @Column('timestamp', { name: 'created_at' })
+  @Column('timestamp', { name: 'created_at', transformer: timestamp })
   createdAt!: number;
 
-  @Column('timestamp', { name: 'updated_at' })
+  @Column('timestamp', { name: 'updated_at', transformer: timestamp })
   updatedAt!: number;
 
+  @ApiHideProperty()
+  @Column('timestamp', {
+    name: 'last_signed_at',
+    transformer: timestamp,
+    select: false,
+  })
+  lastSignedAt!: number;
+
+  @ApiHideProperty()
   @Column({
-    type: 'timestamp',
     name: 'deleted_at',
-    nullable: true,
+    transformer: timestamp,
     select: false,
   })
   deletedAt?: number | null;
