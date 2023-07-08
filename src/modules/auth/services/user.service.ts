@@ -20,12 +20,19 @@ export class UserService {
   }
 
   async create(user: DeepPartial<User>) {
-    return this.userRepo.save(this.userRepo.create(user));
+    return this.userRepo.create(user);
+  }
+
+  async login(user: User): Promise<User> {
+    return this.userRepo.save(
+      this.userRepo.merge(user, {
+        updatedAt: getUnixTime(new Date()),
+        lastSignedAt: getUnixTime(new Date()),
+      }),
+    );
   }
 
   async delete(user: User) {
-    return this.userRepo.save(
-      this.userRepo.merge(user, { deletedAt: getUnixTime(new Date()) }),
-    );
+    return this.userRepo.softDelete(user);
   }
 }

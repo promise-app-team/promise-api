@@ -6,16 +6,12 @@ export const timestamp: ValueTransformer = {
     if (typeof value === 'undefined') {
       return undefined;
     }
-    console.log('to', value);
-    console.log('date', fromUnixTime(value));
-    return value;
+    return fromUnixTime(value);
   },
   from(value: any) {
     if (typeof value === 'undefined') {
       return undefined;
     }
-    console.log('from', value);
-    console.log('date', getUnixTime(value));
-    return value;
+    return getUnixTime(value);
   },
 };
