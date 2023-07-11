@@ -9,9 +9,9 @@ export class AppController {
   constructor(private readonly config: ConfigService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Ping' })
-  @ApiOkResponse({ description: 'Pong', type: [EntryResponse] })
-  pong() {
+  @ApiOperation({ operationId: 'ping', summary: 'Ping / Pong' })
+  @ApiOkResponse({ description: 'ping', type: EntryResponse })
+  ping() {
     return {
       message: 'pong',
       version: this.config.get('API_VERSION'),

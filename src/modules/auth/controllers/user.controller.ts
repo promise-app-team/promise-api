@@ -1,8 +1,8 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
-import { UserService } from '../services/user.service';
 import {
   ApiBearerAuth,
   ApiOkResponse,
+  ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -14,10 +14,9 @@ import { AuthUser } from '../decorators/auth.decorator';
 @ApiBearerAuth()
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
-
   @Get('profile')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ operationId: 'profile', summary: '인증 사용자 정보 조회' })
   @ApiOkResponse({ type: User, description: '인증 사용자 정보' })
   @ApiUnauthorizedResponse({ description: '로그인 필요' })
   async profile(@AuthUser() user: User): Promise<User> {
