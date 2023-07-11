@@ -1,8 +1,8 @@
-export class InputRefreshTokenDto {
+export class InputRefreshToken {
   refreshToken!: string;
 }
 
-export class OutputAuthTokenDto {
+export class AuthToken {
   accessToken!: string;
   refreshToken!: string;
 }

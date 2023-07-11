@@ -2,9 +2,9 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from './user.service';
 import { JwtService } from '@nestjs/jwt';
-import { InputCreateUserDto } from '../dtos/user.dto';
+import { InputCreateUser } from '../dtos/user.dto';
 import { DataSource } from 'typeorm';
-import { OutputAuthTokenDto } from '../dtos/auth.dto';
+import { AuthToken } from '../dtos/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -15,7 +15,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async authenticate(user: InputCreateUserDto): Promise<OutputAuthTokenDto> {
+  async authenticate(user: InputCreateUser): Promise<AuthToken> {
     if (!user.provider || !user.providerId) {
       throw new BadRequestException('로그인을 실패했습니다.');
     }
@@ -32,7 +32,7 @@ export class AuthService {
     return this._generateToken({ id: `${node.id}` });
   }
 
-  async refresh(token: string): Promise<OutputAuthTokenDto> {
+  async refresh(token: string): Promise<AuthToken> {
     // TODO: AuthToken 모듈로 분리
     const payload = this.jwtService.verify(token, {
       secret: this.configService.get('JWT_SECRET_KEY'),
