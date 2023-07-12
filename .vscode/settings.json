@@ -21,6 +21,7 @@
     "kakao",
     "mikro",
     "nestjs",
-    "typeorm"
+    "typeorm",
+    "websockets"
   ]
 }
