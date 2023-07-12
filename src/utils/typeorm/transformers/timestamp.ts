@@ -6,12 +6,12 @@ export const timestamp: ValueTransformer = {
     if (typeof value === 'undefined') {
       return undefined;
     }
-    return fromUnixTime(value);
+    return fromUnixTime(value) || null;
   },
   from(value: any) {
     if (typeof value === 'undefined') {
       return undefined;
     }
-    return getUnixTime(value);
+    return getUnixTime(value) || null;
   },
 };

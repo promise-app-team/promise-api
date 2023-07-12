@@ -4,6 +4,7 @@ import { ClassSerializerInterceptor, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { SocketIoAdapter } from './modules/event/adapters/socket-io.adapter';
 import { join } from 'path';
 
 async function bootstrap() {
@@ -14,6 +15,7 @@ async function bootstrap() {
 
   app.useStaticAssets(join(__dirname, '..', 'assets'), { prefix: '/assets' });
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  app.useWebSocketAdapter(new SocketIoAdapter(app));
 
   const openApiConfig = new DocumentBuilder()
     .setTitle(`Promise API`)
