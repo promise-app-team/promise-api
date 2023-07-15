@@ -26,7 +26,6 @@ export class UserService {
   async login(user: User): Promise<User> {
     return this.userRepo.save(
       this.userRepo.merge(user, {
-        updatedAt: getUnixTime(new Date()),
         lastSignedAt: getUnixTime(new Date()),
       }),
     );

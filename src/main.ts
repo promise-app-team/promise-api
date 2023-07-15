@@ -1,6 +1,6 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from '@/app/app.module';
-import { Logger } from '@nestjs/common';
+import { ClassSerializerInterceptor, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -13,6 +13,7 @@ async function bootstrap() {
   const API_VERSION = config.get('API_VERSION');
 
   app.useStaticAssets(join(__dirname, '..', 'assets'), { prefix: '/assets' });
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   const openApiConfig = new DocumentBuilder()
     .setTitle(`Promise API`)

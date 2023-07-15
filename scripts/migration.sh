@@ -1,7 +1,7 @@
 set -e
 
 command=$1
-datasource="dist/database/data-source.js"
+datasource="dist/database/datasource.js"
 
 function warn() {
   echo "\033[0;33mUsage: yarn migration <command>\033[0m\n"
