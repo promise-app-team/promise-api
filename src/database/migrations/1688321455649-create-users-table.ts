@@ -9,7 +9,7 @@ export class CreateUsersTable1688321455649 implements MigrationInterface {
         '  `username` varchar(80) not null,',
         '  `profile_url` text,',
         '  `provider` varchar(10) null default null,',
-        '  `provider_id` varchar(20) null default null,',
+        '  `provider_id` varchar(100) null default null,',
         '  `created_at` timestamp not null default current_timestamp,',
         '  `updated_at` timestamp not null default current_timestamp on update current_timestamp,',
         '  `deleted_at` timestamp null default null,',

@@ -20,16 +20,39 @@ export class OAuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const user: OAuthRequestUser = req.user;
-    const result = await this.oauthService.loginWithKakao(user);
-    if (!result) {
+    try {
+      const result = await this.oauthService.login(req.user);
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+      });
+      return result;
+    } catch (error) {
+      console.error(error);
       throw new Error('카카오톡 로그인을 실패했습니다.');
     }
+  }
 
-    res.cookie('refreshToken', result.refreshToken, {
-      httpOnly: true,
-    });
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  redirectToGoogleLoginPage() {
+    // redirect to google login page
+  }
 
-    return result;
+  @Get('google/redirect')
+  @UseGuards(AuthGuard('google'))
+  async googleLoginCallback(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    try {
+      const result = await this.oauthService.login(req.user);
+      res.cookie('refreshToken', result.refreshToken, {
+        httpOnly: true,
+      });
+      return result;
+    } catch (error) {
+      console.error(error);
+      throw new Error('구글 로그인을 실패했습니다.');
+    }
   }
 }

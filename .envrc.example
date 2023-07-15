@@ -1,20 +1,26 @@
-export TZ='Asia/Seoul'
-export NODE_ENV='local'
-export PORT='8080'
-export HTTPS='false'
+export TZ="Asia/Seoul"
+export NODE_ENV="local"
+export PORT="8080"
 
-export JWT_SECRET_KEY='42'
+# http://localhost:$PORT
+# https://api.promise.local
+# https://api.local.promise.co
+export API_URL="http://localhost:$PORT"
+
+export JWT_SECRET_KEY="42"
 
 # https://github.com/vercel/ms#ms
-export JWT_ACCESS_EXPIRES_IN='15m'
-export JWT_REFRESH_EXPIRES_IN='7d'
+export JWT_ACCESS_EXPIRES_IN="15m"
+export JWT_REFRESH_EXPIRES_IN="7d"
 
-export DB_HOST=''
-export DB_PORT=''
-export DB_USERNAME=''
-export DB_PASSWORD=''
-export DB_DATABASE=''
+export DB_HOST=""
+export DB_PORT=""
+export DB_USERNAME=""
+export DB_PASSWORD=""
+export DB_DATABASE=""
 
-export TYPEORM_VERBOSE='false'
+export TYPEORM_VERBOSE="false"
 
-export KAKAO_REST_API_KEY=''
+export KAKAO_REST_API_KEY=""
+export GOOGLE_CLIENT_ID=""
+export GOOGLE_SECRET_KEY=""
