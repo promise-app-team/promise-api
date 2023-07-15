@@ -7,6 +7,7 @@ import { AuthModule } from '../modules/auth/auth.module';
 import { extraEnv } from '../config/env';
 import { schema } from '../config/validation';
 import { JwtModule } from '@nestjs/jwt';
+import { EventModule } from '@/modules/event/event.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { JwtModule } from '@nestjs/jwt';
       }),
     }),
     AuthModule,
+    EventModule,
   ],
   controllers: [AppController],
 })
