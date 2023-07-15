@@ -1,21 +1,32 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from './user.service';
-import { OAuthRequestUser } from '../types/oauth';
 import { JwtService } from '@nestjs/jwt';
+import { AuthResponseDto, CreateUserDto } from '../dtos/user.dto';
+import { DataSource } from 'typeorm';
 
 @Injectable()
-export class OAuthService {
+export class AuthService {
   constructor(
+    private readonly dataSource: DataSource,
     private readonly userService: UserService,
     private readonly configService: ConfigService,
     private readonly jwtService: JwtService,
   ) {}
 
-  async login(user: OAuthRequestUser) {
-    const node = await this.userService
-      .findOneByProvider(user.provider, user.providerId)
-      .then((node) => node ?? this.userService.create(user));
+  async authenticate(user: CreateUserDto): Promise<AuthResponseDto> {
+    if (!user.provider || !user.providerId) {
+      throw new BadRequestException('로그인을 실패했습니다.');
+    }
+
+    const node = await this.dataSource.transaction(async (em) => {
+      const node = await this.userService
+        .findOneByProvider(user.provider, user.providerId)
+        .then((node) => node ?? this.userService.create(user))
+        .then((node) => this.userService.login(node));
+
+      return em.save(node);
+    });
 
     const payload = { id: `${node.id}` };
     const secret = this.configService.get('JWT_SECRET_KEY');
