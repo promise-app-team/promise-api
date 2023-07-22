@@ -30,32 +30,32 @@ export class EventGateway
     const ms = +client.handshake.query['interval'] || null;
     const to = client.handshake.query['to'] || null;
 
-    const emitEvents = (...data: any) => {
+    clearInterval(this.intervalIdById[client.id]);
+    client.emit('pong', `Successfully Connected! Client ID: ${client.id}`);
+    if (typeof ms === 'number') {
+      this.intervalIdById[client.id] = setInterval(emitEvents.bind(this), ms);
+    } else {
+      emitEvents.call(this);
+    }
+
+    client.on('ping', (data) => {
+      emitEvents.call(this, data);
+    });
+
+    function emitEvents(data: any) {
       const payload = JSON.stringify({
         from: client.id,
         timestamp: Date.now(),
         data,
       });
-
       if (to === 'broadcast') {
-        this.io.emit('pong', payload, emitEvents);
+        this.io.emit('pong', payload);
       } else if (to === 'self') {
-        client.emit('pong', payload, emitEvents);
+        client.emit('pong', payload);
       } else if (to) {
         this.io.to(to).emit('pong', payload);
       }
-    };
-
-    clearInterval(this.intervalIdById[client.id]);
-    client.emit('pong', `Successfully Connected! Client ID: ${client.id}`);
-
-    if (typeof ms === 'number') {
-      this.intervalIdById[client.id] = setInterval(emitEvents, ms);
-    } else {
-      emitEvents();
     }
-
-    client.on('ping', emitEvents);
   }
 
   handleDisconnect(client: Socket) {

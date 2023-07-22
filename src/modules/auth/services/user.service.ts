@@ -32,10 +32,6 @@ export class UserService {
   }
 
   async delete(user: User) {
-    return this.userRepo.save(
-      this.userRepo.merge(user, {
-        deletedAt: getUnixTime(new Date()),
-      }),
-    );
+    return this.userRepo.softDelete(user);
   }
 }

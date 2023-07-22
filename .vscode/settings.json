@@ -11,7 +11,6 @@
   "editor.codeActionsOnSave": {
     "source.fixAll": true
   },
-  "explorer.fileNesting.enabled": true,
   "cSpell.words": [
     "arendajaelu",
     "autoincrement",
@@ -20,6 +19,7 @@
     "fastify",
     "inno",
     "kakao",
+    "mikro",
     "nestjs",
     "typeorm",
     "websockets"
