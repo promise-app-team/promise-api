@@ -9,17 +9,17 @@ import {
 import { Namespace, Socket } from 'socket.io';
 
 @WebSocketGateway({ namespace: 'ping' })
-export class EventGateway
+export class SocketIOEventGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
-  private readonly logger = new Logger(EventGateway.name);
+  private readonly logger = new Logger(SocketIOEventGateway.name);
   private intervalIdById: Record<string, ReturnType<typeof setInterval>> = {};
 
   @WebSocketServer()
   io: Namespace;
 
   afterInit(_server: Socket) {
-    this.logger.log('WebSocket Gateway Initialized');
+    this.logger.log('SocketIO Gateway Initialized');
   }
 
   handleConnection(client: Socket) {
