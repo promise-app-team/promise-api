@@ -29,13 +29,13 @@ export class WebSocketEventGateway
   @SubscribeMessage('ping')
   handlePing(client: WebSocket, data: any) {
     if (client['to'] === 'broadcast') {
-      this.clients.forEach((c) => c.send(this.payload(c, data)));
+      this.clients.forEach((c) => c.send(this.payload(client, data)));
     } else if (client['to'] === 'self') {
       client.send(this.payload(client, data));
     } else if (client['to']) {
       this.clients
         .filter((c) => c['id'] === client['to'])
-        .forEach((c) => c.send(this.payload(c, data)));
+        .forEach((c) => c.send(this.payload(client, data)));
     }
   }
 
