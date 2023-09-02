@@ -474,6 +474,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@nestjs/platform-ws@npm:^10.1.0":
+  version: 10.1.0
+  resolution: "@nestjs/platform-ws@npm:10.1.0"
+  dependencies:
+    tslib: 2.6.0
+    ws: 8.13.0
+  peerDependencies:
+    "@nestjs/common": ^10.0.0
+    "@nestjs/websockets": ^10.0.0
+    rxjs: ^7.1.0
+  checksum: 51048c4151acb2097c8e3dc11a267020dc669ddb6a902450675eec192b38ff9b1d357b7fe5f4b0a3b66adefd91ac66030bd33fbfebfbd3142606d003644ed625
+  languageName: node
+  linkType: hard
+
 "@nestjs/schematics@npm:^10.0.1":
   version: 10.0.1
   resolution: "@nestjs/schematics@npm:10.0.1"
@@ -893,6 +907,15 @@ __metadata:
     "@types/mime": "*"
     "@types/node": "*"
   checksum: 15c261dbfc57890f7cc17c04d5b22b418dfa0330c912b46c5d8ae2064da5d6f844ef7f41b63c7f4bbf07675e97ebe6ac804b032635ec742ae45d6f1274259b3e
+  languageName: node
+  linkType: hard
+
+"@types/ws@npm:^8":
+  version: 8.5.5
+  resolution: "@types/ws@npm:8.5.5"
+  dependencies:
+    "@types/node": "*"
+  checksum: d00bf8070e6938e3ccf933010921c6ce78ac3606696ce37a393b27a9a603f7bd93ea64f3c5fa295a2f743575ba9c9a9fdb904af0f5fe2229bf2adf0630386e4a
   languageName: node
   linkType: hard
 
@@ -4497,6 +4520,7 @@ __metadata:
     "@nestjs/passport": ^10.0.0
     "@nestjs/platform-express": ^10.0.4
     "@nestjs/platform-socket.io": ^10.0.5
+    "@nestjs/platform-ws": ^10.1.0
     "@nestjs/schematics": ^10.0.1
     "@nestjs/serve-static": ^4.0.0
     "@nestjs/swagger": ^7.1.1
@@ -4505,6 +4529,7 @@ __metadata:
     "@types/express": ^4
     "@types/node": 20.3.3
     "@types/passport": ^0
+    "@types/ws": ^8
     "@typescript-eslint/eslint-plugin": ^5.60.1
     "@typescript-eslint/parser": ^5.60.1
     class-transformer: ^0.5.1
@@ -4528,6 +4553,7 @@ __metadata:
     typeorm: ^0.3.17
     typescript: ^5.1.6
     webpack: ^5.88.1
+    ws: ^8.13.0
   languageName: unknown
   linkType: soft
 
@@ -5879,6 +5905,21 @@ __metadata:
   version: 1.0.2
   resolution: "wrappy@npm:1.0.2"
   checksum: 159da4805f7e84a3d003d8841557196034155008f817172d4e986bd591f74aa82aa7db55929a54222309e01079a65a92a9e6414da5a6aa4b01ee44a511ac3ee5
+  languageName: node
+  linkType: hard
+
+"ws@npm:8.13.0, ws@npm:^8.13.0":
+  version: 8.13.0
+  resolution: "ws@npm:8.13.0"
+  peerDependencies:
+    bufferutil: ^4.0.1
+    utf-8-validate: ">=5.0.2"
+  peerDependenciesMeta:
+    bufferutil:
+      optional: true
+    utf-8-validate:
+      optional: true
+  checksum: 53e991bbf928faf5dc6efac9b8eb9ab6497c69feeb94f963d648b7a3530a720b19ec2e0ec037344257e05a4f35bd9ad04d9de6f289615ffb133282031b18c61c
   languageName: node
   linkType: hard
 
