@@ -434,16 +434,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@nestjs/passport@npm:^10.0.0":
-  version: 10.0.0
-  resolution: "@nestjs/passport@npm:10.0.0"
-  peerDependencies:
-    "@nestjs/common": ^8.0.0 || ^9.0.0 || ^10.0.0
-    passport: ^0.4.0 || ^0.5.0 || ^0.6.0
-  checksum: 54436958322435bcdb03bf57cc4c1303f8fbbae56d04a05335f7fd9f1563fdeab45107b2a5ed75732f9596e251b0755d282624301b7ffce7dd9f3af5323b6621
-  languageName: node
-  linkType: hard
-
 "@nestjs/platform-express@npm:^10.0.4":
   version: 10.0.4
   resolution: "@nestjs/platform-express@npm:10.0.4"
@@ -752,7 +742,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/express@npm:*, @types/express@npm:^4":
+"@types/express@npm:^4":
   version: 4.17.17
   resolution: "@types/express@npm:4.17.17"
   dependencies:
@@ -812,15 +802,6 @@ __metadata:
   version: 4.0.0
   resolution: "@types/parse-json@npm:4.0.0"
   checksum: fd6bce2b674b6efc3db4c7c3d336bd70c90838e8439de639b909ce22f3720d21344f52427f1d9e57b265fcb7f6c018699b99e5e0c208a1a4823014269a6bf35b
-  languageName: node
-  linkType: hard
-
-"@types/passport@npm:^0":
-  version: 0.4.7
-  resolution: "@types/passport@npm:0.4.7"
-  dependencies:
-    "@types/express": "*"
-  checksum: c22a84226d763db30cc6d8b330022820d067ea4039dc625371825e0d2fb8e3d6e7387cf4619e79a4cc293e8c3f3420f3da3067c564da14c21fadb03b5f5c870f
   languageName: node
   linkType: hard
 
@@ -4280,24 +4261,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"passport-strategy@npm:1.x.x":
-  version: 1.0.0
-  resolution: "passport-strategy@npm:1.0.0"
-  checksum: 5086693f2508e538dffa55a338c89fe8192fb5f4478c71f80cd5890b8573419a098f4fec88b505374f60bbe9049f6f24b9f3992678612528a3370b4dc73354a2
-  languageName: node
-  linkType: hard
-
-"passport@npm:^0.6.0":
-  version: 0.6.0
-  resolution: "passport@npm:0.6.0"
-  dependencies:
-    passport-strategy: 1.x.x
-    pause: 0.0.1
-    utils-merge: ^1.0.1
-  checksum: ef932ad671d50de34765c7a53cd1e058d8331a82a6df09265a9c6c1168911aee4a7b5215803d0101110ab7f317e096b4954ca7e18fb2c33b9929f0bd17dbe159
-  languageName: node
-  linkType: hard
-
 "path-exists@npm:^4.0.0":
   version: 4.0.0
   resolution: "path-exists@npm:4.0.0"
@@ -4364,13 +4327,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pause@npm:0.0.1":
-  version: 0.0.1
-  resolution: "pause@npm:0.0.1"
-  checksum: e96ee581b68085e6f2ba5adbcb4d4a41fe88e5b514061e76df2fe1905f0f65f4fe5a843b538e9551122c6b9184ff4be266c2ee0ea4614702f9a3d04466d9f462
-  languageName: node
-  linkType: hard
-
 "picocolors@npm:^1.0.0":
   version: 1.0.0
   resolution: "picocolors@npm:1.0.0"
@@ -4434,7 +4390,6 @@ __metadata:
     "@nestjs/core": ^10.0.4
     "@nestjs/jwt": ^10.1.0
     "@nestjs/mapped-types": ^2.0.2
-    "@nestjs/passport": ^10.0.0
     "@nestjs/platform-express": ^10.0.4
     "@nestjs/platform-ws": ^10.1.0
     "@nestjs/schematics": ^10.0.1
@@ -4444,7 +4399,6 @@ __metadata:
     "@nestjs/websockets": ^10.0.5
     "@types/express": ^4
     "@types/node": 20.3.3
-    "@types/passport": ^0
     "@types/ws": ^8
     "@typescript-eslint/eslint-plugin": ^5.60.1
     "@typescript-eslint/parser": ^5.60.1
@@ -4456,7 +4410,6 @@ __metadata:
     express: ^4.18.2
     joi: ^17.9.2
     mysql2: ^3.4.3
-    passport: ^0.6.0
     prettier: ^2.8.8
     reflect-metadata: ^0.1.13
     rxjs: ^7.8.1
@@ -5614,7 +5567,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"utils-merge@npm:1.0.1, utils-merge@npm:^1.0.1":
+"utils-merge@npm:1.0.1":
   version: 1.0.1
   resolution: "utils-merge@npm:1.0.1"
   checksum: c81095493225ecfc28add49c106ca4f09cdf56bc66731aa8dabc2edbbccb1e1bfe2de6a115e5c6a380d3ea166d1636410b62ef216bb07b3feb1cfde1d95d5080
