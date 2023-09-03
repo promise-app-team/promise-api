@@ -11,8 +11,8 @@ export class AuthService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly userService: UserService,
-    private readonly configService: ConfigService,
-    private readonly jwtService: JwtService,
+    private readonly config: ConfigService,
+    private readonly jwt: JwtService,
   ) {}
 
   async authenticate(user: InputCreateUser): Promise<AuthToken> {
@@ -34,9 +34,7 @@ export class AuthService {
 
   async refresh(token: string): Promise<AuthToken> {
     // TODO: AuthToken 모듈로 분리
-    const payload = this.jwtService.verify(token, {
-      secret: this.configService.get('JWT_SECRET_KEY'),
-    });
+    const payload = this.jwt.verify(token);
     const node = await this.userService.findOneById(payload.id);
     if (!node) {
       throw new BadRequestException('로그인을 실패했습니다.');
@@ -46,14 +44,11 @@ export class AuthService {
 
   // TODO: AuthToken 모듈로 분리
   async _generateToken(payload: object) {
-    const secret = this.configService.get('JWT_SECRET_KEY');
-    const accessToken = this.jwtService.sign(payload, {
-      secret,
-      expiresIn: this.configService.get('JWT_ACCESS_EXPIRES_IN'),
+    const accessToken = this.jwt.sign(payload, {
+      expiresIn: this.config.get('JWT_ACCESS_EXPIRES_IN'),
     });
-    const refreshToken = this.jwtService.sign(payload, {
-      secret,
-      expiresIn: this.configService.get('JWT_REFRESH_EXPIRES_IN'),
+    const refreshToken = this.jwt.sign(payload, {
+      expiresIn: this.config.get('JWT_REFRESH_EXPIRES_IN'),
     });
     return { accessToken, refreshToken };
   }

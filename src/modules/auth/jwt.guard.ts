@@ -4,7 +4,6 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 
@@ -12,7 +11,6 @@ import { UserService } from '../user/user.service';
 export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly jwt: JwtService,
-    private readonly config: ConfigService,
     private readonly userService: UserService,
   ) {}
 
@@ -22,9 +20,7 @@ export class JwtAuthGuard implements CanActivate {
     if (!token) throw new UnauthorizedException('로그인이 필요합니다.');
 
     try {
-      const payload = this.jwt.verify(token, {
-        secret: this.config.get('JWT_SECRET_KEY'),
-      });
+      const payload = this.jwt.verify(token);
       request.user = await this.userService.findOneById(payload.id);
     } catch {
       throw new UnauthorizedException('로그인이 필요합니다.');
