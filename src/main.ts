@@ -15,7 +15,6 @@ async function bootstrap() {
 
   app.useStaticAssets(join(__dirname, '..', 'assets'), { prefix: '/assets' });
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
-  // app.useWebSocketAdapter(new SocketIoAdapter(app));
   app.useWebSocketAdapter(new WsAdapter(app));
 
   const openApiConfig = new DocumentBuilder()
