@@ -7,7 +7,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../guards/jwt.guard';
-import { User } from '../entities/user.entity';
+import { UserEntity } from '../entities/user.entity';
 import { AuthUser } from '../decorators/auth.decorator';
 
 @ApiTags('User')
@@ -17,9 +17,9 @@ export class UserController {
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ operationId: 'profile', summary: '인증 사용자 정보 조회' })
-  @ApiOkResponse({ type: User, description: '인증 사용자 정보' })
+  @ApiOkResponse({ type: UserEntity, description: '인증 사용자 정보' })
   @ApiUnauthorizedResponse({ description: '로그인 필요' })
-  async profile(@AuthUser() user: User): Promise<User> {
+  async profile(@AuthUser() user: UserEntity): Promise<UserEntity> {
     return user;
   }
 

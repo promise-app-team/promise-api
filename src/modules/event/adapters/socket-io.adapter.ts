@@ -1,4 +1,4 @@
-import { User } from '@/modules/auth/entities/user.entity';
+import { UserEntity } from '@/modules/auth/entities/user.entity';
 import { UserService } from '@/modules/auth/services/user.service';
 import {
   INestApplicationContext,
@@ -19,24 +19,26 @@ export class SocketIoAdapter extends IoAdapter {
   createIOServer(port: number, options?: ServerOptions) {
     const server: Server = super.createIOServer(port, options);
     false && // TODO: 인증 절차 임시 해제
-      server.of('ping').use(async (socket: Socket & { user: User }, next) => {
-        const jwt = this.app.get(JwtService);
-        const user = this.app.get(UserService);
-        const config = this.app.get(ConfigService);
-        const token = this.getToken(socket);
-        if (!token) next(new UnauthorizedException('로그인이 필요합니다.'));
+      server
+        .of('ping')
+        .use(async (socket: Socket & { user: UserEntity }, next) => {
+          const jwt = this.app.get(JwtService);
+          const user = this.app.get(UserService);
+          const config = this.app.get(ConfigService);
+          const token = this.getToken(socket);
+          if (!token) next(new UnauthorizedException('로그인이 필요합니다.'));
 
-        try {
-          const payload = jwt.verify(token, {
-            secret: config.get('JWT_SECRET_KEY'),
-          });
-          socket.user = await user.findOneById(payload.id);
-          next();
-        } catch (error) {
-          this.logger.error(error);
-          next(new UnauthorizedException('로그인이 필요합니다.'));
-        }
-      });
+          try {
+            const payload = jwt.verify(token, {
+              secret: config.get('JWT_SECRET_KEY'),
+            });
+            socket.user = await user.findOneById(payload.id);
+            next();
+          } catch (error) {
+            this.logger.error(error);
+            next(new UnauthorizedException('로그인이 필요합니다.'));
+          }
+        });
 
     return server;
   }

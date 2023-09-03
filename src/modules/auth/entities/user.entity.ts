@@ -10,7 +10,7 @@ export enum Provider {
 }
 
 @Entity({ name: 'pm_users' })
-export class User {
+export class UserEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 

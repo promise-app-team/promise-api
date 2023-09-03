@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { DeepPartial, Repository } from 'typeorm';
-import { Provider, User } from '../entities/user.entity';
+import { Provider, UserEntity } from '../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getUnixTime } from 'date-fns';
 
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User)
-    private readonly userRepo: Repository<User>,
+    @InjectRepository(UserEntity)
+    private readonly userRepo: Repository<UserEntity>,
   ) {}
 
   async findOneById(id: string) {
@@ -19,11 +19,11 @@ export class UserService {
     return this.userRepo.findOneBy({ provider, providerId });
   }
 
-  async create(user: DeepPartial<User>) {
+  async create(user: DeepPartial<UserEntity>) {
     return this.userRepo.create(user);
   }
 
-  async login(user: User): Promise<User> {
+  async login(user: UserEntity): Promise<UserEntity> {
     return this.userRepo.save(
       this.userRepo.merge(user, {
         lastSignedAt: getUnixTime(new Date()),
@@ -31,7 +31,7 @@ export class UserService {
     );
   }
 
-  async delete(user: User) {
+  async delete(user: UserEntity) {
     return this.userRepo.softDelete(user);
   }
 }
