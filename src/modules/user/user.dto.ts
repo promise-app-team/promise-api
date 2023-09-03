@@ -1,4 +1,4 @@
-import { Provider } from '../entities/user.entity';
+import { Provider } from './user.entity';
 
 export class InputCreateUser {
   username!: string | null;

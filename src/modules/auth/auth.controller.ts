@@ -6,9 +6,9 @@ import {
   ApiBody,
   ApiTags,
 } from '@nestjs/swagger';
-import { InputCreateUser } from '../dtos/user.dto';
-import { AuthService } from '../services/auth.service';
-import { InputRefreshToken } from '../dtos/auth.dto';
+import { InputCreateUser } from '../user/user.dto';
+import { AuthService } from './auth.service';
+import { InputRefreshToken } from './auth.dto';
 
 @ApiTags('Auth')
 @ApiBearerAuth()

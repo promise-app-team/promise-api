@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DeepPartial, Repository } from 'typeorm';
-import { Provider, UserEntity } from '../entities/user.entity';
+import { Provider, UserEntity } from './user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { getUnixTime } from 'date-fns';
 
