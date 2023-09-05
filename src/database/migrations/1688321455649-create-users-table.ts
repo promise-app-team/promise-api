@@ -2,9 +2,9 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreateUsersTable1688321455649 implements MigrationInterface {
   public async up(runner: QueryRunner): Promise<void> {
-    runner.query(
+    await runner.query(
       [
-        'CREATE TABLE `pm_users` (',
+        'create table `pm_users` (',
         '  `id` int unsigned not null auto_increment,',
         '  `username` varchar(80) null default null,',
         '  `profile_url` text,',
@@ -22,6 +22,6 @@ export class CreateUsersTable1688321455649 implements MigrationInterface {
   }
 
   public async down(runner: QueryRunner): Promise<void> {
-    runner.query('drop table if exists `pm_users`;');
+    await runner.query('drop table if exists `pm_users`;');
   }
 }

@@ -9,4 +9,5 @@ export default new DataSource({
   database: process.env.DB_DATABASE,
   migrations: ['dist/database/migrations/*.js'],
   migrationsTableName: '_migrations',
+  migrationsTransactionMode: 'all',
 });

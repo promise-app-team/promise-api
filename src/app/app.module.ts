@@ -10,6 +10,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { EventModule } from '@/modules/event/event.module';
 import { UserModule } from '@/modules/user/user.module';
 import { jwtConfig } from '@/config/token';
+import { PromiseModule } from '@/modules/promise/promise.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { jwtConfig } from '@/config/token';
     AuthModule,
     UserModule,
     EventModule,
+    PromiseModule,
   ],
   controllers: [AppController],
 })

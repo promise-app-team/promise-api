@@ -49,7 +49,7 @@ if [[ -z "$command" ]]; then
 fi
 
 if [[ $(type -t $command) == function ]]; then
-  $command ${@:2} 2>/dev/null
+  $command ${@:2}
 else
   warn && exit 1
 fi
