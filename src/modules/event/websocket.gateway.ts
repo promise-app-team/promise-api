@@ -40,7 +40,7 @@ export class WebSocketEventGateway
   }
 
   handleConnection(client: WebSocket, incoming: IncomingMessage) {
-    const params = new URLSearchParams(incoming.url.replace('/?', ''));
+    const params = new URLSearchParams(incoming.url?.replace('/?', ''));
     client['id'] = uid(16).toUpperCase();
     client['to'] = params.get('to') || null;
 

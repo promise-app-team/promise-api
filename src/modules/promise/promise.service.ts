@@ -107,11 +107,11 @@ export class PromiseService {
       } else if (input.destinationType === DestinationType.Dynamic) {
         await em.delete(LocationEntity, { id: promise.destinationId });
         await em.save(
-          em.merge(PromiseEntity, promise, { destinationId: null }),
+          em.merge(PromiseEntity, promise, { destinationId: undefined }),
         );
       }
 
-      if (input.themeIds && input.themeIds?.length > 0) {
+      if (input.themeIds && input.themeIds.length > 0) {
         const themes = await em.find(ThemeEntity, {
           where: { id: In(input.themeIds) },
         });

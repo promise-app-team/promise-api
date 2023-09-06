@@ -16,13 +16,14 @@ export class AuthService {
   ) {}
 
   async authenticate(user: InputCreateUser): Promise<AuthToken> {
-    if (!user.provider || !user.providerId) {
+    const { provider, providerId } = user;
+    if (!provider || !providerId) {
       throw new BadRequestException('로그인을 실패했습니다.');
     }
 
     const node = await this.dataSource.transaction(async (em) => {
       const node = await this.userService
-        .findOneByProvider(user.provider, user.providerId)
+        .findOneByProvider(provider, providerId)
         .then((node) => node ?? this.userService.create(user))
         .then((node) => this.userService.login(node));
 

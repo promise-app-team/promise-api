@@ -14,10 +14,10 @@ export class UserEntity {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ nullable: true })
+  @Column('varchar', { nullable: true })
   username!: string | null;
 
-  @Column({ name: 'profile_url', nullable: true })
+  @Column('varchar', { name: 'profile_url', nullable: true })
   profileUrl!: string | null;
 
   @Column('enum', { enum: Provider, nullable: true })
@@ -25,7 +25,7 @@ export class UserEntity {
 
   @ApiHideProperty()
   @Exclude({ toPlainOnly: true })
-  @Column({ name: 'provider_id', nullable: true })
+  @Column('varchar', { name: 'provider_id', nullable: true })
   providerId!: string | null;
 
   @Column('timestamp', { name: 'created_at', transformer: timestamp })
@@ -41,6 +41,6 @@ export class UserEntity {
 
   @ApiHideProperty()
   @Exclude({ toPlainOnly: true })
-  @Column({ name: 'deleted_at', transformer: timestamp })
+  @Column('timestamp', { name: 'deleted_at', transformer: timestamp })
   deletedAt?: number | null;
 }
