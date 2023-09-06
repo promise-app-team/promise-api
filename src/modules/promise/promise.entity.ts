@@ -28,8 +28,8 @@ export class PromiseEntity {
   @Column({ name: 'destination_type' })
   destinationType!: DestinationType;
 
-  @Column({ name: 'destination_id' })
-  destinationId!: number;
+  @Column('varchar', { name: 'destination_id', nullable: true })
+  destinationId!: number | null;
 
   @Column('enum', {
     name: 'location_share_start_type',

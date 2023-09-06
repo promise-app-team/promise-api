@@ -25,6 +25,7 @@ import {
   InputCreatePromise,
   InputUpdatePromise,
   OutputCreatePromise,
+  OutputPromiseListItem,
   OutputUpdatePromise,
 } from './promise.dto';
 import { ThemeEntity } from './theme.entity';
@@ -34,6 +35,15 @@ import { ThemeEntity } from './theme.entity';
 @Controller('promise')
 export class PromiseController {
   constructor(private readonly promiseService: PromiseService) {}
+
+  @Get('list')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ operationId: 'list', summary: '약속 목록' })
+  @ApiOkResponse({ type: [OutputPromiseListItem], description: '약속 목록' })
+  @ApiUnauthorizedResponse({ description: '로그인 필요' })
+  async list(@AuthUser() user: UserEntity): Promise<OutputPromiseListItem[]> {
+    return this.promiseService.findAllByUser(user.id);
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard)
@@ -119,6 +129,9 @@ export class PromiseController {
   }
 
   private isValidTimestamp(input: InputCreatePromise | InputUpdatePromise) {
-    return !input.promisedAt || input.promisedAt > 0;
+    return (
+      input.promisedAt == undefined ||
+      (typeof input.promisedAt == 'number' && input.promisedAt > 1000)
+    );
   }
 }

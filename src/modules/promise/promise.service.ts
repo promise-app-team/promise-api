@@ -12,14 +12,17 @@ import {
   InputCreatePromise,
   InputUpdatePromise,
   OutputCreatePromise,
+  OutputPromiseListItem,
   OutputUpdatePromise,
 } from './promise.dto';
-import { getUnixTime } from 'date-fns';
+import { UserEntity } from '../user/user.entity';
 
 @Injectable()
 export class PromiseService {
   constructor(
     private readonly dataSource: DataSource,
+    @InjectRepository(UserEntity)
+    private readonly userRepo: Repository<UserEntity>,
     @InjectRepository(PromiseEntity)
     private readonly promiseRepo: Repository<PromiseEntity>,
     @InjectRepository(PromiseUserEntity)
@@ -31,6 +34,44 @@ export class PromiseService {
     @InjectRepository(LocationEntity)
     private readonly locationRepo: Repository<LocationEntity>,
   ) {}
+
+  async findAllByUser(userId: number): Promise<OutputPromiseListItem[]> {
+    const promiseUsers = await this.promiseUserRepo.find({ where: { userId } });
+    const promiseIds = promiseUsers.map((user) => user.promiseId);
+    const promises = await this.promiseRepo.find({
+      where: { id: In(promiseIds) },
+    });
+
+    for (const promise of promises) {
+      if (promise.destinationId) {
+        promise['destination'] = await this.locationRepo.findOne({
+          where: { id: promise.destinationId },
+        });
+      }
+    }
+
+    return Promise.all(
+      promises.map(async (promise) => {
+        const result: OutputPromiseListItem = {
+          ...promise,
+          host: { username: '' },
+          destination: null,
+        };
+        delete result['hostId'];
+        delete result['destinationId'];
+        if (promise.destinationId) {
+          const [host, destination] = await Promise.all([
+            this.userRepo.findOne({ where: { id: promise.hostId } }),
+            this.locationRepo.findOne({ where: { id: promise.destinationId } }),
+          ]);
+          result.host.username = host?.username ?? 'Unknown';
+          result.destination = destination ?? null;
+        }
+        console.log(result);
+        return result;
+      }),
+    );
+  }
 
   async create(
     hostId: number,
@@ -53,7 +94,6 @@ export class PromiseService {
           hostId,
           inviteLink,
           destinationId,
-          promisedAt: getUnixTime(input.promisedAt),
         }),
       );
 
@@ -93,22 +133,28 @@ export class PromiseService {
         throw new BadRequestException(`해당 약속을 찾을 수 없습니다.`);
       }
 
-      if (input.destination) {
-        const destination = await em.findOne(LocationEntity, {
-          where: { id: promise.destinationId },
-        });
-        if (destination) {
+      switch (input.destinationType) {
+        case DestinationType.Static:
+          const destination = promise.destinationId
+            ? await em.findOne(LocationEntity, {
+                where: { id: promise.destinationId },
+              })
+            : null;
+
+          if (destination) {
+            await em.save(
+              em.merge(LocationEntity, destination, { ...input.destination }),
+            );
+          } else {
+            await em.save(this.locationRepo.create({ ...input.destination }));
+          }
+          break;
+        case DestinationType.Dynamic:
+          await em.delete(LocationEntity, { id: promise.destinationId });
           await em.save(
-            em.merge(LocationEntity, destination, { ...input.destination }),
+            em.merge(PromiseEntity, promise, { destinationId: undefined }),
           );
-        } else {
-          await em.save(this.locationRepo.create({ ...input.destination }));
-        }
-      } else if (input.destinationType === DestinationType.Dynamic) {
-        await em.delete(LocationEntity, { id: promise.destinationId });
-        await em.save(
-          em.merge(PromiseEntity, promise, { destinationId: undefined }),
-        );
+          break;
       }
 
       if (input.themeIds && input.themeIds.length > 0) {
@@ -126,14 +172,7 @@ export class PromiseService {
         );
       }
 
-      return em.save(
-        this.promiseRepo.merge(promise, {
-          ...input,
-          promisedAt: input.promisedAt
-            ? getUnixTime(input.promisedAt)
-            : undefined,
-        }),
-      );
+      return em.save(this.promiseRepo.merge(promise, { ...input }));
     });
   }
 

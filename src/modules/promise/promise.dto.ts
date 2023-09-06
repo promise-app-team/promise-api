@@ -1,5 +1,19 @@
-import { PartialType } from '@nestjs/swagger';
-import { DestinationType, LocationShareType } from './promise.entity';
+import { OmitType, PartialType } from '@nestjs/swagger';
+import {
+  DestinationType,
+  LocationShareType,
+  PromiseEntity,
+} from './promise.entity';
+import { LocationEntity } from './location.entity';
+import { UserEntity } from '../user/user.entity';
+
+export class OutputPromiseListItem extends OmitType(PromiseEntity, [
+  'hostId',
+  'destinationId',
+]) {
+  host!: Pick<UserEntity, 'username'>;
+  destination!: LocationEntity | null;
+}
 
 export class InputCreatePromise {
   title!: string;
