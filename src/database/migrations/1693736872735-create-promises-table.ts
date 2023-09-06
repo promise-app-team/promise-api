@@ -10,7 +10,7 @@ export class CreatePromisesTable1693736872735 implements MigrationInterface {
         '  `title` varchar(20) not null,',
         '  `invite_link` text,',
         '  `destination_type` varchar(10) not null,',
-        '  `destination_id` int unsigned not null,',
+        '  `destination_id` int unsigned null,',
         '  `location_share_start_type` varchar(10) not null,',
         '  `location_share_start_value` int unsigned not null,',
         '  `location_share_end_type` varchar(10) not null,',
@@ -20,7 +20,8 @@ export class CreatePromisesTable1693736872735 implements MigrationInterface {
         '  `created_at` timestamp not null default current_timestamp,',
         '  `updated_at` timestamp not null default current_timestamp on update current_timestamp,',
         '  primary key (`id`),',
-        '  index `host_id` (`host_id`)',
+        '  index `host_id` (`host_id`),',
+        '  unique `ix_id_host_id` (`id`, `host_id`)',
         ') engine=InnoDB;',
       ].join('\n'),
     );
@@ -97,7 +98,6 @@ export class CreatePromisesTable1693736872735 implements MigrationInterface {
     await runner.query('drop table if exists `pm_promise_users`;');
     await runner.query('drop table if exists `pm_themes`;');
     await runner.query('drop table if exists `pm_promise_themes`;');
-    await runner.query('drop table if exists `pm_promise_destinations`;');
-    await runner.query('drop table if exists `pm_promise_location_shares`;');
+    await runner.query('drop table if exists `pm_locations`;');
   }
 }

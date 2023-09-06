@@ -31,7 +31,7 @@ export class UserService {
     );
   }
 
-  async delete(user: UserEntity) {
-    return this.userRepo.softDelete(user);
-  }
+  // async delete(user: UserEntity) {
+  //   return this.userRepo.softDelete(user);
+  // }
 }

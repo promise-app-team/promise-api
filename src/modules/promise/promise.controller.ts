@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Get,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -17,10 +18,15 @@ import {
 
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { AuthUser } from '../auth/auth.decorator';
-import { DestinationType } from './promise.entity';
+import { DestinationType, LocationShareType } from './promise.entity';
 import { UserEntity } from '../user/user.entity';
 import { PromiseService } from './promise.service';
-import { InputCreatePromise, OutputCreatePromise } from './promise.dto';
+import {
+  InputCreatePromise,
+  InputUpdatePromise,
+  OutputCreatePromise,
+  OutputUpdatePromise,
+} from './promise.dto';
 import { ThemeEntity } from './theme.entity';
 
 @ApiTags('Promise')
@@ -39,15 +45,22 @@ export class PromiseController {
     @AuthUser() user: UserEntity,
     @Body() input: InputCreatePromise,
   ): Promise<OutputCreatePromise> {
-    if (
-      input.destinationType === DestinationType.Static &&
-      !input.destination
-    ) {
-      throw new BadRequestException(
-        '"장소 지정" 선택 시 장소를 선택해야 합니다.',
-      );
-    }
+    this.throwInvalidInputException(input);
     return this.promiseService.create(user.id, input);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ operationId: 'promise', summary: '약속 수정' })
+  @ApiOkResponse({ type: OutputCreatePromise, description: '약속 수정 성공' })
+  @ApiUnauthorizedResponse({ description: '로그인 필요' })
+  @ApiBadRequestResponse({ description: '약속 수정 실패' })
+  async update(
+    @AuthUser() user: UserEntity,
+    @Body() input: InputUpdatePromise,
+  ): Promise<OutputUpdatePromise> {
+    this.throwInvalidInputException(input);
+    return this.promiseService.update(user.id, input);
   }
 
   @Get('themes')
@@ -55,5 +68,57 @@ export class PromiseController {
   @ApiOkResponse({ type: [ThemeEntity], description: '약속 테마 목록' })
   async themes(): Promise<ThemeEntity[]> {
     return this.promiseService.themes();
+  }
+
+  private throwInvalidInputException(
+    input: InputCreatePromise | InputUpdatePromise,
+  ) {
+    if (!this.isValidDestinationType(input)) {
+      throw new BadRequestException('유효하지 않은 "장소 지정" 값입니다.');
+    }
+
+    if (!this.isValidLocationShareType(input)) {
+      throw new BadRequestException('유효하지 않은 "위치 공유" 값입니다.');
+    }
+
+    if (!this.isValidDestination(input)) {
+      throw new BadRequestException('유효하지 않은 "장소" 값입니다.');
+    }
+
+    if (!this.isValidTimestamp(input)) {
+      throw new BadRequestException('유효하지 않은 "약속 시간" 값입니다.');
+    }
+  }
+
+  private isValidDestinationType(
+    input: InputCreatePromise | InputUpdatePromise,
+  ) {
+    return (
+      !input.destinationType ||
+      Object.values(DestinationType).includes(input.destinationType)
+    );
+  }
+
+  private isValidLocationShareType(
+    input: InputCreatePromise | InputUpdatePromise,
+  ) {
+    const isValidStartType =
+      !input.locationShareStartType ||
+      Object.values(LocationShareType).includes(input.locationShareStartType);
+    const isValidEndType =
+      !input.locationShareEndType ||
+      Object.values(LocationShareType).includes(input.locationShareEndType);
+    return isValidStartType && isValidEndType;
+  }
+
+  private isValidDestination(input: InputCreatePromise | InputUpdatePromise) {
+    return (
+      !input.destinationType ||
+      (input.destinationType === DestinationType.Static && !!input.destination)
+    );
+  }
+
+  private isValidTimestamp(input: InputCreatePromise | InputUpdatePromise) {
+    return !input.promisedAt || input.promisedAt > 0;
   }
 }
