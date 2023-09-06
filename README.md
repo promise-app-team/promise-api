@@ -18,8 +18,6 @@ $ yarn install # or yarn
 
 Use [direnv](https://github.com/direnv/direnv) to manager environment variables
 
->⚠️ If you configure your server to use HTTPS, you should set `HTTPS='true'` in your `.envrc` file.
-
 1. Copy `.envrc.example` file and rename `.envrc`.
 2. Set environment variables according to your local env.
 3. Run `$ direnv allow` in your terminal so that enable environment variables.
@@ -29,29 +27,29 @@ Use [direnv](https://github.com/direnv/direnv) to manager environment variables
 
 ```bash
 # development mode
-$ yarn run start:dev
+$ yarn start:dev
 
 # production mode
-$ yarn run start:prod
+$ yarn start:prod
 ```
 
 ### Database Migration
 
 ```bash
 # generate migration file
-$ yarn run migration:new <migration-name>
+$ yarn migration new <migration-name>
 
 # run migration
-$ yarn run migration:up
+$ yarn migration up
 
 # revert last migration
-$ yarn run migration:down
+$ yarn migration down
 
 # revert migrations
-$ yarn run migration:down <number-of-migrations>
+$ yarn migration down <number-of-migrations>
 
 # list migrations
-$ yarn run migration:list
+$ yarn migration list
 ```
 
 ## Project Structure

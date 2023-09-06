@@ -7,11 +7,11 @@ export PORT="8080"
 # https://api.local.promise.co
 export API_URL="http://localhost:$PORT"
 
-export JWT_SECRET_KEY="42"
+export JWT_SECRET_KEY=""
 
 # https://github.com/vercel/ms#ms
-export JWT_ACCESS_EXPIRES_IN="15m"
-export JWT_REFRESH_EXPIRES_IN="7d"
+export JWT_ACCESS_EXPIRES_IN=""
+export JWT_REFRESH_EXPIRES_IN=""
 
 export DB_HOST=""
 export DB_PORT=""
@@ -20,11 +20,3 @@ export DB_PASSWORD=""
 export DB_DATABASE=""
 
 export TYPEORM_VERBOSE="false"
-
-export KAKAO_REST_API_KEY=""
-export GOOGLE_CLIENT_ID=""
-export GOOGLE_SECRET_KEY=""
-export APPLE_CLIENT_ID=""
-export APPLE_SECRET_KEY=""
-export APPLE_TEAM_ID=""
-export APPLE_KEY_ID=""
