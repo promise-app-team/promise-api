@@ -11,6 +11,7 @@
   "editor.codeActionsOnSave": {
     "source.fixAll": true
   },
+  "explorer.fileNesting.enabled": true,
   "cSpell.words": [
     "arendajaelu",
     "autoincrement",
