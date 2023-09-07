@@ -11,6 +11,7 @@ import { LocationEntity } from './location.entity';
 import {
   InputCreatePromise,
   InputUpdatePromise,
+  InputUpdateUserStartLocation as InputUpdateUserStartLocation,
   OutputCreatePromise,
   OutputPromiseListItem,
   OutputUpdatePromise,
@@ -94,13 +95,13 @@ export class PromiseService {
       let destinationId: number | undefined;
       if (input.destination) {
         const destination = await em.save(
-          this.locationRepo.create({ ...input.destination }),
+          em.create(LocationEntity, { ...input.destination }),
         );
         destinationId = destination.id;
       }
 
       const promise = await em.save(
-        this.promiseRepo.create({
+        em.create(PromiseEntity, {
           ...input,
           hostId,
           inviteLink,
@@ -112,12 +113,12 @@ export class PromiseService {
         where: { id: In(input.themeIds) },
       });
       await em.save([
-        this.promiseUserRepo.create({
+        em.create(PromiseUserEntity, {
           userId: hostId,
           promiseId: promise.id,
         }),
         ...themes.map((theme) =>
-          this.promiseThemeRepo.create({
+          em.create(PromiseThemeEntity, {
             themeId: theme.id,
             promiseId: promise.id,
           }),
@@ -136,6 +137,9 @@ export class PromiseService {
     input: InputUpdatePromise,
   ): Promise<OutputUpdatePromise> {
     return this.dataSource.transaction(async (em) => {
+      if (!input.id) {
+        throw new BadRequestException(`약속을 찾을 수 없습니다.`);
+      }
       const promise = await em.findOne(PromiseEntity, {
         where: { id: input.id, hostId },
       });
@@ -157,7 +161,7 @@ export class PromiseService {
               em.merge(LocationEntity, destination, { ...input.destination }),
             );
           } else {
-            await em.save(this.locationRepo.create({ ...input.destination }));
+            await em.save(em.create(LocationEntity, { ...input.destination }));
           }
           break;
         case DestinationType.Dynamic:
@@ -175,7 +179,7 @@ export class PromiseService {
         await em.delete(PromiseThemeEntity, { promiseId: promise.id });
         await em.save(
           themes.map((theme) =>
-            this.promiseThemeRepo.create({
+            em.create(PromiseThemeEntity, {
               themeId: theme.id,
               promiseId: promise.id,
             }),
@@ -184,6 +188,30 @@ export class PromiseService {
       }
 
       return em.save(this.promiseRepo.merge(promise, { ...input }));
+    });
+  }
+
+  async updateStartLocation(
+    userId: number,
+    input: InputUpdateUserStartLocation,
+  ) {
+    if (!input.promiseId) {
+      throw new BadRequestException(`약속을 찾을 수 없습니다.`);
+    }
+    const promiseUser = await this.promiseUserRepo.findOne({
+      where: { userId, promiseId: input.promiseId },
+    });
+
+    if (!promiseUser) {
+      throw new BadRequestException(`해당 약속에 참여하고 있지 않습니다.`);
+    }
+
+    this.dataSource.transaction(async (em) => {
+      const location = await em.save(
+        em.create(LocationEntity, { ...input.location }),
+      );
+      promiseUser.startLocationId = location.id;
+      await em.save(promiseUser);
     });
   }
 

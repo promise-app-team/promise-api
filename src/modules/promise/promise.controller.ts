@@ -24,6 +24,7 @@ import { PromiseService } from './promise.service';
 import {
   InputCreatePromise,
   InputUpdatePromise,
+  InputUpdateUserStartLocation,
   OutputCreatePromise,
   OutputPromiseListItem,
   OutputUpdatePromise,
@@ -38,7 +39,7 @@ export class PromiseController {
 
   @Get('list')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'list', summary: '약속 목록' })
+  @ApiOperation({ operationId: 'getPromiseList', summary: '약속 목록' })
   @ApiOkResponse({ type: [OutputPromiseListItem], description: '약속 목록' })
   @ApiUnauthorizedResponse({ description: '로그인 필요' })
   async list(@AuthUser() user: UserEntity): Promise<OutputPromiseListItem[]> {
@@ -47,7 +48,10 @@ export class PromiseController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'promise', summary: '새로운 약속 추가' })
+  @ApiOperation({
+    operationId: 'createNewPromise',
+    summary: '새로운 약속 추가',
+  })
   @ApiOkResponse({ type: OutputCreatePromise, description: '약속 추가 성공' })
   @ApiUnauthorizedResponse({ description: '로그인 필요' })
   @ApiBadRequestResponse({ description: '약속 추가 실패' })
@@ -59,9 +63,22 @@ export class PromiseController {
     return this.promiseService.create(user.id, input);
   }
 
+  @Patch('start-location')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ operationId: 'updateStartLocation', summary: '출발지 설정' })
+  @ApiOkResponse({ description: '출발지 설정 성공' })
+  @ApiUnauthorizedResponse({ description: '로그인 필요' })
+  @ApiBadRequestResponse({ description: '출발지 설정 실패' })
+  async startLocation(
+    @AuthUser() user: UserEntity,
+    @Body() input: InputUpdateUserStartLocation,
+  ): Promise<void> {
+    return this.promiseService.updateStartLocation(user.id, input);
+  }
+
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'promise', summary: '약속 수정' })
+  @ApiOperation({ operationId: 'updatePromise', summary: '약속 수정' })
   @ApiOkResponse({ type: OutputCreatePromise, description: '약속 수정 성공' })
   @ApiUnauthorizedResponse({ description: '로그인 필요' })
   @ApiBadRequestResponse({ description: '약속 수정 실패' })

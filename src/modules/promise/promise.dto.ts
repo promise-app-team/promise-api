@@ -46,3 +46,14 @@ export class InputUpdatePromise extends PartialType(InputCreatePromise) {
 export class OutputUpdatePromise {
   id!: number;
 }
+
+export class InputUpdateUserStartLocation {
+  promiseId!: number;
+  location!: {
+    city: string;
+    district: string;
+    address: string;
+    latitude: number;
+    longitude: number;
+  };
+}
