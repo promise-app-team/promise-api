@@ -13,6 +13,7 @@ export class OutputPromiseListItem extends OmitType(PromiseEntity, [
 ]) {
   host!: Pick<UserEntity, 'username'>;
   destination!: LocationEntity | null;
+  attendees: Pick<UserEntity, 'username'>[] = [];
 }
 
 export class InputCreatePromise {

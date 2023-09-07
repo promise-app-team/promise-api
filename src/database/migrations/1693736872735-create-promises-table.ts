@@ -20,8 +20,9 @@ export class CreatePromisesTable1693736872735 implements MigrationInterface {
         '  `created_at` timestamp not null default current_timestamp,',
         '  `updated_at` timestamp not null default current_timestamp on update current_timestamp,',
         '  primary key (`id`),',
-        '  index `host_id` (`host_id`),',
-        '  unique `ix_id_host_id` (`id`, `host_id`)',
+        '  index `ix_host` (`host_id`),',
+        '  index `ix_destination` (`destination_id`),',
+        '  unique `ix_id_host` (`id`, `host_id`)',
         ') engine=InnoDB;',
       ].join('\n'),
     );
@@ -31,7 +32,9 @@ export class CreatePromisesTable1693736872735 implements MigrationInterface {
         'create table `pm_promise_users` (',
         '  `user_id` int unsigned not null,',
         '  `promise_id` int unsigned not null,',
-        '  primary key (`user_id`, `promise_id`)',
+        '  `start_location_id` int unsigned null,',
+        '  primary key (`user_id`, `promise_id`),',
+        '  index `start_location_id` (`start_location_id`)',
         ') engine=InnoDB;',
       ].join('\n'),
     );

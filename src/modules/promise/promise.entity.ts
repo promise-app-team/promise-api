@@ -2,13 +2,13 @@ import { timestamp } from '@/utils/typeorm/transformers/timestamp';
 import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum DestinationType {
-  Static = 'STATIC',
-  Dynamic = 'DYNAMIC',
+  Static = 'STATIC', // 장소 지정
+  Dynamic = 'DYNAMIC', // 중간 장소
 }
 
 export enum LocationShareType {
-  Distance = 'DISTANCE',
-  Time = 'TIME',
+  Distance = 'DISTANCE', // 거리 기준
+  Time = 'TIME', // 시간 기준
 }
 
 @Entity({ name: 'pm_promises' })
@@ -28,7 +28,7 @@ export class PromiseEntity {
   @Column({ name: 'destination_type' })
   destinationType!: DestinationType;
 
-  @Column('varchar', { name: 'destination_id', nullable: true })
+  @Column('int', { name: 'destination_id', nullable: true })
   destinationId!: number | null;
 
   @Column('enum', {
@@ -70,4 +70,7 @@ export class PromiseUserEntity {
 
   @Column({ name: 'promise_id', primary: true })
   promiseId!: number;
+
+  @Column('int', { name: 'start_location_id', nullable: true })
+  startLocationId!: number | null;
 }

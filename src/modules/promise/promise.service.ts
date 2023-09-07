@@ -56,18 +56,29 @@ export class PromiseService {
           ...promise,
           host: { username: '' },
           destination: null,
+          attendees: [],
         };
         delete result['hostId'];
         delete result['destinationId'];
         if (promise.destinationId) {
-          const [host, destination] = await Promise.all([
+          const [host, destination, promiseUsers] = await Promise.all([
             this.userRepo.findOne({ where: { id: promise.hostId } }),
             this.locationRepo.findOne({ where: { id: promise.destinationId } }),
+            this.promiseUserRepo.find({ where: { promiseId: promise.id } }),
           ]);
           result.host.username = host?.username ?? 'Unknown';
           result.destination = destination ?? null;
+          result.attendees = await Promise.all(
+            promiseUsers
+              .filter(({ userId }) => userId !== promise.hostId)
+              .map(async ({ userId }) => {
+                const user = await this.userRepo.findOne({
+                  where: { id: userId },
+                });
+                return { username: user?.username ?? 'Unknown' };
+              }),
+          );
         }
-        console.log(result);
         return result;
       }),
     );
