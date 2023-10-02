@@ -44,7 +44,7 @@ describe('UserService', () => {
       const user = new UserEntity();
       jest.spyOn(mockUserRepo, 'findOneBy').mockResolvedValue(user);
       expect(await userService.findOneByProvider(Provider.Google, '1')).toBe(
-        user,
+        user
       );
     });
   });

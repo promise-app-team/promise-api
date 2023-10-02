@@ -24,7 +24,7 @@ export class CreatePromisesTable1693736872735 implements MigrationInterface {
         '  index `ix_destination` (`destination_id`),',
         '  unique `ix_id_host` (`id`, `host_id`)',
         ') engine=InnoDB;',
-      ].join('\n'),
+      ].join('\n')
     );
 
     await runner.query(
@@ -36,7 +36,7 @@ export class CreatePromisesTable1693736872735 implements MigrationInterface {
         '  primary key (`user_id`, `promise_id`),',
         '  index `start_location_id` (`start_location_id`)',
         ') engine=InnoDB;',
-      ].join('\n'),
+      ].join('\n')
     );
 
     await runner.query(
@@ -46,7 +46,7 @@ export class CreatePromisesTable1693736872735 implements MigrationInterface {
         '  `theme` varchar(10) not null,',
         '  primary key (`id`)',
         ') engine=InnoDB;',
-      ].join('\n'),
+      ].join('\n')
     );
 
     const themes = [
@@ -66,7 +66,7 @@ export class CreatePromisesTable1693736872735 implements MigrationInterface {
       [
         'insert into `pm_themes` (`theme`) values',
         themes.map((theme) => `('${theme}')`).join(','),
-      ].join('\n'),
+      ].join('\n')
     );
 
     await runner.query(
@@ -76,7 +76,7 @@ export class CreatePromisesTable1693736872735 implements MigrationInterface {
         '  `theme_id` int unsigned not null,',
         '  primary key (`promise_id`, `theme_id`)',
         ') engine=InnoDB;',
-      ].join('\n'),
+      ].join('\n')
     );
 
     await runner.query(
@@ -92,7 +92,7 @@ export class CreatePromisesTable1693736872735 implements MigrationInterface {
         '  `updated_at` timestamp not null default current_timestamp on update current_timestamp,',
         '  primary key (`id`)',
         ') engine=InnoDB;',
-      ].join('\n'),
+      ].join('\n')
     );
   }
 

@@ -14,7 +14,8 @@
     "start:prod": "node dist/main",
     "migration": "yarn build; ./scripts/migration.sh",
     "format": "prettier --write **/*.ts",
-    "lint": "eslint **/*.ts --fix",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint --fix src/**/*.ts",
     "test": "jest --coverage"
   },
   "dependencies": {

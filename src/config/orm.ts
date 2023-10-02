@@ -1,8 +1,5 @@
-import { Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-
-const logger = new Logger('TypeORM');
 
 export function typeormConfig(config: ConfigService): TypeOrmModuleOptions {
   return {
@@ -15,7 +12,6 @@ export function typeormConfig(config: ConfigService): TypeOrmModuleOptions {
 
     synchronize: false,
     autoLoadEntities: true,
-    logger: logger.log.bind(logger),
     logging: config.get('TYPEORM_VERBOSE') === 'true' ? 'all' : ['error'],
     entities: ['dist/**/*.entity.js'],
     migrations: ['dist/database/migrations/*.js'],

@@ -6,12 +6,13 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
+import { Request } from 'express';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly jwt: JwtService,
-    private readonly userService: UserService,
+    private readonly userService: UserService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -29,7 +30,7 @@ export class JwtAuthGuard implements CanActivate {
   }
 
   private getToken(request: Request): string | null {
-    const [type, token] = request.headers['authorization']?.split(' ') ?? [];
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : null;
   }
 }

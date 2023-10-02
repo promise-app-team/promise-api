@@ -17,7 +17,7 @@ export class CreateUsersTable1688321455649 implements MigrationInterface {
         '  primary key (`id`),',
         '  unique key `ix_provider` (`provider`, `provider_id`)',
         ') engine=InnoDB;',
-      ].join('\n'),
+      ].join('\n')
     );
   }
 

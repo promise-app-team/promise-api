@@ -33,23 +33,14 @@ export class PromiseService {
     @InjectRepository(PromiseThemeEntity)
     private readonly promiseThemeRepo: Repository<PromiseThemeEntity>,
     @InjectRepository(LocationEntity)
-    private readonly locationRepo: Repository<LocationEntity>,
+    private readonly locationRepo: Repository<LocationEntity>
   ) {}
 
   async findAllByUser(userId: number): Promise<OutputPromiseListItem[]> {
     const promiseUsers = await this.promiseUserRepo.find({ where: { userId } });
-    const promiseIds = promiseUsers.map((user) => user.promiseId);
     const promises = await this.promiseRepo.find({
-      where: { id: In(promiseIds) },
+      where: { id: In(promiseUsers.map(({ promiseId }) => promiseId)) },
     });
-
-    for (const promise of promises) {
-      if (promise.destinationId) {
-        promise['destination'] = await this.locationRepo.findOne({
-          where: { id: promise.destinationId },
-        });
-      }
-    }
 
     return Promise.all(
       promises.map(async (promise) => {
@@ -59,8 +50,8 @@ export class PromiseService {
           destination: null,
           attendees: [],
         };
-        delete result['hostId'];
-        delete result['destinationId'];
+        Reflect.deleteProperty(result, 'hostId');
+        Reflect.deleteProperty(result, 'destinationId');
         if (promise.destinationId) {
           const [host, destination, promiseUsers] = await Promise.all([
             this.userRepo.findOne({ where: { id: promise.hostId } }),
@@ -77,17 +68,17 @@ export class PromiseService {
                   where: { id: userId },
                 });
                 return { username: user?.username ?? 'Unknown' };
-              }),
+              })
           );
         }
         return result;
-      }),
+      })
     );
   }
 
   async create(
     hostId: number,
-    input: InputCreatePromise,
+    input: InputCreatePromise
   ): Promise<OutputCreatePromise> {
     return this.dataSource.transaction(async (em) => {
       // TODO: inviteLink 생성
@@ -95,7 +86,7 @@ export class PromiseService {
       let destinationId: number | undefined;
       if (input.destination) {
         const destination = await em.save(
-          em.create(LocationEntity, { ...input.destination }),
+          em.create(LocationEntity, { ...input.destination })
         );
         destinationId = destination.id;
       }
@@ -106,7 +97,7 @@ export class PromiseService {
           hostId,
           inviteLink,
           destinationId,
-        }),
+        })
       );
 
       const themes = await em.find(ThemeEntity, {
@@ -121,7 +112,7 @@ export class PromiseService {
           em.create(PromiseThemeEntity, {
             themeId: theme.id,
             promiseId: promise.id,
-          }),
+          })
         ),
       ]);
 
@@ -134,7 +125,7 @@ export class PromiseService {
 
   async update(
     hostId: number,
-    input: InputUpdatePromise,
+    input: InputUpdatePromise
   ): Promise<OutputUpdatePromise> {
     return this.dataSource.transaction(async (em) => {
       if (!input.id) {
@@ -158,7 +149,7 @@ export class PromiseService {
 
           if (destination) {
             await em.save(
-              em.merge(LocationEntity, destination, { ...input.destination }),
+              em.merge(LocationEntity, destination, { ...input.destination })
             );
           } else {
             await em.save(em.create(LocationEntity, { ...input.destination }));
@@ -167,7 +158,7 @@ export class PromiseService {
         case DestinationType.Dynamic:
           await em.delete(LocationEntity, { id: promise.destinationId });
           await em.save(
-            em.merge(PromiseEntity, promise, { destinationId: undefined }),
+            em.merge(PromiseEntity, promise, { destinationId: undefined })
           );
           break;
       }
@@ -182,8 +173,8 @@ export class PromiseService {
             em.create(PromiseThemeEntity, {
               themeId: theme.id,
               promiseId: promise.id,
-            }),
-          ),
+            })
+          )
         );
       }
 
@@ -193,7 +184,7 @@ export class PromiseService {
 
   async updateStartLocation(
     userId: number,
-    input: InputUpdateUserStartLocation,
+    input: InputUpdateUserStartLocation
   ) {
     if (!input.promiseId) {
       throw new BadRequestException(`약속을 찾을 수 없습니다.`);
@@ -208,7 +199,7 @@ export class PromiseService {
 
     this.dataSource.transaction(async (em) => {
       const location = await em.save(
-        em.create(LocationEntity, { ...input.location }),
+        em.create(LocationEntity, { ...input.location })
       );
       promiseUser.startLocationId = location.id;
       await em.save(promiseUser);

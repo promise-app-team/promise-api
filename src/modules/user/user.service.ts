@@ -8,7 +8,7 @@ import { getUnixTime } from 'date-fns';
 export class UserService {
   constructor(
     @InjectRepository(UserEntity)
-    private readonly userRepo: Repository<UserEntity>,
+    private readonly userRepo: Repository<UserEntity>
   ) {}
 
   async findOneById(id: string) {
@@ -27,7 +27,7 @@ export class UserService {
     return this.userRepo.save(
       this.userRepo.merge(user, {
         lastSignedAt: getUnixTime(new Date()),
-      }),
+      })
     );
   }
 

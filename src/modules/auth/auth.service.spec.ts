@@ -48,7 +48,7 @@ describe('AuthService', () => {
     test("should throw BadRequestException if user doesn't have provider or providerId", async () => {
       const user = new InputCreateUser();
       await expect(authService.authenticate(user)).rejects.toThrow(
-        '로그인을 실패했습니다.',
+        '로그인을 실패했습니다.'
       );
     });
   });

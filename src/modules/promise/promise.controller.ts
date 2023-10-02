@@ -57,7 +57,7 @@ export class PromiseController {
   @ApiBadRequestResponse({ description: '약속 추가 실패' })
   async promise(
     @AuthUser() user: UserEntity,
-    @Body() input: InputCreatePromise,
+    @Body() input: InputCreatePromise
   ): Promise<OutputCreatePromise> {
     this.throwInvalidInputException(input);
     return this.promiseService.create(user.id, input);
@@ -71,7 +71,7 @@ export class PromiseController {
   @ApiBadRequestResponse({ description: '출발지 설정 실패' })
   async startLocation(
     @AuthUser() user: UserEntity,
-    @Body() input: InputUpdateUserStartLocation,
+    @Body() input: InputUpdateUserStartLocation
   ): Promise<void> {
     return this.promiseService.updateStartLocation(user.id, input);
   }
@@ -84,7 +84,7 @@ export class PromiseController {
   @ApiBadRequestResponse({ description: '약속 수정 실패' })
   async update(
     @AuthUser() user: UserEntity,
-    @Body() input: InputUpdatePromise,
+    @Body() input: InputUpdatePromise
   ): Promise<OutputUpdatePromise> {
     this.throwInvalidInputException(input);
     return this.promiseService.update(user.id, input);
@@ -98,7 +98,7 @@ export class PromiseController {
   }
 
   private throwInvalidInputException(
-    input: InputCreatePromise | InputUpdatePromise,
+    input: InputCreatePromise | InputUpdatePromise
   ) {
     if (!this.isValidDestinationType(input)) {
       throw new BadRequestException('유효하지 않은 "장소 지정" 값입니다.');
@@ -118,7 +118,7 @@ export class PromiseController {
   }
 
   private isValidDestinationType(
-    input: InputCreatePromise | InputUpdatePromise,
+    input: InputCreatePromise | InputUpdatePromise
   ): boolean {
     return (
       !!input.destinationType &&
@@ -127,7 +127,7 @@ export class PromiseController {
   }
 
   private isValidLocationShareType(
-    input: InputCreatePromise | InputUpdatePromise,
+    input: InputCreatePromise | InputUpdatePromise
   ): boolean {
     const isValidStartType =
       !input.locationShareStartType ||
@@ -139,7 +139,7 @@ export class PromiseController {
   }
 
   private isValidDestination(
-    input: InputCreatePromise | InputUpdatePromise,
+    input: InputCreatePromise | InputUpdatePromise
   ): boolean {
     if (!input.destinationType) return false;
     if (input.destinationType === DestinationType.Dynamic) return true;
@@ -149,7 +149,7 @@ export class PromiseController {
   }
 
   private isValidTimestamp(
-    input: InputCreatePromise | InputUpdatePromise,
+    input: InputCreatePromise | InputUpdatePromise
   ): boolean {
     return (
       input.promisedAt == undefined ||

@@ -12,7 +12,7 @@ export class AuthService {
     private readonly dataSource: DataSource,
     private readonly userService: UserService,
     private readonly config: ConfigService,
-    private readonly jwt: JwtService,
+    private readonly jwt: JwtService
   ) {}
 
   async authenticate(user: InputCreateUser): Promise<AuthToken> {
