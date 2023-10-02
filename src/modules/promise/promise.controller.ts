@@ -119,16 +119,16 @@ export class PromiseController {
 
   private isValidDestinationType(
     input: InputCreatePromise | InputUpdatePromise,
-  ) {
+  ): boolean {
     return (
-      !input.destinationType ||
+      !!input.destinationType &&
       Object.values(DestinationType).includes(input.destinationType)
     );
   }
 
   private isValidLocationShareType(
     input: InputCreatePromise | InputUpdatePromise,
-  ) {
+  ): boolean {
     const isValidStartType =
       !input.locationShareStartType ||
       Object.values(LocationShareType).includes(input.locationShareStartType);
@@ -138,14 +138,19 @@ export class PromiseController {
     return isValidStartType && isValidEndType;
   }
 
-  private isValidDestination(input: InputCreatePromise | InputUpdatePromise) {
+  private isValidDestination(
+    input: InputCreatePromise | InputUpdatePromise,
+  ): boolean {
+    if (!input.destinationType) return false;
+    if (input.destinationType === DestinationType.Dynamic) return true;
     return (
-      !input.destinationType ||
-      (input.destinationType === DestinationType.Static && !!input.destination)
+      input.destinationType === DestinationType.Static && !!input.destination
     );
   }
 
-  private isValidTimestamp(input: InputCreatePromise | InputUpdatePromise) {
+  private isValidTimestamp(
+    input: InputCreatePromise | InputUpdatePromise,
+  ): boolean {
     return (
       input.promisedAt == undefined ||
       (typeof input.promisedAt == 'number' && input.promisedAt > 1000)
