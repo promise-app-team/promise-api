@@ -54,11 +54,17 @@ export class PromiseService {
         Reflect.deleteProperty(result, 'hostId');
         Reflect.deleteProperty(result, 'destinationId');
         if (promise.destinationId) {
-          const [host, destination, promiseUsers] = await Promise.all([
+          const [themes, host, destination, promiseUsers] = await Promise.all([
+            this.promiseThemeRepo.find({ where: { promiseId: promise.id } }),
             this.userRepo.findOne({ where: { id: promise.hostId } }),
             this.locationRepo.findOne({ where: { id: promise.destinationId } }),
             this.promiseUserRepo.find({ where: { promiseId: promise.id } }),
           ]);
+          result.themes = (
+            await this.themeRepo.find({
+              where: { id: In(themes.map(({ themeId }) => themeId)) },
+            })
+          ).map(({ theme }) => theme);
           result.host.username = host?.username ?? 'Unknown';
           result.destination = destination ?? null;
           result.attendees = await Promise.all(
