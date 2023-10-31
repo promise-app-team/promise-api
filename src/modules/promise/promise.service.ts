@@ -46,6 +46,7 @@ export class PromiseService {
       promises.map(async (promise) => {
         const result: OutputPromiseListItem = {
           ...promise,
+          themes: [],
           host: { username: '' },
           destination: null,
           attendees: [],
