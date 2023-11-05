@@ -11,6 +11,11 @@ import {
 import { IncomingMessage } from 'http';
 import { Server, WebSocket } from 'ws';
 
+interface WebSocketClient extends WebSocket {
+  id: string;
+  to: string | null;
+}
+
 @WebSocketGateway()
 export class WebSocketEventGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
@@ -18,31 +23,31 @@ export class WebSocketEventGateway
   private readonly logger = new Logger(WebSocketEventGateway.name);
 
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
-  clients: WebSocket[] = [];
+  clients: WebSocketClient[] = [];
 
   afterInit(_server: Server) {
     this.logger.log('WebSocket Gateway Initialized');
   }
 
   @SubscribeMessage('ping')
-  handlePing(client: WebSocket, data: any) {
-    if (client['to'] === 'broadcast') {
+  handlePing(client: WebSocketClient, data: any) {
+    if (client.to === 'broadcast') {
       this.clients.forEach((c) => c.send(this.payload(client, data)));
-    } else if (client['to'] === 'self') {
+    } else if (client.to === 'self') {
       client.send(this.payload(client, data));
-    } else if (client['to']) {
+    } else if (client.to) {
       this.clients
-        .filter((c) => c['id'] === client['to'])
+        .filter((c) => c.to === client.to)
         .forEach((c) => c.send(this.payload(client, data)));
     }
   }
 
-  handleConnection(client: WebSocket, incoming: IncomingMessage) {
-    const params = new URLSearchParams(incoming.url.replace('/?', ''));
-    client['id'] = uid(16).toUpperCase();
-    client['to'] = params.get('to') || null;
+  handleConnection(client: WebSocketClient, incoming: IncomingMessage) {
+    const params = new URLSearchParams(incoming.url?.replace('/?', ''));
+    client.id = uid(16).toUpperCase();
+    client.to = params.get('to') || null;
 
     this.clients.push(client);
     this.logger.debug(`Client connected: ${client['id']}`);
@@ -50,13 +55,13 @@ export class WebSocketEventGateway
     client.send(`Successfully Connected! Client ID: ${client['id']}`);
   }
 
-  handleDisconnect(client: WebSocket) {
+  handleDisconnect(client: WebSocketClient) {
     this.clients = this.clients.filter((c) => c !== client);
     this.logger.debug(`Client disconnected: ${client['id']}`);
     this.logger.debug(`Total clients: ${this.clients.length}`);
   }
 
-  payload(client: WebSocket, data?: any) {
+  payload(client: WebSocketClient, data?: any) {
     return JSON.stringify({
       from: client['id'],
       timestamp: Date.now(),

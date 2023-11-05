@@ -5,10 +5,9 @@ module.exports = {
     tsconfigRootDir: __dirname,
     sourceType: 'module',
   },
-  plugins: ['@typescript-eslint/eslint-plugin'],
   extends: [
     'plugin:@typescript-eslint/recommended',
-    'plugin:prettier/recommended',
+    'prettier',
   ],
   root: true,
   env: {
@@ -16,8 +15,9 @@ module.exports = {
     jest: true,
   },
   ignorePatterns: ['.eslintrc.js', 'dist'],
+  plugins: ['@typescript-eslint/eslint-plugin', 'prettier'],
   rules: {
-    'prettier/prettier': ['warn', { endOfLine: 'auto' }],
+    'prettier/prettier': ['warn'],
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',

@@ -8,30 +8,30 @@ import { extraEnv } from '../config/env';
 import { schema } from '../config/validation';
 import { JwtModule } from '@nestjs/jwt';
 import { EventModule } from '@/modules/event/event.module';
+import { UserModule } from '@/modules/user/user.module';
+import { jwtConfig } from '@/config/token';
+import { PromiseModule } from '@/modules/promise/promise.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
+      isGlobal: true,
       load: [extraEnv],
       validationSchema: schema,
     }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory(config: ConfigService) {
-        return typeormConfig(config);
-      },
+      useFactory: (config: ConfigService) => typeormConfig(config),
     }),
     JwtModule.registerAsync({
-      imports: [ConfigModule],
+      global: true,
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        global: true,
-        secret: config.get('JWT_SECRET_KEY'),
-      }),
+      useFactory: (config: ConfigService) => jwtConfig(config),
     }),
     AuthModule,
+    UserModule,
     EventModule,
+    PromiseModule,
   ],
   controllers: [AppController],
 })
