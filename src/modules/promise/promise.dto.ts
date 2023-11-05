@@ -7,8 +7,8 @@ import {
 import { LocationEntity } from './location.entity';
 import { UserEntity } from '../user/user.entity';
 
-class Host extends PickType(UserEntity, ['username']) {}
-class Attendee extends PickType(UserEntity, ['username']) {}
+class Host extends PickType(UserEntity, ['id', 'username']) {}
+class Attendee extends PickType(UserEntity, ['id', 'username']) {}
 
 export class OutputPromiseListItem extends OmitType(PromiseEntity, [
   'hostId',

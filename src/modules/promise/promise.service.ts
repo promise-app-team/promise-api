@@ -47,7 +47,7 @@ export class PromiseService {
         const result: OutputPromiseListItem = {
           ...promise,
           themes: [],
-          host: { username: '' },
+          host: { id: 0, username: '' },
           destination: null,
           attendees: [],
         };
@@ -56,27 +56,28 @@ export class PromiseService {
         if (promise.destinationId) {
           const [themes, host, destination, promiseUsers] = await Promise.all([
             this.promiseThemeRepo.find({ where: { promiseId: promise.id } }),
-            this.userRepo.findOne({ where: { id: promise.hostId } }),
+            this.userRepo.findOneOrFail({
+              where: { id: promise.hostId },
+              select: ['id', 'username'],
+            }),
             this.locationRepo.findOne({ where: { id: promise.destinationId } }),
             this.promiseUserRepo.find({ where: { promiseId: promise.id } }),
           ]);
           result.themes = (
             await this.themeRepo.find({
               where: { id: In(themes.map(({ themeId }) => themeId)) },
+              select: ['theme'],
             })
           ).map(({ theme }) => theme);
-          result.host.username = host?.username ?? 'Unknown';
+          result.host = host;
           result.destination = destination ?? null;
-          result.attendees = await Promise.all(
-            promiseUsers
-              .filter(({ userId }) => userId !== promise.hostId)
-              .map(async ({ userId }) => {
-                const user = await this.userRepo.findOne({
-                  where: { id: userId },
-                });
-                return { username: user?.username ?? 'Unknown' };
-              })
-          );
+          const attendeeIds = promiseUsers
+            .filter(({ userId }) => userId !== promise.hostId)
+            .map(({ userId }) => userId);
+          result.attendees = await this.userRepo.find({
+            where: { id: In(attendeeIds) },
+            select: ['id', 'username'],
+          });
         }
         return result;
       })
