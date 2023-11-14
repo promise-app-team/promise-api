@@ -141,8 +141,15 @@ export class PromiseController {
   private isValidDestination(
     input: InputCreatePromise | InputUpdatePromise
   ): boolean {
-    if (!input.destinationType) return false;
-    if (input.destinationType === DestinationType.Dynamic) return true;
+    if (!input.destinationType) {
+      return false;
+    }
+    if (
+      input.destinationType === DestinationType.Dynamic &&
+      !input.destination
+    ) {
+      return true;
+    }
     return (
       input.destinationType === DestinationType.Static && !!input.destination
     );
