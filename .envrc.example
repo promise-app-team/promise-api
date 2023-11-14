@@ -1,4 +1,4 @@
-export TZ="Asia/Seoul"
+export TZ="UTC"
 export NODE_ENV="local"
 export PORT="8080"
 
