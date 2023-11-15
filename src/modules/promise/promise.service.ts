@@ -53,31 +53,35 @@ export class PromiseService {
         };
         Reflect.deleteProperty(result, 'hostId');
         Reflect.deleteProperty(result, 'destinationId');
-        if (promise.destinationId) {
-          const [themes, host, destination, promiseUsers] = await Promise.all([
-            this.promiseThemeRepo.find({ where: { promiseId: promise.id } }),
-            this.userRepo.findOneOrFail({
-              where: { id: promise.hostId },
-              select: ['id', 'username'],
-            }),
-            this.locationRepo.findOne({ where: { id: promise.destinationId } }),
-            this.promiseUserRepo.find({ where: { promiseId: promise.id } }),
-          ]);
-          result.themes = (
-            await this.themeRepo.find({
-              where: { id: In(themes.map(({ themeId }) => themeId)) },
-              select: ['theme'],
-            })
-          ).map(({ theme }) => theme);
-          result.host = host;
-          result.destination = destination ?? null;
-          const attendeeIds = promiseUsers
-            .filter(({ userId }) => userId !== promise.hostId)
-            .map(({ userId }) => userId);
-          result.attendees = await this.userRepo.find({
-            where: { id: In(attendeeIds) },
+
+        const [themes, host, promiseUsers] = await Promise.all([
+          this.promiseThemeRepo.find({ where: { promiseId: promise.id } }),
+          this.userRepo.findOneOrFail({
+            where: { id: promise.hostId },
             select: ['id', 'username'],
+          }),
+          this.promiseUserRepo.find({ where: { promiseId: promise.id } }),
+        ]);
+        result.themes = (
+          await this.themeRepo.find({
+            where: { id: In(themes.map(({ themeId }) => themeId)) },
+            select: ['theme'],
+          })
+        ).map(({ theme }) => theme);
+        result.host = host;
+        const attendeeIds = promiseUsers
+          .filter(({ userId }) => userId !== promise.hostId)
+          .map(({ userId }) => userId);
+        result.attendees = await this.userRepo.find({
+          where: { id: In(attendeeIds) },
+          select: ['id', 'username'],
+        });
+
+        if (promise.destinationId) {
+          const destination = await this.locationRepo.findOne({
+            where: { id: promise.destinationId },
           });
+          result.destination = destination ?? null;
         }
         return result;
       })
