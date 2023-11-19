@@ -1,7 +1,7 @@
 import Joi from 'joi';
 
 export const schema = Joi.object({
-  TZ: Joi.string().default('Asia/Seoul'),
+  TZ: Joi.string().default('UTC'),
   PORT: Joi.number().default(8080),
   NODE_ENV: Joi.string().valid('local', 'development', 'production'),
 

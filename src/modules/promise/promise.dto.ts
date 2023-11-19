@@ -9,6 +9,12 @@ import { UserEntity } from '../user/user.entity';
 
 class Host extends PickType(UserEntity, ['id', 'username']) {}
 class Attendee extends PickType(UserEntity, ['id', 'username']) {}
+class OutputDestination extends LocationEntity {}
+class InputDestination extends OmitType(LocationEntity, [
+  'id',
+  'createdAt',
+  'updatedAt',
+]) {}
 
 export class OutputPromiseListItem extends OmitType(PromiseEntity, [
   'hostId',
@@ -16,7 +22,7 @@ export class OutputPromiseListItem extends OmitType(PromiseEntity, [
 ]) {
   themes!: string[];
   host!: Host;
-  destination!: LocationEntity | null;
+  destination!: OutputDestination | null;
   attendees!: Attendee[];
 }
 
@@ -25,13 +31,7 @@ export class InputCreatePromise {
   themeIds!: number[];
   promisedAt!: number;
   destinationType!: DestinationType;
-  destination?: {
-    city: string;
-    district: string;
-    address: string;
-    latitude: number;
-    longitude: number;
-  };
+  destination!: InputDestination | null;
   locationShareStartType!: LocationShareType;
   locationShareStartValue!: number;
   locationShareEndType!: LocationShareType;
