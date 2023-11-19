@@ -13,7 +13,7 @@ export class EntryResponse {
   version!: string;
 
   /**
-   * @example 'yyyy-MM-dd HH:mm:ss'
+   * @example 'yyyy-MM-ddTHH:mm:ssZ'
    */
   build!: string;
 
@@ -23,7 +23,7 @@ export class EntryResponse {
   env!: string;
 
   /**
-   * @example Asia/Seoul
+   * @example UTC
    */
   tz!: string;
 }
