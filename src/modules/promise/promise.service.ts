@@ -78,10 +78,9 @@ export class PromiseService {
         });
 
         if (promise.destinationId) {
-          const destination = await this.locationRepo.findOne({
+          result.destination = await this.locationRepo.findOne({
             where: { id: promise.destinationId },
           });
-          result.destination = destination ?? null;
         }
         return result;
       })
