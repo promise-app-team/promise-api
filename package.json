@@ -12,7 +12,7 @@
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
-    "migration": "yarn build; ./scripts/migration.sh",
+    "migration": "bun run build; ./scripts/migration.sh",
     "format": "prettier --write **/*.ts",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint --fix src/**/*.ts",
@@ -64,7 +64,6 @@
     "typescript": "^5.1.6",
     "webpack": "^5.88.2"
   },
-  "packageManager": "yarn@3.6.1",
   "jest": {
     "moduleFileExtensions": [
       "js",
