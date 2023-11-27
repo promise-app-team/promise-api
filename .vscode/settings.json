@@ -4,9 +4,10 @@
   "editor.codeActionsOnSave": {
     "source.fixAll": true
   },
+  "material-icon-theme.activeIconPack": "nest",
   "explorer.fileNesting.enabled": true,
   "cSpell.words": [
-    "arendajaelu",
+  "arendajaelu",
     "autoincrement",
     "customfav",
     "dtos",

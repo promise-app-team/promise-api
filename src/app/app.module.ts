@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './controllers/app.controller';
+import { AppController } from './app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeormConfig } from '@/config/orm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
