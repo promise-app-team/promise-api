@@ -69,6 +69,7 @@ export class UserController {
       throw new BadRequestException('이미 탈퇴한 계정입니다.');
     }
 
+    body.reason = body.reason?.trim();
     if (!body.reason) {
       throw new BadRequestException('탈퇴 사유를 입력해주세요.');
     }
