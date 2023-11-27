@@ -20,10 +20,12 @@ export class UserService {
   }
 
   async create(user: DeepPartial<UserEntity>) {
+    user.profileUrl ||= `${~~(Math.random() * 10)}`;
     return this.userRepo.create(user);
   }
 
   async update(user: UserEntity, update: DeepPartial<UserEntity>) {
+    user.profileUrl ||= `${~~(Math.random() * 10)}`;
     return this.userRepo.save(this.userRepo.merge(user, update));
   }
 
