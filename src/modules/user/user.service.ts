@@ -23,6 +23,10 @@ export class UserService {
     return this.userRepo.create(user);
   }
 
+  async update(user: UserEntity, update: DeepPartial<UserEntity>) {
+    return this.userRepo.save(this.userRepo.merge(user, update));
+  }
+
   async login(user: UserEntity): Promise<UserEntity> {
     return this.userRepo.save(
       this.userRepo.merge(user, {
@@ -31,7 +35,13 @@ export class UserService {
     );
   }
 
-  // async delete(user: UserEntity) {
-  //   return this.userRepo.softDelete(user);
-  // }
+  async delete(user: UserEntity, reason: string) {
+    return this.userRepo.save(
+      this.userRepo.merge(user, {
+        deletedAt: getUnixTime(new Date()),
+        leaveReason: reason,
+        providerId: null,
+      })
+    );
+  }
 }

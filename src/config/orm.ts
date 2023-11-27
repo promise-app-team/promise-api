@@ -9,7 +9,7 @@ export function typeormConfig(config: ConfigService): TypeOrmModuleOptions {
     username: config.get('DB_USERNAME'),
     password: config.get('DB_PASSWORD'),
     database: config.get('DB_DATABASE'),
-
+    timezone: config.get('DB_TIMEZONE'),
     synchronize: false,
     autoLoadEntities: true,
     logging: config.get('TYPEORM_VERBOSE') === 'true' ? 'all' : ['error'],

@@ -18,5 +18,6 @@ export DB_PORT=""
 export DB_USERNAME=""
 export DB_PASSWORD=""
 export DB_DATABASE=""
+export DB_TIMEZONE=""
 
 export TYPEORM_VERBOSE="false"

@@ -16,6 +16,7 @@
     "format": "prettier --write **/*.ts",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint --fix src/**/*.ts",
+    "lint:tsc": "tsc --noEmit",
     "test": "jest --coverage"
   },
   "dependencies": {
