@@ -1,6 +1,13 @@
 FROM nginx:1.25.1-alpine-slim
+WORKDIR /etc/nginx
 
-RUN rm -rf /etc/nginx/conf.d
+ARG PORT
+ENV PORT=$PORT
 
-COPY conf.d /etc/nginx/conf.d
-COPY ssl /etc/nginx/ssl
+RUN rm -rf ./conf.d
+
+COPY conf.d ./conf.d
+COPY ssl ./ssl
+
+RUN envsubst '$PORT' <./conf.d/api.promise.conf >./conf.d/api.promise.conf.temp
+RUN mv ./conf.d/api.promise.conf.temp ./conf.d/api.promise.conf

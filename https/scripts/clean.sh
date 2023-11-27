@@ -1,5 +1,5 @@
 # Clean docker container and image
-image=promise-api:local
+image=promise-api:https
 
 container_id=$(docker ps -a -q --filter ancestor=$image)
 if [[ ! -z $container_id ]]; then
