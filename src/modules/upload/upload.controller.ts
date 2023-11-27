@@ -1,0 +1,46 @@
+import { JwtAuthGuard } from '@/modules/auth/jwt.guard';
+import {
+  Post,
+  Controller,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+  BadRequestException,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
+import { FileUploadService } from './upload.service';
+import { FileUploadOutput } from './upload.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+
+@ApiTags('File Upload')
+@ApiBearerAuth()
+@Controller('upload')
+export class FileUploadController {
+  constructor(private readonly uploader: FileUploadService) {}
+
+  @Post('image')
+  @UseInterceptors(FileInterceptor('file'))
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    operationId: 'uploadImageFile',
+    summary: '이미지 파일 업로드',
+  })
+  @ApiOkResponse({
+    type: FileUploadOutput,
+    description: '이미지 파일 업로드 성공',
+  })
+  @ApiUnauthorizedResponse({ description: '로그인 필요' })
+  async uploadImageFile(@UploadedFile() file: Express.Multer.File) {
+    try {
+      return { url: await this.uploader.upload(file) };
+    } catch (error) {
+      throw new BadRequestException('파일 업로드에 실패했습니다.');
+    }
+  }
+}
