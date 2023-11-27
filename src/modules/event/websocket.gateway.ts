@@ -9,7 +9,7 @@ import {
   SubscribeMessage,
 } from '@nestjs/websockets';
 import { IncomingMessage } from 'http';
-import { Server, WebSocket } from 'ws';
+import { WebSocket } from 'ws';
 
 interface WebSocketClient extends WebSocket {
   id: string;
@@ -23,11 +23,11 @@ export class WebSocketEventGateway
   private readonly logger = new Logger(WebSocketEventGateway.name);
 
   @WebSocketServer()
-  server!: Server;
+  server!: typeof WebSocketServer;
 
   clients: WebSocketClient[] = [];
 
-  afterInit(_server: Server) {
+  afterInit(_server: typeof WebSocketServer) {
     this.logger.log('WebSocket Gateway Initialized');
   }
 

@@ -1,3 +1,6 @@
+/**
+ * @type {import('eslint').Linter.Config}
+ */
 module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -5,16 +8,13 @@ module.exports = {
     tsconfigRootDir: __dirname,
     sourceType: 'module',
   },
-  extends: [
-    'plugin:@typescript-eslint/recommended',
-    'prettier',
-  ],
+  extends: ['plugin:@typescript-eslint/recommended', 'prettier'],
   root: true,
   env: {
     node: true,
     jest: true,
   },
-  ignorePatterns: ['.eslintrc.js', 'dist'],
+  ignorePatterns: ['node_modules', 'dist'],
   plugins: ['@typescript-eslint/eslint-plugin', 'prettier'],
   rules: {
     'prettier/prettier': ['warn'],
