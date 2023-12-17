@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './controllers/app.controller';
+import { AppController } from './app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeormConfig } from '@/config/orm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -11,6 +11,7 @@ import { EventModule } from '@/modules/event/event.module';
 import { UserModule } from '@/modules/user/user.module';
 import { jwtConfig } from '@/config/token';
 import { PromiseModule } from '@/modules/promise/promise.module';
+import { FileUploadModule } from '@/modules/upload/upload.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { PromiseModule } from '@/modules/promise/promise.module';
     UserModule,
     EventModule,
     PromiseModule,
+    FileUploadModule,
   ],
   controllers: [AppController],
 })

@@ -14,4 +14,5 @@ export const schema = Joi.object({
   DB_USERNAME: Joi.string().required(),
   DB_PASSWORD: Joi.string().required().allow(''),
   DB_DATABASE: Joi.string().required(),
+  DB_TIMEZONE: Joi.string().default('Z'),
 });

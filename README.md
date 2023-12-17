@@ -6,50 +6,49 @@ Promise API Server
 
 ## Development
 
-This project is using [yarn berry](https://github.com/yarnpkg/berry) as the package manager.
+This project is using [Bun.js](https://bun.sh) as a typescript runtime & toolkit.
 
 ### Installing Packages
 
 ```bash
-$ yarn install # or yarn
+$ bun install
 ```
 
-### Setting Environment Variables
+### Setup Environment Variables
 
-Use [direnv](https://github.com/direnv/direnv) to manager environment variables
+Copy `.env.example` to `.env` and fill the variables.
 
-1. Copy `.envrc.example` file and rename `.envrc`.
-2. Set environment variables according to your local env.
-3. Run `$ direnv allow` in your terminal so that enable environment variables.
-4. Every time `.envrc` file is changed, run `$ direnv allow` again.
+```bash
+$ cp .env.example .env
+```
 
 ### Running API Server
 
 ```bash
 # development mode
-$ yarn start:dev
+$ bun run start:dev
 
 # production mode
-$ yarn start:prod
+$ bun run start:prod
 ```
 
 ### Database Migration
 
 ```bash
 # generate migration file
-$ yarn migration new <migration-name>
+$ bun run migration new <migration-name>
 
 # run migration
-$ yarn migration up
+$ bun run migration up
 
 # revert last migration
-$ yarn migration down
+$ bun run migration down
 
 # revert migrations
-$ yarn migration down <number-of-migrations>
+$ bun run migration down <number-of-migrations>
 
 # list migrations
-$ yarn migration list
+$ bun run migration list
 ```
 
 ## Project Structure

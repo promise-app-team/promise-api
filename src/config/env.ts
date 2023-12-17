@@ -1,8 +1,8 @@
-import format from 'date-fns/format';
+import { formatISO } from 'date-fns';
 
 export const extraEnv = () => {
   return {
-    BUILD: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
-    API_VERSION: process.env.npm_package_version,
+    BUILD: formatISO(new Date()),
+    API_VERSION: Bun.env.npm_package_version,
   };
 };

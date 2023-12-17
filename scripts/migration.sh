@@ -2,11 +2,12 @@
 
 set -e
 
+script="bun run"
 command=$1
 datasource="dist/database/datasource.js"
 
 function warn {
-  echo -e "\033[0;33mUsage: yarn migration <command>\033[0m\n"
+  echo -e "\033[0;33mUsage: $script migration <command>\033[0m\n"
   echo -e "  Available commands:"
   echo -e "  - new <name>    create a new migration file"
   echo -e "  - up            run all migrations"
@@ -17,7 +18,7 @@ function warn {
 function new {
   name=$1
   [[ -z "$name" ]] && {
-    echo -e "\033[0;33m[ERROR] Usage: yarn migration:new <name>\033[0m"
+    echo -e "\033[0;33m[ERROR] Usage: $script migration new <name>\033[0m"
     exit 1
   }
 

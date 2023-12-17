@@ -43,4 +43,9 @@ export class UserEntity {
   @Exclude({ toPlainOnly: true })
   @Column('timestamp', { name: 'deleted_at', transformer: timestamp })
   deletedAt?: number | null;
+
+  @ApiHideProperty()
+  @Exclude({ toPlainOnly: true })
+  @Column('varchar', { name: 'leave_reason', nullable: true })
+  leaveReason?: string | null;
 }
