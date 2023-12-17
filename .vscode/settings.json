@@ -1,13 +1,15 @@
 {
-  "typescript.enablePromptUseWorkspaceTsdk": true,
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
-    "source.fixAll": true
+    "source.fixAll": "explicit"
+  },
+  "explorer.fileNesting.patterns": {
+    "package.json": "bun.lockb",
+    ".env.example": ".env*"
   },
   "material-icon-theme.activeIconPack": "nest",
   "explorer.fileNesting.enabled": true,
   "cSpell.words": [
-  "arendajaelu",
     "autoincrement",
     "customfav",
     "dtos",

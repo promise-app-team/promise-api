@@ -5,10 +5,12 @@ import {
   ApiOperation,
   ApiBody,
   ApiTags,
+  ApiCreatedResponse,
 } from '@nestjs/swagger';
 import { InputCreateUser } from '../user/user.dto';
 import { AuthService } from './auth.service';
-import { InputRefreshToken } from './auth.dto';
+import { AuthToken, InputRefreshToken } from './auth.dto';
+import { HttpException } from '@/schema/exception';
 
 @ApiTags('Auth')
 @ApiBearerAuth()
@@ -19,7 +21,7 @@ export class AuthController {
   @Post('login')
   @ApiOperation({ operationId: 'login', summary: '회원가입 / 로그인' })
   @ApiBody({ type: InputCreateUser, description: '로그인 정보' })
-  @ApiBadRequestResponse({ description: '로그인 실패' })
+  @ApiBadRequestResponse({ type: HttpException, description: '로그인 실패' })
   async login(@Body() user: InputCreateUser) {
     return this.authService.authenticate(user);
   }
@@ -30,7 +32,11 @@ export class AuthController {
     summary: 'Access Token / Refresh Token 갱신',
   })
   @ApiBody({ type: InputRefreshToken, description: '로그인 정보' })
-  @ApiBadRequestResponse({ description: '로그인 실패' })
+  @ApiCreatedResponse({ type: AuthToken, description: '토큰 갱신 성공' })
+  @ApiBadRequestResponse({
+    type: HttpException,
+    description: '로그인 실패/토큰 만료',
+  })
   async refreshTokens(@Body() { refreshToken }: InputRefreshToken) {
     return this.authService.refresh(refreshToken);
   }

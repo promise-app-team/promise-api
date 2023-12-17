@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiOkResponse,
+  ApiCreatedResponse,
   ApiOperation,
   ApiTags,
   ApiUnauthorizedResponse,
@@ -17,6 +17,7 @@ import {
 import { FileUploadService } from './upload.service';
 import { FileUploadOutput } from './upload.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { HttpException } from '@/schema/exception';
 
 @ApiTags('File Upload')
 @ApiBearerAuth()
@@ -31,11 +32,11 @@ export class FileUploadController {
     operationId: 'uploadImageFile',
     summary: '이미지 파일 업로드',
   })
-  @ApiOkResponse({
+  @ApiCreatedResponse({
     type: FileUploadOutput,
     description: '이미지 파일 업로드 성공',
   })
-  @ApiUnauthorizedResponse({ description: '로그인 필요' })
+  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   async uploadImageFile(@UploadedFile() file: Express.Multer.File) {
     try {
       return { url: await this.uploader.upload(file) };

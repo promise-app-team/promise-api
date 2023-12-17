@@ -30,6 +30,7 @@ import {
   OutputUpdatePromise,
 } from './promise.dto';
 import { ThemeEntity } from './theme.entity';
+import { HttpException } from '@/schema/exception';
 
 @ApiTags('Promise')
 @ApiBearerAuth()
@@ -41,7 +42,7 @@ export class PromiseController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ operationId: 'getPromiseList', summary: '약속 목록' })
   @ApiOkResponse({ type: [OutputPromiseListItem], description: '약속 목록' })
-  @ApiUnauthorizedResponse({ description: '로그인 필요' })
+  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   async list(@AuthUser() user: UserEntity): Promise<OutputPromiseListItem[]> {
     return this.promiseService.findAllByUser(user.id);
   }
@@ -53,8 +54,8 @@ export class PromiseController {
     summary: '새로운 약속 추가',
   })
   @ApiOkResponse({ type: OutputCreatePromise, description: '약속 추가 성공' })
-  @ApiUnauthorizedResponse({ description: '로그인 필요' })
-  @ApiBadRequestResponse({ description: '약속 추가 실패' })
+  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
+  @ApiBadRequestResponse({ type: HttpException, description: '약속 추가 실패' })
   async promise(
     @AuthUser() user: UserEntity,
     @Body() input: InputCreatePromise
@@ -67,21 +68,24 @@ export class PromiseController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ operationId: 'updateStartLocation', summary: '출발지 설정' })
   @ApiOkResponse({ description: '출발지 설정 성공' })
-  @ApiUnauthorizedResponse({ description: '로그인 필요' })
-  @ApiBadRequestResponse({ description: '출발지 설정 실패' })
+  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
+  @ApiBadRequestResponse({
+    type: HttpException,
+    description: '출발지 설정 실패',
+  })
   async startLocation(
     @AuthUser() user: UserEntity,
     @Body() input: InputUpdateUserStartLocation
-  ): Promise<void> {
-    return this.promiseService.updateStartLocation(user.id, input);
+  ) {
+    this.promiseService.updateStartLocation(user.id, input);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ operationId: 'updatePromise', summary: '약속 수정' })
   @ApiOkResponse({ type: OutputCreatePromise, description: '약속 수정 성공' })
-  @ApiUnauthorizedResponse({ description: '로그인 필요' })
-  @ApiBadRequestResponse({ description: '약속 수정 실패' })
+  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
+  @ApiBadRequestResponse({ type: HttpException, description: '약속 수정 실패' })
   async update(
     @AuthUser() user: UserEntity,
     @Body() input: InputUpdatePromise
