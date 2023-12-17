@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
@@ -35,12 +35,17 @@ export class AuthService {
 
   async refresh(token: string): Promise<AuthToken> {
     // TODO: AuthToken 모듈로 분리
-    const payload = this.jwt.verify(token);
-    const node = await this.userService.findOneById(payload.id);
-    if (!node) {
-      throw new BadRequestException('로그인을 실패했습니다.');
+    try {
+      const payload = this.jwt.verify(token);
+      const node = await this.userService.findOneById(payload.id);
+      if (!node) throw new Error('로그인을 실패했습니다.');
+      return this._generateToken({ id: `${node.id}` });
+    } catch (error) {
+      if (error instanceof Error && error.name === 'TokenExpiredError') {
+        throw new BadRequestException('토큰이 만료되었습니다.');
+      }
+      throw error;
     }
-    return this._generateToken({ id: `${node.id}` });
   }
 
   // TODO: AuthToken 모듈로 분리

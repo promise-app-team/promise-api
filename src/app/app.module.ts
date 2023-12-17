@@ -18,6 +18,7 @@ import { FileUploadModule } from '@/modules/upload/upload.module';
     ConfigModule.forRoot({
       isGlobal: true,
       load: [extraEnv],
+      envFilePath: ['.env'],
       validationSchema: schema,
     }),
     TypeOrmModule.forRootAsync({
