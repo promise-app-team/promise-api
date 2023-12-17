@@ -19,6 +19,7 @@ import { UserEntity } from './user.entity';
 import { AuthUser } from '../auth/auth.decorator';
 import { UserService } from './user.service';
 import { InputDeleteUser, InputUpdateUser } from './user.dto';
+import { HttpException } from '@/schema/exception';
 
 @ApiTags('User')
 @ApiBearerAuth()
@@ -33,7 +34,7 @@ export class UserController {
     summary: '인증 사용자 정보 조회',
   })
   @ApiOkResponse({ type: UserEntity, description: '인증 사용자 정보' })
-  @ApiUnauthorizedResponse({ description: '로그인 필요' })
+  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   async getMyProfile(@AuthUser() user: UserEntity): Promise<UserEntity> {
     return user;
   }
@@ -45,7 +46,7 @@ export class UserController {
     summary: '인증 사용자 정보 수정',
   })
   @ApiOkResponse({ type: UserEntity, description: '수정된 인증 사용자 정보' })
-  @ApiUnauthorizedResponse({ description: '로그인 필요' })
+  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   async updateMyProfile(
     @AuthUser() user: UserEntity,
     @Body() body: InputUpdateUser
@@ -60,7 +61,7 @@ export class UserController {
     summary: '인증 사용자 정보 삭제',
   })
   @ApiOkResponse({ description: '인증 사용자 정보 삭제 성공' })
-  @ApiUnauthorizedResponse({ description: '로그인 필요' })
+  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   async deleteMyProfile(
     @AuthUser() user: UserEntity,
     @Body() body: InputDeleteUser
