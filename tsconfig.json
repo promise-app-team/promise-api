@@ -2,14 +2,15 @@
   "compilerOptions": {
     "lib": ["ESNext"],
     "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "declaration": true,
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "declaration": false,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "sourceMap": true,
+    "esModuleInterop": true,
+    "sourceMap": false,
     "outDir": "./dist",
     "baseUrl": "./",
     "paths": {
@@ -22,8 +23,7 @@
     ],
     "incremental": true,
     "skipLibCheck": true,
-    "strict": true,
-    "esModuleInterop": true
+    "strict": true
   },
   "exclude": [
     "node_modules",

@@ -206,6 +206,9 @@ dist
 
 ### Custom ###
 
+.build
+.serverless
+.tsbuildinfo
 dockerdata
 
 # End of Custom

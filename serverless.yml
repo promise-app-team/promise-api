@@ -1,0 +1,20 @@
+service: promise-api
+
+plugins:
+  - serverless-offline
+
+provider:
+  name: aws
+  region: ap-northeast-2
+  runtime: nodejs18.x
+
+functions:
+  main:
+    handler: dist/main.handler
+    events:
+      - http:
+          method: any
+          path: /
+      - http:
+          method: any
+          path: '{proxy+}'

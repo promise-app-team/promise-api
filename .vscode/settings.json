@@ -21,6 +21,7 @@
     "kakao",
     "mikro",
     "nestjs",
+    "predeploy",
     "typeorm",
     "websockets"
   ]
