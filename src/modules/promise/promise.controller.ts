@@ -3,13 +3,15 @@ import {
   Body,
   Controller,
   Get,
-  Patch,
+  Param,
   Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
+  ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
@@ -27,24 +29,37 @@ import {
   InputUpdateUserStartLocation,
   OutputCreatePromise,
   OutputPromiseListItem,
-  OutputUpdatePromise,
 } from './promise.dto';
 import { ThemeEntity } from './theme.entity';
 import { HttpException } from '@/schema/exception';
 
 @ApiTags('Promise')
 @ApiBearerAuth()
-@Controller('promise')
+@Controller('promises')
 export class PromiseController {
   constructor(private readonly promiseService: PromiseService) {}
 
-  @Get('list')
+  @Get('')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ operationId: 'getPromiseList', summary: '약속 목록' })
   @ApiOkResponse({ type: [OutputPromiseListItem], description: '약속 목록' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
-  async list(@AuthUser() user: UserEntity): Promise<OutputPromiseListItem[]> {
+  async getMyPromises(
+    @AuthUser() user: UserEntity
+  ): Promise<OutputPromiseListItem[]> {
     return this.promiseService.findAllByUser(user.id);
+  }
+
+  @Get(':pid')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ operationId: 'getPromise', summary: '약속 상세 정보' })
+  @ApiOkResponse({ type: OutputPromiseListItem, description: '약속 상세 정보' })
+  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
+  @ApiNotFoundResponse({ type: HttpException, description: '약속 없음' })
+  async getPromiseDetail(
+    @Param('pid') pid: string
+  ): Promise<OutputPromiseListItem> {
+    return this.promiseService.findOne(pid);
   }
 
   @Post()
@@ -56,7 +71,7 @@ export class PromiseController {
   @ApiOkResponse({ type: OutputCreatePromise, description: '약속 추가 성공' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   @ApiBadRequestResponse({ type: HttpException, description: '약속 추가 실패' })
-  async promise(
+  async createNewPromise(
     @AuthUser() user: UserEntity,
     @Body() input: InputCreatePromise
   ): Promise<OutputCreatePromise> {
@@ -64,34 +79,38 @@ export class PromiseController {
     return this.promiseService.create(user.id, input);
   }
 
-  @Patch('start-location')
+  @Put(':pid')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'updateStartLocation', summary: '출발지 설정' })
+  @ApiOperation({ operationId: 'updatePromise', summary: '약속 수정' })
+  @ApiOkResponse({ type: OutputCreatePromise, description: '약속 수정 성공' })
+  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
+  @ApiBadRequestResponse({ type: HttpException, description: '약속 수정 실패' })
+  @ApiNotFoundResponse({ type: HttpException, description: '약속 없음' })
+  async update(
+    @AuthUser() user: UserEntity,
+    @Param('pid') pid: string,
+    @Body() input: InputUpdatePromise
+  ) {
+    this.throwInvalidInputException(input);
+    await this.promiseService.update(pid, user.id, input);
+  }
+
+  @Post(':pid/start-location')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ operationId: 'setStartLocation', summary: '출발지 설정' })
   @ApiOkResponse({ description: '출발지 설정 성공' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
+  @ApiNotFoundResponse({ type: HttpException, description: '약속 없음' })
   @ApiBadRequestResponse({
     type: HttpException,
     description: '출발지 설정 실패',
   })
   async startLocation(
     @AuthUser() user: UserEntity,
+    @Param('pid') pid: string,
     @Body() input: InputUpdateUserStartLocation
   ) {
-    this.promiseService.updateStartLocation(user.id, input);
-  }
-
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'updatePromise', summary: '약속 수정' })
-  @ApiOkResponse({ type: OutputCreatePromise, description: '약속 수정 성공' })
-  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
-  @ApiBadRequestResponse({ type: HttpException, description: '약속 수정 실패' })
-  async update(
-    @AuthUser() user: UserEntity,
-    @Body() input: InputUpdatePromise
-  ): Promise<OutputUpdatePromise> {
-    this.throwInvalidInputException(input);
-    return this.promiseService.update(user.id, input);
+    await this.promiseService.updateStartLocation(pid, user.id, input);
   }
 
   @Get('themes')

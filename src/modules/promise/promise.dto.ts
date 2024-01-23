@@ -17,9 +17,11 @@ class InputDestination extends OmitType(LocationEntity, [
 ]) {}
 
 export class OutputPromiseListItem extends OmitType(PromiseEntity, [
+  'id',
   'hostId',
   'destinationId',
 ]) {
+  pid!: string;
   themes!: string[];
   host!: Host;
   destination!: OutputDestination | null;
@@ -39,25 +41,20 @@ export class InputCreatePromise {
 }
 
 export class OutputCreatePromise {
-  id!: number;
+  pid!: string;
   inviteLink!: string;
 }
 
-export class InputUpdatePromise extends PartialType(InputCreatePromise) {
-  id!: number;
-}
+export class InputUpdatePromise extends PartialType(InputCreatePromise) {}
 
 export class OutputUpdatePromise {
-  id!: number;
+  pid!: string;
 }
 
-export class InputUpdateUserStartLocation {
-  promiseId!: number;
-  location!: {
-    city: string;
-    district: string;
-    address: string;
-    latitude: number;
-    longitude: number;
-  };
-}
+export class InputUpdateUserStartLocation extends PickType(LocationEntity, [
+  'city',
+  'district',
+  'address',
+  'latitude',
+  'longitude',
+]) {}

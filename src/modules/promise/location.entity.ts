@@ -12,7 +12,7 @@ export class LocationEntity {
   @Column()
   district!: string;
 
-  @Column()
+  @Column({ nullable: true })
   address!: string;
 
   @Column({ type: 'double', precision: 10, scale: 8 })
