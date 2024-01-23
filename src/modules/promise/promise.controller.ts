@@ -51,6 +51,13 @@ export class PromiseController {
     return this.promiseService.findAllByUser(user.id);
   }
 
+  @Get('themes')
+  @ApiOperation({ operationId: 'themes', summary: '약속 테마 목록' })
+  @ApiOkResponse({ type: [ThemeEntity], description: '약속 테마 목록' })
+  async themes(): Promise<ThemeEntity[]> {
+    return this.promiseService.themes();
+  }
+
   @Get(':pid')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ operationId: 'getPromise', summary: '약속 상세 정보' })
@@ -134,13 +141,6 @@ export class PromiseController {
   @ApiBadRequestResponse({ type: HttpException, description: '약속 취소 실패' })
   async cancelPromise(@AuthUser() user: UserEntity, @Param('pid') pid: string) {
     await this.promiseService.cancel(pid, user.id);
-  }
-
-  @Get('themes')
-  @ApiOperation({ operationId: 'themes', summary: '약속 테마 목록' })
-  @ApiOkResponse({ type: [ThemeEntity], description: '약속 테마 목록' })
-  async themes(): Promise<ThemeEntity[]> {
-    return this.promiseService.themes();
   }
 
   private throwInvalidInputException(
