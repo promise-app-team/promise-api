@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { DataSource, In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -17,21 +22,30 @@ import {
   OutputUpdatePromise,
 } from './promise.dto';
 import { UserEntity } from '../user/user.entity';
+import { HasherService } from '../common/services/HasherService.service';
 
 @Injectable()
 export class PromiseService {
   constructor(
     private readonly dataSource: DataSource,
+
+    @Inject(HasherService)
+    private readonly hasher: HasherService,
+
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
     @InjectRepository(PromiseEntity)
     private readonly promiseRepo: Repository<PromiseEntity>,
+
     @InjectRepository(PromiseUserEntity)
     private readonly promiseUserRepo: Repository<PromiseUserEntity>,
+
     @InjectRepository(ThemeEntity)
     private readonly themeRepo: Repository<ThemeEntity>,
+
     @InjectRepository(PromiseThemeEntity)
     private readonly promiseThemeRepo: Repository<PromiseThemeEntity>,
+
     @InjectRepository(LocationEntity)
     private readonly locationRepo: Repository<LocationEntity>
   ) {}
@@ -42,49 +56,68 @@ export class PromiseService {
       where: { id: In(promiseUsers.map(({ promiseId }) => promiseId)) },
     });
 
-    return Promise.all(
-      promises.map(async (promise) => {
-        const result: OutputPromiseListItem = {
-          ...promise,
-          themes: [],
-          host: { id: 0, username: '' },
-          destination: null,
-          attendees: [],
-        };
-        Reflect.deleteProperty(result, 'hostId');
-        Reflect.deleteProperty(result, 'destinationId');
+    return Promise.all(promises.map(this.transformPromise.bind(this)));
+  }
 
-        const [themes, host, promiseUsers] = await Promise.all([
-          this.promiseThemeRepo.find({ where: { promiseId: promise.id } }),
-          this.userRepo.findOneOrFail({
-            where: { id: promise.hostId },
-            select: ['id', 'username'],
-          }),
-          this.promiseUserRepo.find({ where: { promiseId: promise.id } }),
-        ]);
-        result.themes = (
-          await this.themeRepo.find({
-            where: { id: In(themes.map(({ themeId }) => themeId)) },
-            select: ['theme'],
-          })
-        ).map(({ theme }) => theme);
-        result.host = host;
-        const attendeeIds = promiseUsers
-          .filter(({ userId }) => userId !== promise.hostId)
-          .map(({ userId }) => userId);
-        result.attendees = await this.userRepo.find({
-          where: { id: In(attendeeIds) },
-          select: ['id', 'username'],
-        });
+  async findOne(pid: string): Promise<OutputPromiseListItem> {
+    const id = +this.hasher.decode(pid);
+    const promise = await this.promiseRepo.findOne({ where: { id } });
+    if (!promise) {
+      throw new NotFoundException(`해당 약속을 찾을 수 없습니다.`);
+    }
+    return this.transformPromise(promise);
+  }
 
-        if (promise.destinationId) {
-          result.destination = await this.locationRepo.findOne({
-            where: { id: promise.destinationId },
-          });
-        }
-        return result;
+  private async transformPromise(
+    promise: PromiseEntity
+  ): Promise<OutputPromiseListItem> {
+    const result: OutputPromiseListItem = {
+      ...promise,
+      pid: this.hasher.encode(promise.id),
+      themes: [],
+      host: { id: 0, username: '', profileUrl: '' },
+      destination: null,
+      attendees: [],
+    };
+
+    Reflect.deleteProperty(result, 'id');
+    Reflect.deleteProperty(result, 'hostId');
+    Reflect.deleteProperty(result, 'destinationId');
+
+    const [themes, host, promiseUsers] = await Promise.all([
+      this.promiseThemeRepo.find({ where: { promiseId: promise.id } }),
+      this.userRepo.findOneOrFail({
+        where: { id: promise.hostId },
+        select: ['id', 'username', 'profileUrl'],
+      }),
+      this.promiseUserRepo.find({ where: { promiseId: promise.id } }),
+    ]);
+
+    result.themes = (
+      await this.themeRepo.find({
+        where: { id: In(themes.map(({ themeId }) => themeId)) },
+        select: ['theme'],
       })
-    );
+    ).map(({ theme }) => theme);
+
+    result.host = host;
+
+    const attendeeIds = promiseUsers
+      .filter(({ userId }) => userId !== promise.hostId)
+      .map(({ userId }) => userId);
+
+    result.attendees = await this.userRepo.find({
+      where: { id: In(attendeeIds) },
+      select: ['id', 'username', 'profileUrl'],
+    });
+
+    if (promise.destinationId) {
+      result.destination = await this.locationRepo.findOne({
+        where: { id: promise.destinationId },
+      });
+    }
+
+    return result;
   }
 
   async create(
@@ -128,26 +161,25 @@ export class PromiseService {
       ]);
 
       return {
-        id: promise.id,
+        pid: this.hasher.encode(promise.id),
         inviteLink,
       };
     });
   }
 
   async update(
+    pid: string,
     hostId: number,
     input: InputUpdatePromise
   ): Promise<OutputUpdatePromise> {
     return this.dataSource.transaction(async (em) => {
-      if (!input.id) {
-        throw new BadRequestException(`약속을 찾을 수 없습니다.`);
-      }
+      const id = +this.hasher.decode(pid);
       const promise = await em.findOne(PromiseEntity, {
-        where: { id: input.id, hostId },
+        where: { id, hostId },
       });
 
       if (!promise) {
-        throw new BadRequestException(`해당 약속을 찾을 수 없습니다.`);
+        throw new NotFoundException(`해당 약속을 찾을 수 없습니다.`);
       }
 
       switch (input.destinationType) {
@@ -174,7 +206,7 @@ export class PromiseService {
           break;
       }
 
-      if (input.themeIds && input.themeIds.length > 0) {
+      if (input.themeIds?.length) {
         const themes = await em.find(ThemeEntity, {
           where: { id: In(input.themeIds) },
         });
@@ -189,32 +221,84 @@ export class PromiseService {
         );
       }
 
-      return em.save(this.promiseRepo.merge(promise, { ...input }));
+      await em.save(this.promiseRepo.merge(promise, { ...input }));
+      return { pid };
     });
   }
 
   async updateStartLocation(
+    pid: string,
     userId: number,
     input: InputUpdateUserStartLocation
   ) {
-    if (!input.promiseId) {
-      throw new BadRequestException(`약속을 찾을 수 없습니다.`);
-    }
+    const id = +this.hasher.decode(pid);
     const promiseUser = await this.promiseUserRepo.findOne({
-      where: { userId, promiseId: input.promiseId },
+      where: { userId, promiseId: id },
     });
 
     if (!promiseUser) {
-      throw new BadRequestException(`해당 약속에 참여하고 있지 않습니다.`);
+      throw new BadRequestException(`해당 약속을 찾을 수 없습니다.`);
     }
 
-    this.dataSource.transaction(async (em) => {
-      const location = await em.save(
-        em.create(LocationEntity, { ...input.location })
-      );
-      promiseUser.startLocationId = location.id;
+    await this.dataSource.transaction(async (em) => {
+      const location = promiseUser.startLocationId
+        ? await em.findOne(LocationEntity, {
+            where: { id: promiseUser.startLocationId },
+          })
+        : null;
+
+      if (location) {
+        await em.save(em.merge(LocationEntity, location, { ...input }));
+        promiseUser.startLocationId = location.id;
+      } else {
+        const { id } = await em.save(em.create(LocationEntity, { ...input }));
+        promiseUser.startLocationId = id;
+      }
+
       await em.save(promiseUser);
     });
+  }
+
+  async attend(pid: string, userId: number) {
+    const id = +this.hasher.decode(pid);
+    const promise = await this.promiseRepo.findOne({ where: { id } });
+    if (!promise) {
+      throw new NotFoundException(`해당 약속을 찾을 수 없습니다.`);
+    }
+
+    const promiseUser = await this.promiseUserRepo.findOne({
+      where: { userId, promiseId: promise.id },
+    });
+
+    if (promiseUser) {
+      throw new BadRequestException(`이미 참여한 약속입니다.`);
+    }
+
+    await this.promiseUserRepo.save(
+      this.promiseUserRepo.create({ userId, promiseId: promise.id })
+    );
+  }
+
+  async cancel(pid: string, userId: number) {
+    const id = +this.hasher.decode(pid);
+    const promise = await this.promiseRepo.findOne({ where: { id } });
+    if (!promise) {
+      throw new NotFoundException(`해당 약속을 찾을 수 없습니다.`);
+    }
+
+    const promiseUser = await this.promiseUserRepo.findOne({
+      where: { userId, promiseId: promise.id },
+    });
+
+    if (!promiseUser) {
+      throw new BadRequestException(`참여하지 않은 약속입니다.`);
+    }
+
+    if (promise.hostId === userId) {
+      throw new BadRequestException(`약속장은 약속을 취소할 수 없습니다.`);
+    }
+
+    await this.promiseUserRepo.delete({ userId, promiseId: promise.id });
   }
 
   async themes(): Promise<ThemeEntity[]> {

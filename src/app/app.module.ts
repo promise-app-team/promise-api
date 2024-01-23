@@ -12,6 +12,7 @@ import { UserModule } from '@/modules/user/user.module';
 import { jwtConfig } from '@/config/token';
 import { PromiseModule } from '@/modules/promise/promise.module';
 import { FileUploadModule } from '@/modules/upload/upload.module';
+import { CommonModule } from '@/modules/common/common.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { FileUploadModule } from '@/modules/upload/upload.module';
     EventModule,
     PromiseModule,
     FileUploadModule,
+    CommonModule,
   ],
   controllers: [AppController],
 })
