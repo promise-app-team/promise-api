@@ -75,7 +75,7 @@ export class PromiseService {
       ...promise,
       pid: this.hasher.encode(promise.id),
       themes: [],
-      host: { id: 0, username: '' },
+      host: { id: 0, username: '', profileUrl: '' },
       destination: null,
       attendees: [],
     };
@@ -88,7 +88,7 @@ export class PromiseService {
       this.promiseThemeRepo.find({ where: { promiseId: promise.id } }),
       this.userRepo.findOneOrFail({
         where: { id: promise.hostId },
-        select: ['id', 'username'],
+        select: ['id', 'username', 'profileUrl'],
       }),
       this.promiseUserRepo.find({ where: { promiseId: promise.id } }),
     ]);
@@ -108,7 +108,7 @@ export class PromiseService {
 
     result.attendees = await this.userRepo.find({
       where: { id: In(attendeeIds) },
-      select: ['id', 'username'],
+      select: ['id', 'username', 'profileUrl'],
     });
 
     if (promise.destinationId) {
@@ -257,6 +257,48 @@ export class PromiseService {
 
       await em.save(promiseUser);
     });
+  }
+
+  async attend(pid: string, userId: number) {
+    const id = +this.hasher.decode(pid);
+    const promise = await this.promiseRepo.findOne({ where: { id } });
+    if (!promise) {
+      throw new NotFoundException(`해당 약속을 찾을 수 없습니다.`);
+    }
+
+    const promiseUser = await this.promiseUserRepo.findOne({
+      where: { userId, promiseId: promise.id },
+    });
+
+    if (promiseUser) {
+      throw new BadRequestException(`이미 참여한 약속입니다.`);
+    }
+
+    await this.promiseUserRepo.save(
+      this.promiseUserRepo.create({ userId, promiseId: promise.id })
+    );
+  }
+
+  async cancel(pid: string, userId: number) {
+    const id = +this.hasher.decode(pid);
+    const promise = await this.promiseRepo.findOne({ where: { id } });
+    if (!promise) {
+      throw new NotFoundException(`해당 약속을 찾을 수 없습니다.`);
+    }
+
+    const promiseUser = await this.promiseUserRepo.findOne({
+      where: { userId, promiseId: promise.id },
+    });
+
+    if (!promiseUser) {
+      throw new BadRequestException(`참여하지 않은 약속입니다.`);
+    }
+
+    if (promise.hostId === userId) {
+      throw new BadRequestException(`약속장은 약속을 취소할 수 없습니다.`);
+    }
+
+    await this.promiseUserRepo.delete({ userId, promiseId: promise.id });
   }
 
   async themes(): Promise<ThemeEntity[]> {

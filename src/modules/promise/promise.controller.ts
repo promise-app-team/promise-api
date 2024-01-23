@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -111,6 +112,28 @@ export class PromiseController {
     @Body() input: InputUpdateUserStartLocation
   ) {
     await this.promiseService.updateStartLocation(pid, user.id, input);
+  }
+
+  @Post(':pid/attend')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ operationId: 'attendPromise', summary: '약속 참여' })
+  @ApiOkResponse({ description: '약속 참여 성공' })
+  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
+  @ApiNotFoundResponse({ type: HttpException, description: '약속 없음' })
+  @ApiBadRequestResponse({ type: HttpException, description: '약속 참여 실패' })
+  async attendPromise(@AuthUser() user: UserEntity, @Param('pid') pid: string) {
+    await this.promiseService.attend(pid, user.id);
+  }
+
+  @Delete(':pid/attend')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ operationId: 'cancelPromise', summary: '약속 취소' })
+  @ApiOkResponse({ description: '약속 취소 성공' })
+  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
+  @ApiNotFoundResponse({ type: HttpException, description: '약속 없음' })
+  @ApiBadRequestResponse({ type: HttpException, description: '약속 취소 실패' })
+  async cancelPromise(@AuthUser() user: UserEntity, @Param('pid') pid: string) {
+    await this.promiseService.cancel(pid, user.id);
   }
 
   @Get('themes')

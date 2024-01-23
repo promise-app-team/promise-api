@@ -7,8 +7,8 @@ import {
 import { LocationEntity } from './location.entity';
 import { UserEntity } from '../user/user.entity';
 
-class Host extends PickType(UserEntity, ['id', 'username']) {}
-class Attendee extends PickType(UserEntity, ['id', 'username']) {}
+class Host extends PickType(UserEntity, ['id', 'username', 'profileUrl']) {}
+class Attendee extends PickType(UserEntity, ['id', 'username', 'profileUrl']) {}
 class OutputDestination extends LocationEntity {}
 class InputDestination extends OmitType(LocationEntity, [
   'id',
