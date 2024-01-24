@@ -1,0 +1,28 @@
+version: '3'
+
+services:
+  mysql:
+    image: mysql:8.3
+    container_name: mysql
+    ports:
+      - 3306:3306
+    volumes:
+      - ./dockerdata/mysql:/var/lib/mysql
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      TZ: ${DB_TIMEZONE}
+    restart: always
+
+  redis:
+    image: redis:7.2
+    container_name: redis
+    ports:
+      - 6379:6379
+    volumes:
+      - ./dockerdata/redis:/data
+    restart: always

@@ -42,7 +42,6 @@ export class InputCreatePromise {
 
 export class OutputCreatePromise {
   pid!: string;
-  inviteLink!: string;
 }
 
 export class InputUpdatePromise extends PartialType(InputCreatePromise) {}
@@ -58,3 +57,7 @@ export class InputUpdateUserStartLocation extends PickType(LocationEntity, [
   'latitude',
   'longitude',
 ]) {}
+
+export class OutputCheckPromiseQueue {
+  pid!: string;
+}
