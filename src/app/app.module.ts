@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { RedisModule } from '@nestjs-modules/ioredis';
 import { typeormConfig } from '@/config/orm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../modules/auth/auth.module';
@@ -25,6 +26,13 @@ import { CommonModule } from '@/modules/common/common.module';
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => typeormConfig(config),
+    }),
+    RedisModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: 'single',
+        url: config.get('REDIS_URL'),
+      }),
     }),
     JwtModule.registerAsync({
       global: true,

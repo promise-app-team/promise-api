@@ -22,9 +22,6 @@ export class PromiseEntity {
   @Column()
   title!: string;
 
-  @Column({ name: 'invite_link' })
-  inviteLink!: string;
-
   @Column({ name: 'destination_type' })
   destinationType!: DestinationType;
 

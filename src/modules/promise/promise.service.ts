@@ -50,6 +50,11 @@ export class PromiseService {
     private readonly locationRepo: Repository<LocationEntity>
   ) {}
 
+  async exists(pid: string): Promise<boolean> {
+    const id = +this.hasher.decode(pid);
+    return this.promiseRepo.exist({ where: { id } });
+  }
+
   async findAllByUser(userId: number): Promise<OutputPromiseListItem[]> {
     const promiseUsers = await this.promiseUserRepo.find({ where: { userId } });
     const promises = await this.promiseRepo.find({
@@ -125,8 +130,6 @@ export class PromiseService {
     input: InputCreatePromise
   ): Promise<OutputCreatePromise> {
     return this.dataSource.transaction(async (em) => {
-      // TODO: inviteLink 생성
-      const inviteLink = 'https://www.google.com';
       let destinationId: number | undefined;
       if (input.destination) {
         const destination = await em.save(
@@ -139,7 +142,6 @@ export class PromiseService {
         em.create(PromiseEntity, {
           ...input,
           hostId,
-          inviteLink,
           destinationId,
         })
       );
@@ -162,7 +164,6 @@ export class PromiseService {
 
       return {
         pid: this.hasher.encode(promise.id),
-        inviteLink,
       };
     });
   }
