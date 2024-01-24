@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { RedisModule } from '@nestjs-modules/ioredis';
@@ -14,6 +14,7 @@ import { jwtConfig } from '@/config/token';
 import { PromiseModule } from '@/modules/promise/promise.module';
 import { FileUploadModule } from '@/modules/upload/upload.module';
 import { CommonModule } from '@/modules/common/common.module';
+import { LoggerMiddleware } from '@/modules/common/middlewares/logger.middleware';
 
 @Module({
   imports: [
@@ -48,4 +49,8 @@ import { CommonModule } from '@/modules/common/common.module';
   ],
   controllers: [AppController],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}
