@@ -104,7 +104,8 @@ export class PromiseController {
     @Query('pid') pid: string,
     @Query('deviceId') deviceId: string
   ) {
-    if (await this.promiseService.exists(pid)) {
+    const exists = await this.promiseService.exists(pid);
+    if (!exists) {
       throw new NotFoundException('약속을 찾을 수 없습니다.');
     }
     const key = `promise:${deviceId}:queue`;
