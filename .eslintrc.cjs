@@ -2,6 +2,11 @@
  * @type {import('eslint').Linter.Config}
  */
 module.exports = {
+  root: true,
+  env: {
+    node: true,
+    jest: true,
+  },
   parser: '@typescript-eslint/parser',
   parserOptions: {
     project: 'tsconfig.json',
@@ -9,11 +14,6 @@ module.exports = {
     sourceType: 'module',
   },
   extends: ['plugin:@typescript-eslint/recommended', 'prettier'],
-  root: true,
-  env: {
-    node: true,
-    jest: true,
-  },
   ignorePatterns: ['node_modules', 'dist'],
   plugins: ['@typescript-eslint/eslint-plugin', 'prettier'],
   rules: {

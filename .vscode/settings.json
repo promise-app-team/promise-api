@@ -1,17 +1,9 @@
 {
-  "editor.formatOnSave": true,
-  "editor.codeActionsOnSave": {
-    "source.fixAll": "explicit"
-  },
-  "explorer.fileNesting.patterns": {
-    "package.json": "bun.lockb",
-    ".env.example": ".env*"
-  },
-  "material-icon-theme.activeIconPack": "nest",
-  "explorer.fileNesting.enabled": true,
   "cSpell.words": [
     "autoincrement",
+    "bunx",
     "customfav",
+    "datasource",
     "dockerdata",
     "dtos",
     "fastify",
@@ -23,6 +15,17 @@
     "nestjs",
     "predeploy",
     "typeorm",
+    "vendia",
     "websockets"
-  ]
+  ],
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit"
+  },
+  "editor.formatOnSave": true,
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    ".env.example": ".env*",
+    "package.json": "bun.lockb"
+  },
+  "material-icon-theme.activeIconPack": "nest"
 }
