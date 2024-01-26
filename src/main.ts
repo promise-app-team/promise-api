@@ -15,7 +15,7 @@ const API_VERSION = process.env.npm_package_version || '0.0.0';
 async function bootstrap<App extends NestExpressApplication>(): Promise<App> {
   const app = await NestFactory.create<App>(AppModule);
 
-  app.useStaticAssets(join(__dirname, '..', 'assets'), { prefix: '/assets' });
+  app.useStaticAssets(join(__dirname, 'assets'), { prefix: '/assets' });
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.useWebSocketAdapter(new WsAdapter(app));
   app.enableCors();
