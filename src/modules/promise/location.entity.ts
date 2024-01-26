@@ -1,5 +1,10 @@
-import { timestamp } from '@/utils/typeorm/transformers/timestamp';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity({ name: 'pm_locations' })
 export class LocationEntity {
@@ -21,9 +26,9 @@ export class LocationEntity {
   @Column({ type: 'double', precision: 11, scale: 8 })
   longitude!: number;
 
-  @Column('timestamp', { name: 'created_at', transformer: timestamp })
-  createdAt!: number;
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt!: Date;
 
-  @Column('timestamp', { name: 'updated_at', transformer: timestamp })
-  updatedAt!: number;
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt!: Date;
 }

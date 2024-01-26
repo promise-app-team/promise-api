@@ -31,7 +31,7 @@ export class OutputPromiseListItem extends OmitType(PromiseEntity, [
 export class InputCreatePromise {
   title!: string;
   themeIds!: number[];
-  promisedAt!: number;
+  promisedAt!: string;
   destinationType!: DestinationType;
   destination!: InputDestination | null;
   locationShareStartType!: LocationShareType;

@@ -213,7 +213,7 @@ export class PromiseController {
       throw new BadRequestException('유효하지 않은 "장소" 값입니다.');
     }
 
-    if (!this.isValidTimestamp(input)) {
+    if (!this.isValidPromisedAt(input)) {
       throw new BadRequestException('유효하지 않은 "약속 시간" 값입니다.');
     }
   }
@@ -256,12 +256,13 @@ export class PromiseController {
     );
   }
 
-  private isValidTimestamp(
+  private isValidPromisedAt(
     input: InputCreatePromise | InputUpdatePromise
   ): boolean {
-    return (
-      input.promisedAt == undefined ||
-      (typeof input.promisedAt == 'number' && input.promisedAt > 1000)
-    );
+    if (!input.promisedAt || typeof input.promisedAt !== 'string') {
+      return false;
+    }
+    const date = new Date(input.promisedAt);
+    return !isNaN(date.getTime());
   }
 }

@@ -1,5 +1,11 @@
-import { timestamp } from '@/utils/typeorm/transformers/timestamp';
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { DateColumn } from '../common/decorators/date-column.decorator';
 
 export enum DestinationType {
   Static = 'STATIC', // 장소 지정
@@ -43,21 +49,17 @@ export class PromiseEntity {
   @Column({ name: 'location_share_end_value' })
   locationShareEndValue!: number;
 
-  @Column('timestamp', { name: 'promised_at', transformer: timestamp })
-  promisedAt!: number;
+  @DateColumn({ name: 'promised_at' })
+  promisedAt!: Date;
 
-  @Column('timestamp', {
-    name: 'completed_at',
-    transformer: timestamp,
-    nullable: true,
-  })
-  completedAt!: number | null;
+  @DateColumn({ name: 'completed_at', nullable: true })
+  completedAt!: Date | null;
 
-  @Column('timestamp', { name: 'created_at', transformer: timestamp })
-  createdAt!: number;
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt!: Date;
 
-  @Column('timestamp', { name: 'updated_at', transformer: timestamp })
-  updatedAt!: number;
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt!: Date;
 }
 
 @Entity({ name: 'pm_promise_users' })

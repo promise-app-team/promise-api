@@ -1,7 +1,14 @@
-import { timestamp } from '@/utils/typeorm/transformers/timestamp';
 import { ApiHideProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+} from 'typeorm';
+import { DateColumn } from '../common/decorators/date-column.decorator';
 
 export enum Provider {
   Kakao = 'KAKAO',
@@ -28,21 +35,21 @@ export class UserEntity {
   @Column('varchar', { name: 'provider_id', nullable: true })
   providerId!: string | null;
 
-  @Column('timestamp', { name: 'created_at', transformer: timestamp })
-  createdAt!: number;
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt!: Date;
 
-  @Column('timestamp', { name: 'updated_at', transformer: timestamp })
-  updatedAt!: number;
-
-  @ApiHideProperty()
-  @Exclude({ toPlainOnly: true })
-  @Column('timestamp', { name: 'last_signed_at', transformer: timestamp })
-  lastSignedAt!: number;
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt!: Date;
 
   @ApiHideProperty()
   @Exclude({ toPlainOnly: true })
-  @Column('timestamp', { name: 'deleted_at', transformer: timestamp })
-  deletedAt?: number | null;
+  @DateColumn({ name: 'last_signed_at' })
+  lastSignedAt!: Date;
+
+  @ApiHideProperty()
+  @Exclude({ toPlainOnly: true })
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt?: Date | null;
 
   @ApiHideProperty()
   @Exclude({ toPlainOnly: true })

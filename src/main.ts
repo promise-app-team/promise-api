@@ -42,6 +42,14 @@ async function bootstrap<App extends NestExpressApplication>(): Promise<App> {
   return app;
 }
 
+if (!process.env.IS_OFFLINE) {
+  (async () => {
+    const app = await bootstrap();
+    await app.listen(PORT, '0.0.0.0');
+    Logger.log(`Server running on ${await app.getUrl()}`, 'Bootstrap');
+  })();
+}
+
 let cached: Handler;
 export const handler: Handler = async (...args) => {
   if (!cached) {
@@ -51,11 +59,3 @@ export const handler: Handler = async (...args) => {
   }
   return cached(...args);
 };
-
-// if (process.env.NODE_ENV === 'local') {
-//   (async () => {
-//     const app = await bootstrap();
-//     await app.listen(PORT, '0.0.0.0');
-//     Logger.log(`Server running on ${await app.getUrl()}`, 'Bootstrap');
-//   })();
-// }
