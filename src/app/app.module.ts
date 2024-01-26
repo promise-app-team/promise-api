@@ -23,6 +23,7 @@ import { LoggerMiddleware } from '@/modules/common/middlewares/logger.middleware
       load: [extraEnv],
       envFilePath: ['.env'],
       validationSchema: schema,
+      expandVariables: true,
     }),
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],

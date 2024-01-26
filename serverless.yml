@@ -3,6 +3,10 @@ service: promise-api
 plugins:
   - serverless-offline
 
+custom:
+  serverless-offline:
+    noPrependStageInUrl: true
+
 provider:
   name: aws
   region: ap-northeast-2
@@ -13,8 +17,8 @@ functions:
     handler: dist/main.handler
     events:
       - http:
-          method: any
+          method: ANY
           path: /
       - http:
-          method: any
+          method: ANY
           path: '{proxy+}'

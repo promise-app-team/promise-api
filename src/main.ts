@@ -18,6 +18,7 @@ async function bootstrap<App extends NestExpressApplication>(): Promise<App> {
   app.useStaticAssets(join(__dirname, '..', 'assets'), { prefix: '/assets' });
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.useWebSocketAdapter(new WsAdapter(app));
+  app.enableCors();
 
   const openApiConfig = new DocumentBuilder()
     .setTitle('Promise API')
@@ -41,22 +42,20 @@ async function bootstrap<App extends NestExpressApplication>(): Promise<App> {
   return app;
 }
 
-async function initialize(app: NestExpressApplication) {
-  await app.init();
-  return createServer({ app: app.getHttpAdapter().getInstance() });
-}
-
 let cached: Handler;
 export const handler: Handler = async (...args) => {
-  const app = await bootstrap();
-  cached ??= await initialize(app);
+  if (!cached) {
+    const app = await bootstrap();
+    await app.init();
+    cached = createServer({ app: app.getHttpAdapter().getInstance() });
+  }
   return cached(...args);
 };
 
-if (process.env.NODE_ENV === 'local') {
-  (async () => {
-    const app = await bootstrap();
-    await app.listen(PORT, '0.0.0.0');
-    Logger.log(`Server running on ${await app.getUrl()}`, 'Bootstrap');
-  })();
-}
+// if (process.env.NODE_ENV === 'local') {
+//   (async () => {
+//     const app = await bootstrap();
+//     await app.listen(PORT, '0.0.0.0');
+//     Logger.log(`Server running on ${await app.getUrl()}`, 'Bootstrap');
+//   })();
+// }
