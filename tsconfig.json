@@ -1,6 +1,11 @@
 {
+  "extends": [
+    "./tsconfig.paths.json"
+  ],
   "compilerOptions": {
-    "lib": ["ESNext"],
+    "lib": [
+      "ESNext"
+    ],
     "target": "ESNext",
     "module": "CommonJS",
     "moduleResolution": "Node",
@@ -11,11 +16,7 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "sourceMap": false,
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "paths": {
-      "@/*": ["src/*"]
-    },
+    "outDir": "dist",
     "types": [
       "jest",
       "bun-types",

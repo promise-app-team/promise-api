@@ -9,16 +9,28 @@ custom:
 
 provider:
   name: aws
-  region: ap-northeast-2
   runtime: nodejs18.x
+  region: ap-northeast-2
+  stage: ${opt:stage, 'dev'}
+  ecr:
+    images:
+      appimage:
+        path: ./
 
 functions:
   main:
-    handler: dist/main.handler
+    image:
+      name: appimage
+      command:
+        - dist/main.handler
+      entryPoint:
+        - '/lambda-entrypoint.sh'
     events:
       - http:
+          cors: true
           method: ANY
           path: /
       - http:
+          cors: true
           method: ANY
           path: '{proxy+}'

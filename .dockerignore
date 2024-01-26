@@ -1,0 +1,10 @@
+.*
+Dockerfile
+docker-compose.yml
+serverless.yml
+node_modules
+dockerdata
+coverage
+scrips
+https
+dist
