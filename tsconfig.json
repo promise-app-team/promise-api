@@ -1,20 +1,22 @@
 {
+  "extends": [
+    "./tsconfig.paths.json"
+  ],
   "compilerOptions": {
-    "lib": ["ESNext"],
+    "lib": [
+      "ESNext"
+    ],
     "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "declaration": true,
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "declaration": false,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
-    "sourceMap": true,
-    "outDir": "./dist",
-    "baseUrl": "./",
-    "paths": {
-      "@/*": ["src/*"]
-    },
+    "esModuleInterop": true,
+    "sourceMap": false,
+    "outDir": "dist",
     "types": [
       "jest",
       "bun-types",
@@ -22,8 +24,7 @@
     ],
     "incremental": true,
     "skipLibCheck": true,
-    "strict": true,
-    "esModuleInterop": true
+    "strict": true
   },
   "exclude": [
     "node_modules",

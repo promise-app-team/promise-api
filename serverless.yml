@@ -1,0 +1,38 @@
+service: promise-api
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    noPrependStageInUrl: true
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: ap-northeast-2
+  stage: ${opt:stage, 'dev'}
+  ecr:
+    images:
+      appimage:
+        path: ./
+        platform: linux/amd64
+
+functions:
+  main:
+    architecture: arm64
+    image:
+      name: appimage
+      command:
+        - dist/main.handler
+      entryPoint:
+        - '/lambda-entrypoint.sh'
+    events:
+      - http:
+          cors: true
+          method: ANY
+          path: /
+      - http:
+          cors: true
+          method: ANY
+          path: '{proxy+}'

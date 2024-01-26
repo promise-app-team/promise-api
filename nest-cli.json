@@ -13,7 +13,8 @@
           "introspectComments": true
         }
       }
-    ]
+    ],
+    "tsConfigPath": "tsconfig.build.json"
   },
   "sourceRoot": "src"
 }
