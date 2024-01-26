@@ -16,9 +16,11 @@ provider:
     images:
       appimage:
         path: ./
+        platform: linux/amd64
 
 functions:
   main:
+    architecture: arm64
     image:
       name: appimage
       command:
