@@ -1,5 +1,7 @@
 service: promise-api
 
+frameworkVersion: '3'
+
 custom:
   serverless-offline:
     noPrependStageInUrl: true
@@ -9,6 +11,7 @@ provider:
   runtime: nodejs18.x
   region: ap-northeast-2
   stage: ${opt:stage, 'dev'}
+  architecture: arm64
   ecr:
     images:
       appimage:
