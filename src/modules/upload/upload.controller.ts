@@ -9,6 +9,8 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiOperation,
   ApiTags,
@@ -28,6 +30,18 @@ export class FileUploadController {
   @Post('image')
   @UseInterceptors(FileInterceptor('file'))
   @UseGuards(JwtAuthGuard)
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
   @ApiOperation({
     operationId: 'uploadImageFile',
     summary: '이미지 파일 업로드',
