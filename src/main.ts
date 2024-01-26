@@ -1,14 +1,12 @@
-import type { Server } from 'http';
 import type { Handler } from 'aws-lambda';
 
-// @ts-expect-error - no types
-import { createServer, proxy } from '@vendia/serverless-express';
+import createServer from '@codegenie/serverless-express';
 import { NestFactory, Reflector } from '@nestjs/core';
-import { AppModule } from '@/app/app.module';
 import { ClassSerializerInterceptor, Logger } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
+import { AppModule } from '@/app/app.module';
 import { join } from 'path';
 
 const PORT = +(process.env.PORT || 3000);
@@ -43,19 +41,16 @@ async function bootstrap<App extends NestExpressApplication>(): Promise<App> {
   return app;
 }
 
-let cachedServer: Server;
-const binaryMimeTypes: string[] = [];
-
-async function initialize(app: NestExpressApplication): Promise<Server> {
+async function initialize(app: NestExpressApplication) {
   await app.init();
-  const expressApp = app.getHttpAdapter().getInstance();
-  return createServer(expressApp, undefined, binaryMimeTypes);
+  return createServer({ app: app.getHttpAdapter().getInstance() });
 }
 
-export const handler: Handler = async (event, context, callback) => {
+let cached: Handler;
+export const handler: Handler = async (...args) => {
   const app = await bootstrap();
-  cachedServer ??= await initialize(app);
-  return proxy(cachedServer, event, context, 'PROMISE', callback).promise;
+  cached ??= await initialize(app);
+  return cached(...args);
 };
 
 if (process.env.NODE_ENV === 'local') {

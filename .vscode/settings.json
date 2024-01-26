@@ -2,6 +2,7 @@
   "cSpell.words": [
     "autoincrement",
     "bunx",
+    "codegenie",
     "customfav",
     "datasource",
     "dockerdata",
@@ -15,7 +16,6 @@
     "nestjs",
     "predeploy",
     "typeorm",
-    "vendia",
     "websockets"
   ],
   "editor.codeActionsOnSave": {
