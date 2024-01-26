@@ -1,8 +1,5 @@
 service: promise-api
 
-plugins:
-  - serverless-offline
-
 custom:
   serverless-offline:
     noPrependStageInUrl: true
