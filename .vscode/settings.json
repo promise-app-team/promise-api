@@ -25,8 +25,8 @@
   "editor.formatOnSave": true,
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": {
-    ".env.example": ".env*",
-    "package.json": "bun.lockb"
+    ".env.example": ".env, .env.*",
+    "package.json": "package-lock.json, yarn.lock, bun.lockb"
   },
   "material-icon-theme.activeIconPack": "nest"
 }

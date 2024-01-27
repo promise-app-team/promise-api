@@ -13,6 +13,7 @@
     "start:debug": "nest start --exec \"bun run\" --debug --watch",
     "start:prod": "bun run ./dist/main.js",
     "migration": "bun run build; ./scripts/migration.sh",
+    "migration:dev": "bun run build; bunx dotenv-cli -e .env.development -o -- ./scripts/migration.sh",
     "deploy": "sls deploy --verbose --force",
     "format": "prettier --write **/* --ext .ts",
     "lint": "DEBUG=eslint:cli-engine eslint \"src/**/*\" --ext .ts",
