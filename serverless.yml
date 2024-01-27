@@ -8,6 +8,8 @@ provider:
   region: ap-northeast-2
   stage: ${opt:stage, 'dev'}
   architecture: arm64
+  httpApi:
+    cors: true
   ecr:
     images:
       appimage:
@@ -26,6 +28,22 @@ provider:
     subnetIds:
       - subnet-0428912e4d39d2947
       - subnet-075c29b5ae54675d0
+  environment:
+    TZ: ${env:TZ}
+    NODE_ENV: ${env:NODE_ENV}
+
+    JWT_SECRET_KEY: ${env:JWT_SECRET_KEY}
+    JWT_ACCESS_EXPIRES_IN: ${env:JWT_ACCESS_EXPIRES_IN}
+    JWT_REFRESH_EXPIRES_IN: ${env:JWT_REFRESH_EXPIRES_IN}
+
+    DB_HOST: ${env:DB_HOST}
+    DB_PORT: ${env:DB_PORT}
+    DB_USERNAME: ${env:DB_USERNAME}
+    DB_PASSWORD: ${env:DB_PASSWORD}
+    DB_DATABASE: ${env:DB_DATABASE}
+    DB_TIMEZONE: ${env:DB_TIMEZONE}
+
+    REDIS_URL: ${env:REDIS_URL}
 
 functions:
   main:
@@ -37,6 +55,4 @@ functions:
       entryPoint:
         - /lambda-entrypoint.sh
     events:
-      - httpApi:
-          method: ANY
-          path: /{any+}
+      - httpApi: '*'
