@@ -2,10 +2,6 @@ service: promise-api
 
 frameworkVersion: '3'
 
-custom:
-  serverless-offline:
-    noPrependStageInUrl: true
-
 provider:
   name: aws
   runtime: nodejs18.x
@@ -17,6 +13,19 @@ provider:
       appimage:
         path: ./
         platform: linux/amd64
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - ec2:CreateNetworkInterface
+        - ec2:DescribeNetworkInterfaces
+        - ec2:DeleteNetworkInterface
+      Resource: '*'
+  vpc:
+    securityGroupIds:
+      - sg-0322225ba04d879fa
+    subnetIds:
+      - subnet-0428912e4d39d2947
+      - subnet-075c29b5ae54675d0
 
 functions:
   main:
@@ -26,13 +35,8 @@ functions:
       command:
         - dist/main.handler
       entryPoint:
-        - '/lambda-entrypoint.sh'
+        - /lambda-entrypoint.sh
     events:
-      - http:
-          cors: true
+      - httpApi:
           method: ANY
-          path: /
-      - http:
-          cors: true
-          method: ANY
-          path: '{proxy+}'
+          path: /{any+}
