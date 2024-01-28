@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  Inject,
   NotFoundException,
   Param,
   Post,
@@ -37,15 +38,16 @@ import {
 } from './promise.dto';
 import { ThemeEntity } from './theme.entity';
 import { HttpException } from '@/schema/exception';
-import { Redis } from 'ioredis';
-import { InjectRedis } from '@nestjs-modules/ioredis';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @ApiTags('Promise')
 @ApiBearerAuth()
 @Controller('promises')
 export class PromiseController {
   constructor(
-    @InjectRedis() private readonly redis: Redis,
+    // @InjectRedis() private readonly redis: Redis,
+    @Inject(CACHE_MANAGER) private readonly cache: Cache,
     private readonly promiseService: PromiseService
   ) {}
 
@@ -78,10 +80,10 @@ export class PromiseController {
   })
   @ApiNotFoundResponse({ type: HttpException, description: '약속 대기열 없음' })
   async dequeuePromise(@Query('deviceId') deviceId: string) {
-    const key = this.makeRedisKey(deviceId);
-    const value = await this.redis.get(key);
-    if (value !== null) {
-      await this.redis.del(key);
+    const key = this.makeDeviceKey(deviceId);
+    const value = await this.cache.get(key);
+    if (value) {
+      await this.cache.del(key);
       return {
         pid: value,
       };
@@ -108,9 +110,8 @@ export class PromiseController {
     if (!exists) {
       throw new NotFoundException('약속을 찾을 수 없습니다.');
     }
-    const key = this.makeRedisKey(deviceId);
-    await this.redis.set(key, pid);
-    await this.redis.expire(key, 60 * 10);
+    const key = this.makeDeviceKey(deviceId);
+    await this.cache.set(key, pid, 60 * 10 * 1000);
   }
 
   @Get(':pid')
@@ -198,9 +199,9 @@ export class PromiseController {
     await this.promiseService.cancel(pid, user.id);
   }
 
-  private makeRedisKey(deviceId: string) {
+  private makeDeviceKey(deviceId: string) {
     const env = process.env.NODE_ENV || 'test';
-    return `promise:${deviceId}:queue:${env}`;
+    return `device:${deviceId}:${env}`;
   }
 
   private throwInvalidInputException(
