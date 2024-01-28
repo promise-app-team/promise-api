@@ -42,7 +42,7 @@ async function bootstrap<App extends NestExpressApplication>(): Promise<App> {
   return app;
 }
 
-if (!process.env.IS_OFFLINE) {
+if (!process.env.IS_OFFLINE || process.env.NODE_ENV === 'local') {
   (async () => {
     const app = await bootstrap();
     await app.listen(PORT, '0.0.0.0');
