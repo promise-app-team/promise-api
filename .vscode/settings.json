@@ -26,6 +26,7 @@
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": {
     ".env.example": ".env, .env.*",
+    ".env-cmdrc.example": ".env-cmdrc, .env-cmdrc.*",
     "package.json": "package-lock.json, yarn.lock, bun.lockb"
   },
   "material-icon-theme.activeIconPack": "nest"

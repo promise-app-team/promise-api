@@ -144,6 +144,9 @@ web_modules/
 .env.local
 .env.test
 
+# env-cmd environment variable files
+.env-cmdrc
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache

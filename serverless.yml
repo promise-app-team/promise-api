@@ -5,8 +5,8 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: nodejs18.x
-  region: ap-northeast-2
-  stage: ${opt:stage, 'dev'}
+  region: ${env:AWS_REGION}
+  stage: ${opt:stage}
   architecture: arm64
   httpApi:
     cors: true
@@ -44,6 +44,7 @@ provider:
     DB_TIMEZONE: ${env:DB_TIMEZONE}
 
     REDIS_URL: ${env:REDIS_URL}
+    REDIS_PASSWORD: ${env:REDIS_PASSWORD}
 
 functions:
   main:

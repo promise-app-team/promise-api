@@ -44,7 +44,7 @@ $ bun run start:prod
 
 ```bash
 # generate migration file
-$ bun run migration new <migration-name>
+$ bun run migration new [migration-name]
 
 # run migration
 $ bun run migration up
@@ -53,7 +53,7 @@ $ bun run migration up
 $ bun run migration down
 
 # revert migrations
-$ bun run migration down <number-of-migrations>
+$ bun run migration down [number]
 
 # list migrations
 $ bun run migration list

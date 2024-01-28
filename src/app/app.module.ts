@@ -34,6 +34,9 @@ import { LoggerMiddleware } from '@/modules/common/middlewares/logger.middleware
       useFactory: (config: ConfigService) => ({
         type: 'single',
         url: config.get('REDIS_URL'),
+        options: {
+          password: config.get('REDIS_PASSWORD'),
+        },
       }),
     }),
     JwtModule.registerAsync({

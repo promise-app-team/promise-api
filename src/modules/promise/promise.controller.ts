@@ -78,7 +78,7 @@ export class PromiseController {
   })
   @ApiNotFoundResponse({ type: HttpException, description: '약속 대기열 없음' })
   async dequeuePromise(@Query('deviceId') deviceId: string) {
-    const key = `promise:${deviceId}:queue`;
+    const key = this.makeRedisKey(deviceId);
     const value = await this.redis.get(key);
     if (value !== null) {
       await this.redis.del(key);
@@ -108,7 +108,7 @@ export class PromiseController {
     if (!exists) {
       throw new NotFoundException('약속을 찾을 수 없습니다.');
     }
-    const key = `promise:${deviceId}:queue`;
+    const key = this.makeRedisKey(deviceId);
     await this.redis.set(key, pid);
     await this.redis.expire(key, 60 * 10);
   }
@@ -196,6 +196,11 @@ export class PromiseController {
   @ApiBadRequestResponse({ type: HttpException, description: '약속 취소 실패' })
   async cancelPromise(@AuthUser() user: UserEntity, @Param('pid') pid: string) {
     await this.promiseService.cancel(pid, user.id);
+  }
+
+  private makeRedisKey(deviceId: string) {
+    const env = process.env.NODE_ENV || 'test';
+    return `promise:${deviceId}:queue:${env}`;
   }
 
   private throwInvalidInputException(
