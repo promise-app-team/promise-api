@@ -28,4 +28,6 @@ services:
   #     - 6379:6379
   #   volumes:
   #     - ./dockerdata/redis:/data
+  #   command:
+  #     - --requirepass ${REDIS_PASSWORD}
   #   restart: always
