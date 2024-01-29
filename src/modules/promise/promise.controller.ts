@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -25,7 +24,6 @@ import {
 
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { AuthUser } from '../auth/auth.decorator';
-import { DestinationType, LocationShareType } from './promise.entity';
 import { UserEntity } from '../user/user.entity';
 import { PromiseService } from './promise.service';
 import {
@@ -139,7 +137,6 @@ export class PromiseController {
     @AuthUser() user: UserEntity,
     @Body() input: InputCreatePromise
   ): Promise<OutputCreatePromise> {
-    this.throwInvalidInputException(input);
     return this.promiseService.create(user.id, input);
   }
 
@@ -155,7 +152,6 @@ export class PromiseController {
     @Param('pid') pid: string,
     @Body() input: InputUpdatePromise
   ) {
-    this.throwInvalidInputException(input);
     await this.promiseService.update(pid, user.id, input);
   }
 
@@ -202,73 +198,5 @@ export class PromiseController {
   private makeDeviceKey(deviceId: string) {
     const env = process.env.NODE_ENV || 'test';
     return `device:${deviceId}:${env}`;
-  }
-
-  private throwInvalidInputException(
-    input: InputCreatePromise | InputUpdatePromise
-  ) {
-    if (!this.isValidDestinationType(input)) {
-      throw new BadRequestException('유효하지 않은 "장소 지정" 값입니다.');
-    }
-
-    if (!this.isValidLocationShareType(input)) {
-      throw new BadRequestException('유효하지 않은 "위치 공유" 값입니다.');
-    }
-
-    if (!this.isValidDestination(input)) {
-      throw new BadRequestException('유효하지 않은 "장소" 값입니다.');
-    }
-
-    if (!this.isValidPromisedAt(input)) {
-      throw new BadRequestException('유효하지 않은 "약속 시간" 값입니다.');
-    }
-  }
-
-  private isValidDestinationType(
-    input: InputCreatePromise | InputUpdatePromise
-  ): boolean {
-    return (
-      !!input.destinationType &&
-      Object.values(DestinationType).includes(input.destinationType)
-    );
-  }
-
-  private isValidLocationShareType(
-    input: InputCreatePromise | InputUpdatePromise
-  ): boolean {
-    const isValidStartType =
-      !input.locationShareStartType ||
-      Object.values(LocationShareType).includes(input.locationShareStartType);
-    const isValidEndType =
-      !input.locationShareEndType ||
-      Object.values(LocationShareType).includes(input.locationShareEndType);
-    return isValidStartType && isValidEndType;
-  }
-
-  private isValidDestination(
-    input: InputCreatePromise | InputUpdatePromise
-  ): boolean {
-    if (!input.destinationType) {
-      return false;
-    }
-    if (
-      input.destinationType === DestinationType.Dynamic &&
-      !input.destination
-    ) {
-      return true;
-    }
-    return (
-      input.destinationType === DestinationType.Static && !!input.destination
-    );
-  }
-
-  private isValidPromisedAt(
-    input: InputCreatePromise | InputUpdatePromise
-  ): boolean {
-    if (!input.promisedAt || typeof input.promisedAt !== 'string') {
-      return false;
-    }
-    const date = new Date(input.promisedAt);
-    return !isNaN(date.getTime());
   }
 }
