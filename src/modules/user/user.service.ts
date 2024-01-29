@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, IsNull, Repository } from 'typeorm';
 import { Provider, UserEntity } from './user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -11,11 +11,18 @@ export class UserService {
   ) {}
 
   async findOneById(id: string) {
-    return this.userRepo.findOneBy({ id: +id });
+    return this.userRepo.findOneBy({
+      id: +id,
+      deletedAt: IsNull(),
+    });
   }
 
   async findOneByProvider(provider: Provider, providerId: string) {
-    return this.userRepo.findOneBy({ provider, providerId });
+    return this.userRepo.findOneBy({
+      provider,
+      providerId,
+      deletedAt: IsNull(),
+    });
   }
 
   async create(user: DeepPartial<UserEntity>) {
