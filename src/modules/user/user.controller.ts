@@ -66,21 +66,6 @@ export class UserController {
     @AuthUser() user: UserEntity,
     @Body() body: InputDeleteUser
   ): Promise<void> {
-    if (user.deletedAt) {
-      throw new BadRequestException('이미 탈퇴한 계정입니다.');
-    }
-
-    body.reason = body.reason?.trim();
-    if (!body.reason) {
-      throw new BadRequestException('탈퇴 사유를 입력해주세요.');
-    }
-
-    if (body.reason.length < 10 || body.reason.length > 200) {
-      throw new BadRequestException(
-        '탈퇴 사유는 10자 이상 200자 이하로 입력해주세요.'
-      );
-    }
-
     await this.userService.delete(user, body.reason);
   }
 }
