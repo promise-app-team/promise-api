@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { StringifyDateInterceptor } from '@/modules/common/interceptors/stringify-date.interceptor';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { AppModule } from '@/app/app.module';
 import { join } from 'path';
@@ -21,6 +22,7 @@ async function bootstrap<App extends NestExpressApplication>(): Promise<App> {
 
   app.useStaticAssets(join(__dirname, 'assets'), { prefix: '/assets' });
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  app.useGlobalInterceptors(new StringifyDateInterceptor());
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useWebSocketAdapter(new WsAdapter(app));
   app.enableCors();

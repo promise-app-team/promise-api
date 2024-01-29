@@ -4,21 +4,21 @@ import { Request, Response, NextFunction } from 'express';
 @Injectable()
 export class TrimMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
-    req.body = this.trimObjectStrings(req.body);
+    req.body = this.transform(req.body);
     next();
   }
 
-  private trimObjectStrings(obj: any): any {
-    if (typeof obj === 'string') {
-      return obj.trim();
-    } else if (Array.isArray(obj)) {
-      return obj.map(this.trimObjectStrings);
-    } else if (typeof obj === 'object') {
-      for (const key in obj) {
-        if (!obj.hasOwnProperty(key)) continue;
-        obj[key] = this.trimObjectStrings(obj[key]);
+  private transform(data: any): any {
+    if (typeof data === 'string') {
+      return data.trim();
+    } else if (Array.isArray(data)) {
+      return data.map(this.transform.bind(this));
+    } else if (typeof data === 'object') {
+      for (const key in data) {
+        if (!data.hasOwnProperty(key)) continue;
+        data[key] = this.transform(data[key]);
       }
     }
-    return obj;
+    return data;
   }
 }

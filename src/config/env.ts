@@ -1,6 +1,4 @@
-import { formatISO } from 'date-fns';
-
-const BUILD = formatISO(new Date());
+const BUILD = new Date();
 
 export const extraEnv = () => {
   return {
