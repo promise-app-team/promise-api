@@ -16,6 +16,7 @@ import { FileUploadModule } from '@/modules/upload/upload.module';
 import { CommonModule } from '@/modules/common/common.module';
 import { LoggerMiddleware } from '@/modules/common/middlewares/logger.middleware';
 import { CacheModule } from '@nestjs/cache-manager';
+import { TrimMiddleware } from '@/modules/common/middlewares/trim.middleware';
 
 @Module({
   imports: [
@@ -58,5 +59,6 @@ import { CacheModule } from '@nestjs/cache-manager';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer.apply(LoggerMiddleware).forRoutes('*');
+    consumer.apply(TrimMiddleware).forRoutes('*');
   }
 }

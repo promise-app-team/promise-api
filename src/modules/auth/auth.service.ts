@@ -41,10 +41,15 @@ export class AuthService {
       if (!node) throw new Error('로그인을 실패했습니다.');
       return this._generateToken({ id: `${node.id}` });
     } catch (error) {
-      if (error instanceof Error && error.name === 'TokenExpiredError') {
-        throw new BadRequestException('토큰이 만료되었습니다.');
+      if (error instanceof Error) {
+        switch (error.name) {
+          case 'TokenExpiredError':
+            throw new BadRequestException('토큰이 만료되었습니다.');
+          case 'JsonWebTokenError':
+            throw new BadRequestException('토큰이 유효하지 않습니다.');
+        }
       }
-      throw error;
+      throw new BadRequestException('예상치 못한 오류가 발생했습니다.');
     }
   }
 
