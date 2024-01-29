@@ -13,13 +13,31 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: development
+    env:
+      TZ: ${{ vars.TZ }}
+      NODE_ENV: development
+
+      JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+      JWT_ACCESS_EXPIRES_IN: ${{ vars.JWT_ACCESS_EXPIRES_IN }}
+      JWT_REFRESH_EXPIRES_IN: ${{ vars.JWT_REFRESH_EXPIRES_IN }}
+
+      DB_HOST: ${{ vars.DB_HOST }}
+      DB_PORT: ${{ vars.DB_PORT }}
+      DB_USERNAME: ${{ vars.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_DATABASE: ${{ vars.DB_DATABASE }}
+      DB_TIMEZONE: ${{ vars.DB_TIMEZONE }}
+
+      REDIS_URL: ${{ vars.REDIS_URL }}
+      REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@v4
-      - name: Serverless Deploy
-        uses: serverless/github-action@v3.2
-        with:
-          args: deploy
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
+      - name: Install Serverless Framework 
+        run: npm i -g serverless
+      - name: Deploy to AWS Lambda
+        run: sls deploy --verbose --force --stage dev

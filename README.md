@@ -44,7 +44,7 @@ $ bun run start:prod
 
 ```bash
 # generate migration file
-$ bun run migration new <migration-name>
+$ bun run migration new [migration-name]
 
 # run migration
 $ bun run migration up
@@ -53,10 +53,18 @@ $ bun run migration up
 $ bun run migration down
 
 # revert migrations
-$ bun run migration down <number-of-migrations>
+$ bun run migration down [number]
 
 # list migrations
 $ bun run migration list
+```
+
+```bash
+# for development (tunneling)
+$ ssh -i ~/path/to/[filename].pem -L 63306:localhost:3306 ubuntu@ec2-3-34-123-5.ap-northeast-2.compute.amazonaws.com
+
+# run migration
+$ bun run migration:dev [new|up|down|list]
 ```
 
 ## Project Structure

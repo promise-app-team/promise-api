@@ -16,7 +16,6 @@ export const schema = Joi.object({
   DB_DATABASE: Joi.string().required(),
   DB_TIMEZONE: Joi.string().default('Z'),
 
-  REDIS_HOST: Joi.string().default('localhost'),
-  REDIS_PORT: Joi.number().default(6379),
   REDIS_URL: Joi.string().required(),
+  REDIS_PASSWORD: Joi.string().allow(''),
 });

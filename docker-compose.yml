@@ -12,17 +12,22 @@ services:
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
+      - --performance-schema=OFF
     environment:
       MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       TZ: ${DB_TIMEZONE}
     restart: always
 
-  redis:
-    image: redis:7.2
-    container_name: redis
-    ports:
-      - 6379:6379
-    volumes:
-      - ./dockerdata/redis:/data
-    restart: always
+  # redis:
+  #   image: redis:7.2
+  #   container_name: redis
+  #   ports:
+  #     - 6379:6379
+  #   volumes:
+  #     - ./dockerdata/redis:/data
+  #   command:
+  #     - --requirepass ${REDIS_PASSWORD}
+  #   restart: always

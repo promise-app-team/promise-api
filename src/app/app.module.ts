@@ -1,7 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { RedisModule } from '@nestjs-modules/ioredis';
+// import { RedisModule } from '@nestjs-modules/ioredis';
 import { typeormConfig } from '@/config/orm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../modules/auth/auth.module';
@@ -15,6 +15,7 @@ import { PromiseModule } from '@/modules/promise/promise.module';
 import { FileUploadModule } from '@/modules/upload/upload.module';
 import { CommonModule } from '@/modules/common/common.module';
 import { LoggerMiddleware } from '@/modules/common/middlewares/logger.middleware';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
@@ -29,13 +30,17 @@ import { LoggerMiddleware } from '@/modules/common/middlewares/logger.middleware
       inject: [ConfigService],
       useFactory: (config: ConfigService) => typeormConfig(config),
     }),
-    RedisModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'single',
-        url: config.get('REDIS_URL'),
-      }),
-    }),
+    // RedisModule.forRootAsync({
+    //   inject: [ConfigService],
+    //   useFactory: (config: ConfigService) => ({
+    //     type: 'single',
+    //     url: config.get('REDIS_URL'),
+    //     options: {
+    //       password: config.get('REDIS_PASSWORD'),
+    //     },
+    //   }),
+    // }),
+    CacheModule.register({ isGlobal: true }),
     JwtModule.registerAsync({
       global: true,
       inject: [ConfigService],

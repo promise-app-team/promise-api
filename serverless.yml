@@ -1,22 +1,50 @@
 service: promise-api
 
-plugins:
-  - serverless-offline
-
-custom:
-  serverless-offline:
-    noPrependStageInUrl: true
+frameworkVersion: '3'
 
 provider:
   name: aws
   runtime: nodejs18.x
-  region: ap-northeast-2
-  stage: ${opt:stage, 'dev'}
+  region: ${env:AWS_REGION}
+  stage: ${opt:stage}
+  architecture: arm64
+  httpApi:
+    cors: true
   ecr:
     images:
       appimage:
         path: ./
         platform: linux/amd64
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - ec2:CreateNetworkInterface
+        - ec2:DescribeNetworkInterfaces
+        - ec2:DeleteNetworkInterface
+      Resource: '*'
+  vpc:
+    securityGroupIds:
+      - sg-0322225ba04d879fa
+    subnetIds:
+      - subnet-0428912e4d39d2947
+      - subnet-075c29b5ae54675d0
+  environment:
+    TZ: ${env:TZ}
+    NODE_ENV: ${env:NODE_ENV}
+
+    JWT_SECRET_KEY: ${env:JWT_SECRET_KEY}
+    JWT_ACCESS_EXPIRES_IN: ${env:JWT_ACCESS_EXPIRES_IN}
+    JWT_REFRESH_EXPIRES_IN: ${env:JWT_REFRESH_EXPIRES_IN}
+
+    DB_HOST: ${env:DB_HOST}
+    DB_PORT: ${env:DB_PORT}
+    DB_USERNAME: ${env:DB_USERNAME}
+    DB_PASSWORD: ${env:DB_PASSWORD}
+    DB_DATABASE: ${env:DB_DATABASE}
+    DB_TIMEZONE: ${env:DB_TIMEZONE}
+
+    REDIS_URL: ${env:REDIS_URL}
+    REDIS_PASSWORD: ${env:REDIS_PASSWORD}
 
 functions:
   main:
@@ -26,13 +54,6 @@ functions:
       command:
         - dist/main.handler
       entryPoint:
-        - '/lambda-entrypoint.sh'
+        - /lambda-entrypoint.sh
     events:
-      - http:
-          cors: true
-          method: ANY
-          path: /
-      - http:
-          cors: true
-          method: ANY
-          path: '{proxy+}'
+      - httpApi: '*'
