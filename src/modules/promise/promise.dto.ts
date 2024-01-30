@@ -17,6 +17,7 @@ import {
   IsNotEmptyObject,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
   ValidateIf,
   ValidateNested,
@@ -31,15 +32,18 @@ class OutputDestination extends LocationEntity {}
 
 class InputDestination {
   @IsString()
+  @MaxLength(50)
   @IsNotEmpty()
   city!: string;
 
   @IsString()
+  @MaxLength(50)
   @IsNotEmpty()
   district!: string;
 
   @IsString()
   @IsOptional()
+  @MaxLength(100)
   address?: string;
 
   @IsLatitude()
@@ -65,6 +69,7 @@ export class OutputPromiseListItem extends OmitType(PromiseEntity, [
 
 export class InputCreatePromise {
   @IsString()
+  @MaxLength(20)
   @IsNotEmpty({ message: '약속 제목을 입력해주세요.' })
   title!: string;
 
