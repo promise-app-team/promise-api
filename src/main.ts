@@ -1,6 +1,6 @@
 import type { Handler } from 'aws-lambda';
 
-import createServer from '@codegenie/serverless-express';
+import serverlessExpress from '@codegenie/serverless-express';
 import { NestFactory, Reflector } from '@nestjs/core';
 import {
   Logger,
@@ -14,11 +14,10 @@ import { WsAdapter } from '@nestjs/platform-ws';
 import { AppModule } from '@/app/app.module';
 import { join } from 'path';
 
-const PORT = +(process.env.PORT || 3000);
 const API_VERSION = process.env.npm_package_version || '0.0.0';
 
-async function bootstrap<App extends NestExpressApplication>(): Promise<App> {
-  const app = await NestFactory.create<App>(AppModule);
+async function initializeApp() {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.useStaticAssets(join(__dirname, 'assets'), { prefix: '/assets' });
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
@@ -49,21 +48,21 @@ async function bootstrap<App extends NestExpressApplication>(): Promise<App> {
   return app;
 }
 
-if (!process.env.IS_OFFLINE && process.env.NODE_ENV === 'local') {
-  (async () => {
-    const app = await bootstrap();
-    await app.listen(PORT, '0.0.0.0');
-    Logger.log(`Server running on ${await app.getUrl()}`, 'Bootstrap');
-  })();
+let bootstrap: Promise<Handler>;
+if (process.env.NODE_ENV === 'local') {
+  const HOST = process.env.HOST || '127.0.0.1';
+  const PORT = +(process.env.PORT || 3000);
+  const URL = `http://${HOST}:${PORT}`;
+  initializeApp()
+    .then((app) => app.listen(PORT, HOST))
+    .then(() => Logger.log(`🌈 Server running on ${URL}`, 'Bootstrap'));
+} else {
+  bootstrap = new Promise<Handler>(async (resolve) => {
+    const app = await initializeApp().then((app) => app.init());
+    const expressApp = app.getHttpAdapter().getInstance();
+    resolve(serverlessExpress({ app: expressApp }));
+    Logger.log('🚀 Server initialized', 'Bootstrap');
+  });
 }
 
-let cached: Handler;
-export const handler: Handler = async (...args) => {
-  if (!cached) {
-    const app = await bootstrap();
-    await app.init();
-    cached = createServer({ app: app.getHttpAdapter().getInstance() });
-    Logger.log('Server initialized 🚀', 'Lambda');
-  }
-  return cached(...args);
-};
+export const handler: Handler = async (...args) => (await bootstrap)(...args);
