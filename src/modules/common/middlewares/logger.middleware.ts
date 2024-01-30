@@ -3,22 +3,18 @@ import { Request, Response, NextFunction } from 'express';
 
 @Injectable()
 export class LoggerMiddleware implements NestMiddleware {
-  private logger = new Logger('HTTP');
+  private readonly logger = new Logger('HTTP');
 
   use(req: Request, res: Response, next: NextFunction) {
-    const { method, originalUrl } = req;
     // const userAgent = req.get('user-agent') || '';
     const startTime = Date.now();
 
     res.on('finish', () => {
-      const { statusCode } = res;
-      const endTime = Date.now();
+      const time = Date.now() - startTime;
       // const contentLength = res.get('content-length');
 
       this.logger.log(
-        `${method} ${originalUrl} ${statusCode} \x1B[37m+${
-          endTime - startTime
-        }ms\x1B[39m`
+        `${req.method} ${req.originalUrl} ${res.statusCode} \x1B[37m+${time}ms\x1B[39m`
       );
     });
 

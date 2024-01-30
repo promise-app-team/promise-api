@@ -29,5 +29,16 @@
     ".env-cmdrc.example": ".env-cmdrc, .env-cmdrc.*",
     "package.json": "package-lock.json, yarn.lock, bun.lockb"
   },
-  "material-icon-theme.activeIconPack": "nest"
+  "material-icon-theme.activeIconPack": "nest",
+  "material-icon-theme.files.associations": {
+    "*.entity.ts": "nest-pipe",
+    "*.dto.ts": "nest-guard",
+    "*.processor.ts": "nest-gateway",
+    "*.enum.ts": "nest-filter",
+    "*.interface.ts": "nest-filter",
+    "*.interceptor.ts": "nest-gateway",
+    "*.strategy.ts": "nest-decorator",
+    "*.type.ts": "nest-filter",
+    "*.schema.ts": "nest-pipe"
+  },
 }
