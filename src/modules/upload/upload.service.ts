@@ -9,7 +9,7 @@ export class FileUploadService {
   private readonly client: S3Client;
   constructor(private readonly config: ConfigService) {
     this.client = new S3Client({
-      region: config.get('AWS_REGION'),
+      region: config.get('AWS_DEFAULT_REGION'),
       credentials: {
         accessKeyId: config.get('AWS_ACCESS_KEY_ID')!,
         secretAccessKey: config.get('AWS_SECRET_ACCESS_KEY')!,
@@ -23,7 +23,7 @@ export class FileUploadService {
     const directory = `${env}/${format(Date.now(), 'yyyy-MM-dd')}`;
     const path = `${directory}/${uuid()}${ext ? `.${ext}` : ''}`;
     const bucket = this.config.get('AWS_S3_BUCKET_NAME');
-    const region = this.config.get('AWS_REGION');
+    const region = this.config.get('AWS_DEFAULT_REGION');
 
     try {
       await this.client.send(

@@ -5,7 +5,7 @@ frameworkVersion: '3'
 provider:
   name: aws
   runtime: nodejs18.x
-  region: ${env:AWS_REGION}
+  region: ${env:AWS_DEFAULT_REGION}
   stage: ${opt:stage}
   architecture: arm64
   httpApi:
@@ -13,8 +13,7 @@ provider:
   ecr:
     images:
       appimage:
-        path: ./
-        platform: linux/amd64
+        uri: 736583075859.dkr.ecr.ap-northeast-2.amazonaws.com
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -46,6 +45,7 @@ provider:
     REDIS_URL: ${env:REDIS_URL}
     REDIS_PASSWORD: ${env:REDIS_PASSWORD}
 
+    AWS_S3_BUCKET_NAME: ${env:AWS_S3_BUCKET_NAME}
 functions:
   main:
     architecture: arm64
