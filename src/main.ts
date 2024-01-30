@@ -50,23 +50,28 @@ async function initializeApp<App extends NestExpressApplication>() {
   return app;
 }
 
-let bootstrap: Promise<Handler>;
-if (process.env.NODE_ENV === 'local') {
-  (async () => {
-    const app = await initializeApp();
-    const config = app.get(ConfigService);
-    await app.listen(`${config.get('PORT')}`, '0.0.0.0');
-    Logger.log(`🌈 Server running on ${await app.getUrl()}`, 'Bootstrap');
-  })();
-} else {
-  bootstrap = (async () => {
-    const app = await initializeApp().then((app) => app.init());
-    Logger.log('🚀 Server initialized', 'Bootstrap');
-    return serverlessExpress({ app: app.getHttpAdapter().getInstance() });
-  })();
+async function startLocalServer() {
+  const app = await initializeApp();
+  const config = app.get(ConfigService);
+  await app.listen(`${config.get('PORT')}`, '0.0.0.0');
+  Logger.log(`🌈 Server running on ${await app.getUrl()}`, 'Bootstrap');
 }
 
-export const handler: Handler = (event, context, callback) => {
+async function startServerless() {
+  const app = await initializeApp().then((app) => app.init());
+  Logger.log('🚀 Server initialized', 'Bootstrap');
+  return serverlessExpress({ app: app.getHttpAdapter().getInstance() });
+}
+
+let bootstrap: Promise<Handler>;
+
+if (process.env.NODE_ENV === 'local') {
+  startLocalServer();
+} else {
+  bootstrap = startServerless();
+}
+
+export const handler: Handler = async (event, context, callback) => {
   context.callbackWaitsForEmptyEventLoop = false;
-  return bootstrap.then((handler) => handler(event, context, callback));
+  return (await bootstrap)(event, context, callback);
 };
