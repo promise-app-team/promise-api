@@ -50,19 +50,21 @@ async function initializeApp() {
 
 let bootstrap: Promise<Handler>;
 if (process.env.NODE_ENV === 'local') {
-  const HOST = process.env.HOST || '127.0.0.1';
-  const PORT = +(process.env.PORT || 3000);
-  const URL = `http://${HOST}:${PORT}`;
-  initializeApp()
-    .then((app) => app.listen(PORT, HOST))
-    .then(() => Logger.log(`🌈 Server running on ${URL}`, 'Bootstrap'));
+  (async () => {
+    const app = await initializeApp();
+    const config = app.get(ConfigService);
+    await app.listen(`${config.get('PORT')}`, '0.0.0.0');
+    Logger.log(`🌈 Server running on ${await app.getUrl()}`, 'Bootstrap');
+  })();
 } else {
-  bootstrap = new Promise<Handler>(async (resolve) => {
+  bootstrap = (async () => {
     const app = await initializeApp().then((app) => app.init());
-    const expressApp = app.getHttpAdapter().getInstance();
-    resolve(serverlessExpress({ app: expressApp }));
     Logger.log('🚀 Server initialized', 'Bootstrap');
-  });
+    return serverlessExpress({ app: app.getHttpAdapter().getInstance() });
+  })();
 }
 
-export const handler: Handler = async (...args) => (await bootstrap)(...args);
+export const handler: Handler = (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+  return bootstrap.then((handler) => handler(event, context, callback));
+};
