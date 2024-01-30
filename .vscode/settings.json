@@ -2,6 +2,7 @@
   "cSpell.words": [
     "appimage",
     "autoincrement",
+    "buildx",
     "bunx",
     "codegenie",
     "customfav",
@@ -41,5 +42,5 @@
     "*.strategy.ts": "nest-decorator",
     "*.type.ts": "nest-filter",
     "*.schema.ts": "nest-pipe"
-  },
+  }
 }

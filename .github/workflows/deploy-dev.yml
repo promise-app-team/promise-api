@@ -17,6 +17,7 @@ jobs:
     env:
       TZ: ${{ vars.TZ }}
       NODE_ENV: development
+      NO_COLOR: ${{ vars.NO_COLOR }}
 
       JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
       JWT_ACCESS_EXPIRES_IN: ${{ vars.JWT_ACCESS_EXPIRES_IN }}
@@ -37,8 +38,31 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_S3_BUCKET_NAME: ${{ vars.AWS_S3_BUCKET_NAME }}
     steps:
-      - uses: actions/checkout@v4
-      - name: Install Serverless Framework 
-        run: npm i -g serverless
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_DEFAULT_REGION }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to AWS ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push docker image
+        uses: docker/build-push-action@v5
+        with:
+          push: true
+          tags: ${{ steps.ecr.outputs.registry }}/promise-api-dev:appimage
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+
       - name: Deploy to AWS Lambda
-        run: sls deploy --verbose --force --stage dev
+        run: npx serverless deploy --verbose --force --stage dev

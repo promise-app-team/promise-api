@@ -21,6 +21,5 @@ RUN bun run build
 FROM public.ecr.aws/lambda/nodejs:18.2024.01.24.17-arm64 as release
 COPY --from=install /deps/prod/node_modules node_modules
 COPY --from=prerelease /app/dist dist
-COPY --from=prerelease /app/node_modules node_modules
 
 CMD ["dist/main.handler"]
