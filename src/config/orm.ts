@@ -1,3 +1,4 @@
+import logger from '@/utils/logger';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 
@@ -12,7 +13,9 @@ export function typeormConfig(config: ConfigService): TypeOrmModuleOptions {
     timezone: config.get('DB_TIMEZONE'),
     synchronize: false,
     autoLoadEntities: true,
-    logging: config.get('TYPEORM_VERBOSE') === 'true' ? 'all' : ['error'],
+    logger: logger.typeorm(
+      config.get('TYPEORM_VERBOSE') === 'true' ? 'all' : ['error']
+    ),
     entities: ['dist/**/*.entity.js'],
     migrations: ['dist/database/migrations/*.js'],
     migrationsTableName: '_migrations',

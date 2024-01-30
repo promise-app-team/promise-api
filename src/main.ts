@@ -13,12 +13,14 @@ import { StringifyDateInterceptor } from '@/modules/common/interceptors/stringif
 import { WsAdapter } from '@nestjs/platform-ws';
 import { AppModule } from '@/app/app.module';
 import { join } from 'path';
+import logger from '@/utils/logger';
+import { ConfigService } from '@nestjs/config';
 
-const API_VERSION = process.env.npm_package_version || '0.0.0';
-
-async function initializeApp() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
-
+async function initializeApp<App extends NestExpressApplication>() {
+  const app = await NestFactory.create<App>(AppModule, {
+    logger: logger.nest(),
+  });
+  const config = app.get(ConfigService);
   app.useStaticAssets(join(__dirname, 'assets'), { prefix: '/assets' });
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.useGlobalInterceptors(new StringifyDateInterceptor());
@@ -28,7 +30,7 @@ async function initializeApp() {
 
   const openApiConfig = new DocumentBuilder()
     .setTitle('Promise API')
-    .setVersion(API_VERSION)
+    .setVersion(`${config.get('API_VERSION')}`)
     .addTag('App', 'Entry point of API')
     .addSecurity('bearer', { type: 'http', scheme: 'bearer' })
     .setExternalDoc('OpenAPI Specification (JSON)', `/api-json`)
