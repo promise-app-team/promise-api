@@ -13,12 +13,14 @@ import { StringifyDateInterceptor } from '@/modules/common/interceptors/stringif
 import { WsAdapter } from '@nestjs/platform-ws';
 import { AppModule } from '@/app/app.module';
 import { join } from 'path';
+import logger from '@/utils/logger';
+import { ConfigService } from '@nestjs/config';
 
-const API_VERSION = process.env.npm_package_version || '0.0.0';
-
-async function initializeApp() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
-
+async function initializeApp<App extends NestExpressApplication>() {
+  const app = await NestFactory.create<App>(AppModule, {
+    logger: logger.nest(),
+  });
+  const config = app.get(ConfigService);
   app.useStaticAssets(join(__dirname, 'assets'), { prefix: '/assets' });
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   app.useGlobalInterceptors(new StringifyDateInterceptor());
@@ -28,7 +30,7 @@ async function initializeApp() {
 
   const openApiConfig = new DocumentBuilder()
     .setTitle('Promise API')
-    .setVersion(API_VERSION)
+    .setVersion(`${config.get('API_VERSION')}`)
     .addTag('App', 'Entry point of API')
     .addSecurity('bearer', { type: 'http', scheme: 'bearer' })
     .setExternalDoc('OpenAPI Specification (JSON)', `/api-json`)
@@ -48,21 +50,28 @@ async function initializeApp() {
   return app;
 }
 
-let bootstrap: Promise<Handler>;
-if (process.env.NODE_ENV === 'local') {
-  const HOST = process.env.HOST || '127.0.0.1';
-  const PORT = +(process.env.PORT || 3000);
-  const URL = `http://${HOST}:${PORT}`;
-  initializeApp()
-    .then((app) => app.listen(PORT, HOST))
-    .then(() => Logger.log(`🌈 Server running on ${URL}`, 'Bootstrap'));
-} else {
-  bootstrap = new Promise<Handler>(async (resolve) => {
-    const app = await initializeApp().then((app) => app.init());
-    const expressApp = app.getHttpAdapter().getInstance();
-    resolve(serverlessExpress({ app: expressApp }));
-    Logger.log('🚀 Server initialized', 'Bootstrap');
-  });
+async function startLocalServer() {
+  const app = await initializeApp();
+  const config = app.get(ConfigService);
+  await app.listen(`${config.get('PORT')}`, '0.0.0.0');
+  Logger.log(`🌈 Server running on ${await app.getUrl()}`, 'Bootstrap');
 }
 
-export const handler: Handler = async (...args) => (await bootstrap)(...args);
+async function startServerless() {
+  const app = await initializeApp().then((app) => app.init());
+  Logger.log('🚀 Server initialized', 'Bootstrap');
+  return serverlessExpress({ app: app.getHttpAdapter().getInstance() });
+}
+
+let bootstrap: Promise<Handler>;
+
+if (process.env.NODE_ENV === 'local') {
+  startLocalServer();
+} else {
+  bootstrap = startServerless();
+}
+
+export const handler: Handler = async (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+  return (await bootstrap)(event, context, callback);
+};

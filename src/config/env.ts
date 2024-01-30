@@ -3,6 +3,6 @@ const BUILD = new Date();
 export const extraEnv = () => {
   return {
     BUILD,
-    API_VERSION: process.env.npm_package_version,
+    API_VERSION: '0.0.0', // TODO: versioning
   };
 };

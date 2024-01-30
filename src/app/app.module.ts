@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Logger, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 // import { RedisModule } from '@nestjs-modules/ioredis';
@@ -54,6 +54,7 @@ import { TrimMiddleware } from '@/modules/common/middlewares/trim.middleware';
     FileUploadModule,
     CommonModule,
   ],
+  providers: [Logger],
   controllers: [AppController],
 })
 export class AppModule implements NestModule {

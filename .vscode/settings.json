@@ -17,6 +17,7 @@
     "nestjs",
     "predeploy",
     "typeorm",
+    "uncolorize",
     "websockets"
   ],
   "editor.codeActionsOnSave": {
