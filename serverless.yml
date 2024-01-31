@@ -7,13 +7,12 @@ provider:
   runtime: nodejs18.x
   region: ${env:AWS_DEFAULT_REGION}
   stage: ${opt:stage}
-  architecture: arm64
   httpApi:
     cors: true
   ecr:
     images:
       appimage:
-        uri: 736583075859.dkr.ecr.ap-northeast-2.amazonaws.com
+        uri: 736583075859.dkr.ecr.${self:provider.region}.amazonaws.com/promise-api-${self:provider.stage}:appimage
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -30,6 +29,7 @@ provider:
   environment:
     TZ: ${env:TZ}
     NODE_ENV: ${env:NODE_ENV}
+    NO_COLOR: ${env:NO_COLOR}
 
     JWT_SECRET_KEY: ${env:JWT_SECRET_KEY}
     JWT_ACCESS_EXPIRES_IN: ${env:JWT_ACCESS_EXPIRES_IN}
@@ -48,7 +48,6 @@ provider:
     AWS_S3_BUCKET_NAME: ${env:AWS_S3_BUCKET_NAME}
 functions:
   main:
-    architecture: arm64
     image:
       name: appimage
       command:
