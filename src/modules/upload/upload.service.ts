@@ -9,17 +9,13 @@ export class FileUploadService {
   private readonly client: S3Client;
   constructor(private readonly config: ConfigService) {
     this.client = new S3Client({
-      region: config.get('AWS_DEFAULT_REGION'),
-      credentials: {
-        accessKeyId: config.get('AWS_ACCESS_KEY_ID')!,
-        secretAccessKey: config.get('AWS_SECRET_ACCESS_KEY')!,
-      },
+      region: this.config.get('AWS_DEFAULT_REGION'),
     });
   }
 
   async upload(file: Express.Multer.File): Promise<string> {
     const ext = file.originalname.split('.').pop();
-    const env = this.config.get('NODE_ENV') === 'production' ? 'prod' : 'dev';
+    const env = this.config.get('STAGE');
     const directory = `${env}/${format(Date.now(), 'yyyy-MM-dd')}`;
     const path = `${directory}/${uuid()}${ext ? `.${ext}` : ''}`;
     const bucket = this.config.get('AWS_S3_BUCKET_NAME');

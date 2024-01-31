@@ -28,7 +28,7 @@ export default class TypeOrmLogger extends AbstractLogger {
 
     for (const message of messages) {
       const defaultMeta = {
-        label: `TypeORM.${message.type}`,
+        label: 'TypeORM',
       };
 
       switch (message.type ?? level) {

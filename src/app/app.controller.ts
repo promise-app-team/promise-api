@@ -16,6 +16,7 @@ export class AppController {
       message: 'pong',
       version: this.config.get('API_VERSION'),
       build: this.config.get('BUILD'),
+      deploy: this.config.get('DEPLOY'),
       env: this.config.get('NODE_ENV'),
       tz: this.config.get('TZ'),
     };
