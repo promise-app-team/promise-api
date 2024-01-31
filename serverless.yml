@@ -7,7 +7,6 @@ provider:
   runtime: nodejs18.x
   region: ${env:AWS_DEFAULT_REGION}
   stage: ${opt:stage}
-  architecture: arm64
   httpApi:
     cors: true
   ecr:
@@ -49,7 +48,6 @@ provider:
     AWS_S3_BUCKET_NAME: ${env:AWS_S3_BUCKET_NAME}
 functions:
   main:
-    architecture: arm64
     image:
       name: appimage
       command:

@@ -18,7 +18,7 @@ COPY --from=install /deps/dev/node_modules node_modules
 COPY . .
 RUN bun run build
 
-FROM public.ecr.aws/lambda/nodejs:18.2024.01.24.17-arm64 as release
+FROM public.ecr.aws/lambda/nodejs:18 as release
 COPY --from=install /deps/prod/node_modules node_modules
 COPY --from=prerelease /app/dist dist
 
