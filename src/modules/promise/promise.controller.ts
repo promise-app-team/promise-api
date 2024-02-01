@@ -18,6 +18,7 @@ import {
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
+  ApiQuery,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
@@ -52,12 +53,14 @@ export class PromiseController {
   @Get('')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ operationId: 'getPromiseList', summary: '약속 목록' })
+  @ApiQuery({ name: 'status', enum: ['all', 'available', 'unavailable'] })
   @ApiOkResponse({ type: [OutputPromiseListItem], description: '약속 목록' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   async getMyPromises(
-    @AuthUser() user: UserEntity
+    @AuthUser() user: UserEntity,
+    @Query('status') status?: 'all' | 'available' | 'unavailable'
   ): Promise<OutputPromiseListItem[]> {
-    return this.promiseService.findAllByUser(user.id);
+    return this.promiseService.findAllByUser(user.id, status);
   }
 
   @Get('themes')
