@@ -23,6 +23,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { IsAfter } from '../common/decorators/is-after.decorator';
+import { addMinutes } from 'date-fns';
 
 class Host extends PickType(UserEntity, ['id', 'username', 'profileUrl']) {}
 
@@ -79,6 +81,9 @@ export class InputCreatePromise {
   themeIds!: number[];
 
   @IsISO8601({ strict: true })
+  @IsAfter(addMinutes(new Date(), 10), {
+    message: '약속 시간을 최소 10분 이후로 설정해주세요.',
+  })
   promisedAt!: string;
 
   @IsEnum(DestinationType)
