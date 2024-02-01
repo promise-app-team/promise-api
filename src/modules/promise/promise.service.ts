@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { DataSource, In, Repository } from 'typeorm';
+import { DataSource, In, LessThan, MoreThan, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   DestinationType,
@@ -55,10 +55,21 @@ export class PromiseService {
     return this.promiseRepo.exist({ where: { id } });
   }
 
-  async findAllByUser(userId: number): Promise<OutputPromiseListItem[]> {
+  async findAllByUser(
+    userId: number,
+    status?: 'all' | 'available' | 'unavailable'
+  ): Promise<OutputPromiseListItem[]> {
     const promiseUsers = await this.promiseUserRepo.find({ where: { userId } });
     const promises = await this.promiseRepo.find({
-      where: { id: In(promiseUsers.map(({ promiseId }) => promiseId)) },
+      where: {
+        id: In(promiseUsers.map(({ promiseId }) => promiseId)),
+        promisedAt:
+          status === 'available'
+            ? MoreThan(new Date())
+            : status === 'unavailable'
+              ? LessThan(new Date())
+              : undefined,
+      },
     });
 
     return Promise.all(promises.map(this.transformPromise.bind(this)));

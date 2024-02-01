@@ -37,14 +37,14 @@ $ docker compose up -d
 $ bun run start:dev
 
 # production mode
-$ bun run start:prod
+$ bun run build && bun run start:prod
 ```
 
 ### Database Migration
 
 ```bash
 # generate migration file
-$ bun run migration new [migration-name]
+$ bun run migration new [name]
 
 # run migration
 $ bun run migration up
