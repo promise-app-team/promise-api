@@ -16,6 +16,7 @@ jobs:
     environment: development
     env:
       TZ: ${{ vars.TZ }}
+      STAGE: dev
       NODE_ENV: development
       NO_COLOR: ${{ vars.NO_COLOR }}
 
@@ -59,10 +60,14 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: ${{ steps.ecr.outputs.registry }}/promise-api-dev:appimage
+          tags: ${{ steps.ecr.outputs.registry }}/promise-api-${{ env.STAGE }}:appimage
           cache-from: type=gha
           cache-to: type=gha,mode=max
           provenance: false
+          build-args: NOW=$(date +%Y-%m-%dT%H:%M:%S%z)
+
+      - name: Install serverless framework
+        run: npm install -g serverless serverless-domain-manager
 
       - name: Deploy to AWS Lambda
-        run: npx serverless deploy --verbose --force --stage dev
+        run: serverless deploy --verbose --stage ${{ env.STAGE }}

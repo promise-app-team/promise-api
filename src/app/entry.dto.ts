@@ -18,6 +18,11 @@ export class EntryResponse {
   build!: string;
 
   /**
+   * @example 'yyyy-MM-ddTHH:mm:ssZ'
+   */
+  deploy!: string;
+
+  /**
    * @example production
    */
   env!: string;

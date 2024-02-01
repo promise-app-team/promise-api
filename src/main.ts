@@ -15,6 +15,7 @@ import { AppModule } from '@/app/app.module';
 import { join } from 'path';
 import logger from '@/utils/logger';
 import { ConfigService } from '@nestjs/config';
+import { TimeoutInterceptor } from './modules/common/interceptors/timeout.interceptor';
 
 async function initializeApp<App extends NestExpressApplication>() {
   const app = await NestFactory.create<App>(AppModule, {
@@ -22,10 +23,15 @@ async function initializeApp<App extends NestExpressApplication>() {
   });
   const config = app.get(ConfigService);
   app.useStaticAssets(join(__dirname, 'assets'), { prefix: '/assets' });
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
-  app.useGlobalInterceptors(new StringifyDateInterceptor());
+  app.useGlobalInterceptors(
+    new ClassSerializerInterceptor(app.get(Reflector)),
+    new StringifyDateInterceptor(),
+    new TimeoutInterceptor()
+  );
   app.useGlobalPipes(new ValidationPipe({ transform: true }));
   app.useWebSocketAdapter(new WsAdapter(app));
+  app.useBodyParser('urlencoded', { limit: '5mb', extended: true });
+  app.useBodyParser('json', { limit: '5mb' });
   app.enableCors();
 
   const openApiConfig = new DocumentBuilder()

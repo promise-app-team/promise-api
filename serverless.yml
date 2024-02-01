@@ -2,32 +2,50 @@ service: promise-api
 
 frameworkVersion: '3'
 
+plugins:
+  - serverless-domain-manager
+
+custom:
+  domain:
+    prod: api.promise-app.com
+    dev: api.dev.promise-app.com
+  customDomain:
+    stage: ${self:provider.stage}
+    domainName: ${self:custom.domain.${self:provider.stage}}
+    certificateArn: arn:aws:acm:us-east-1:736583075859:certificate/bb2cf4ae-22a7-41c9-bfc4-98a983b88663
+
 provider:
   name: aws
   runtime: nodejs18.x
   region: ${env:AWS_DEFAULT_REGION}
-  stage: ${opt:stage}
+  stage: ${env:STAGE}
   httpApi:
     cors: true
   ecr:
     images:
       appimage:
         uri: 736583075859.dkr.ecr.${self:provider.region}.amazonaws.com/promise-api-${self:provider.stage}:appimage
-  iamRoleStatements:
-    - Effect: Allow
-      Action:
-        - ec2:CreateNetworkInterface
-        - ec2:DescribeNetworkInterfaces
-        - ec2:DeleteNetworkInterface
-      Resource: '*'
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - ec2:CreateNetworkInterface
+            - ec2:DescribeNetworkInterfaces
+            - ec2:DeleteNetworkInterface
+          Resource: '*'
   vpc:
     securityGroupIds:
       - sg-0322225ba04d879fa
     subnetIds:
       - subnet-0428912e4d39d2947
       - subnet-075c29b5ae54675d0
+  apiGateway:
+    binaryMediaTypes:
+      - '*/*'
   environment:
     TZ: ${env:TZ}
+    STAGE: ${self:provider.stage}
     NODE_ENV: ${env:NODE_ENV}
     NO_COLOR: ${env:NO_COLOR}
 
@@ -46,8 +64,11 @@ provider:
     REDIS_PASSWORD: ${env:REDIS_PASSWORD}
 
     AWS_S3_BUCKET_NAME: ${env:AWS_S3_BUCKET_NAME}
+
 functions:
   main:
+    timeout: 30
+    memorySize: 1024
     image:
       name: appimage
       command:
@@ -55,4 +76,11 @@ functions:
       entryPoint:
         - /lambda-entrypoint.sh
     events:
-      - httpApi: '*'
+      - http:
+          method: ANY
+          path: /
+          cors: true
+      - http:
+          method: ANY
+          path: /{proxy+}
+          cors: true

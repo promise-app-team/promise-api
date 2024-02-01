@@ -6,6 +6,7 @@ import {
   UseGuards,
   UseInterceptors,
   BadRequestException,
+  ParseFilePipeBuilder,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -51,7 +52,18 @@ export class FileUploadController {
     description: '이미지 파일 업로드 성공',
   })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
-  async uploadImageFile(@UploadedFile() file: Express.Multer.File) {
+  async uploadImageFile(
+    @UploadedFile(
+      new ParseFilePipeBuilder()
+        .addFileTypeValidator({ fileType: 'image' })
+        .addMaxSizeValidator({
+          maxSize: 1024 * 1024 * 5,
+          message: '이미지 파일은 최대 5MB까지 업로드 가능합니다.',
+        })
+        .build()
+    )
+    file: Express.Multer.File
+  ) {
     try {
       return { url: await this.uploader.upload(file) };
     } catch (error) {

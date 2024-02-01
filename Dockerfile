@@ -1,5 +1,8 @@
 FROM oven/bun:latest as base
 
+ARG NOW
+ENV DEPLOY=$NOW
+
 FROM base AS install
 WORKDIR /deps
 
