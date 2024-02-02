@@ -34,6 +34,9 @@ provider:
             - ec2:DescribeNetworkInterfaces
             - ec2:DeleteNetworkInterface
           Resource: '*'
+        - Effect: Allow
+          Action: s3:PutObject
+          Resource: arn:aws:s3:::${env:AWS_S3_BUCKET_NAME}/*
   vpc:
     securityGroupIds:
       - sg-0322225ba04d879fa
