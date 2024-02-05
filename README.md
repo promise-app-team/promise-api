@@ -27,10 +27,13 @@ $ cp .env.example .env
 Using [docker-compose](https://www.docker.com/) to setup MySQL and Redis.
 
 ```bash
+# build and run containers
 $ docker compose up -d
 ```
 
-### Running API Server
+It will create a `dockerdata` directory in the project root and store the database data.
+
+### Run Server
 
 ```bash
 # development mode
@@ -41,6 +44,8 @@ $ bun run build && bun run start:prod
 ```
 
 ### Database Migration
+
+Use `migration` command to manage database migration.
 
 ```bash
 # generate migration file
@@ -59,11 +64,18 @@ $ bun run migration down [number]
 $ bun run migration list
 ```
 
-```bash
-# for development (tunneling)
-$ ssh -i ~/path/to/[filename].pem -L 63306:localhost:3306 ubuntu@ec2-3-34-123-5.ap-northeast-2.compute.amazonaws.com
+#### Remote Database Migration
 
-# run migration
+Use `ssh` to tunnel the remote database and run migration.
+
+```bash
+# copy env file and fill the variables
+$ cp .env-cmdrc.example .env-cmdrc
+
+# tunnel remote database (replace <DB_PORT> and <DB_HOST> with your environment variables)
+$ ssh -i ~/path/to/[filename].pem -L <DB_PORT>:<DB_HOST>:3306 ubuntu@43.201.12.251 -N
+
+# run migration development
 $ bun run migration:dev [new|up|down|list]
 ```
 
