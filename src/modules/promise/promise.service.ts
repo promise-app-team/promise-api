@@ -23,6 +23,7 @@ import {
 } from './promise.dto';
 import { UserEntity } from '../user/user.entity';
 import { HasherService } from '../common/services/HasherService.service';
+import { isPast } from 'date-fns';
 
 @Injectable()
 export class PromiseService {
@@ -34,6 +35,7 @@ export class PromiseService {
 
     @InjectRepository(UserEntity)
     private readonly userRepo: Repository<UserEntity>,
+
     @InjectRepository(PromiseEntity)
     private readonly promiseRepo: Repository<PromiseEntity>,
 
@@ -52,7 +54,7 @@ export class PromiseService {
 
   async exists(pid: string): Promise<boolean> {
     const id = +this.hasher.decode(pid);
-    return this.promiseRepo.exist({ where: { id } });
+    return this.promiseRepo.exists({ where: { id } });
   }
 
   async findAllByUser(
@@ -79,7 +81,7 @@ export class PromiseService {
     const id = +this.hasher.decode(pid);
     const promise = await this.promiseRepo.findOne({ where: { id } });
     if (!promise) {
-      throw new NotFoundException(`해당 약속을 찾을 수 없습니다.`);
+      throw new NotFoundException('해당 약속을 찾을 수 없습니다.');
     }
     return this.transformPromise(promise);
   }
@@ -191,7 +193,11 @@ export class PromiseService {
       });
 
       if (!promise) {
-        throw new NotFoundException(`해당 약속을 찾을 수 없습니다.`);
+        throw new NotFoundException('해당 약속을 찾을 수 없습니다.');
+      }
+
+      if (this.isExpired(promise)) {
+        throw new BadRequestException('만료된 약속은 수정할 수 없습니다.');
       }
 
       switch (input.destinationType) {
@@ -244,12 +250,23 @@ export class PromiseService {
     input: InputUpdateUserStartLocation
   ) {
     const id = +this.hasher.decode(pid);
+    const promise = await this.promiseRepo.findOne({ where: { id } });
+    if (!promise) {
+      throw new NotFoundException('해당 약속을 찾을 수 없습니다.');
+    }
+
+    if (this.isExpired(promise)) {
+      throw new BadRequestException(
+        '만료된 약속은 출발지를 설정할 수 없습니다.'
+      );
+    }
+
     const promiseUser = await this.promiseUserRepo.findOne({
       where: { userId, promiseId: id },
     });
 
     if (!promiseUser) {
-      throw new BadRequestException(`해당 약속을 찾을 수 없습니다.`);
+      throw new BadRequestException('참여하지 않은 약속입니다.');
     }
 
     await this.dataSource.transaction(async (em) => {
@@ -275,7 +292,11 @@ export class PromiseService {
     const id = +this.hasher.decode(pid);
     const promise = await this.promiseRepo.findOne({ where: { id } });
     if (!promise) {
-      throw new NotFoundException(`해당 약속을 찾을 수 없습니다.`);
+      throw new NotFoundException('해당 약속을 찾을 수 없습니다.');
+    }
+
+    if (this.isExpired(promise)) {
+      throw new BadRequestException('만료된 약속은 참여할 수 없습니다.');
     }
 
     const promiseUser = await this.promiseUserRepo.findOne({
@@ -283,7 +304,7 @@ export class PromiseService {
     });
 
     if (promiseUser) {
-      throw new BadRequestException(`이미 참여한 약속입니다.`);
+      throw new BadRequestException('이미 참여한 약속입니다.');
     }
 
     await this.promiseUserRepo.save(
@@ -295,7 +316,11 @@ export class PromiseService {
     const id = +this.hasher.decode(pid);
     const promise = await this.promiseRepo.findOne({ where: { id } });
     if (!promise) {
-      throw new NotFoundException(`해당 약속을 찾을 수 없습니다.`);
+      throw new NotFoundException('해당 약속을 찾을 수 없습니다.');
+    }
+
+    if (this.isExpired(promise)) {
+      throw new BadRequestException('만료된 약속은 참여를 취소할 수 없습니다.');
     }
 
     const promiseUser = await this.promiseUserRepo.findOne({
@@ -303,11 +328,11 @@ export class PromiseService {
     });
 
     if (!promiseUser) {
-      throw new BadRequestException(`참여하지 않은 약속입니다.`);
+      throw new BadRequestException('참여하지 않은 약속입니다.');
     }
 
     if (promise.hostId === userId) {
-      throw new BadRequestException(`약속장은 약속을 취소할 수 없습니다.`);
+      throw new BadRequestException('약속장은 약속을 취소할 수 없습니다.');
     }
 
     await this.promiseUserRepo.delete({ userId, promiseId: promise.id });
@@ -315,5 +340,9 @@ export class PromiseService {
 
   async themes(): Promise<ThemeEntity[]> {
     return this.themeRepo.find();
+  }
+
+  isExpired(promise: PromiseEntity) {
+    return isPast(promise.promisedAt) || !!promise.completedAt;
   }
 }
