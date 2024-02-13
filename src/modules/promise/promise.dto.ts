@@ -120,6 +120,8 @@ export class OutputUpdatePromise {
   pid!: string;
 }
 
+export class OutputStartLocation extends OutputDestination {}
+
 export class InputUpdateUserStartLocation extends InputDestination {}
 
 export class OutputCheckPromiseQueue {

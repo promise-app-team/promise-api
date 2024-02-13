@@ -34,6 +34,7 @@ import {
   OutputCheckPromiseQueue,
   OutputCreatePromise,
   OutputPromiseListItem,
+  OutputStartLocation,
 } from './promise.dto';
 import { ThemeEntity } from './theme.entity';
 import { HttpException } from '@/schema/exception';
@@ -133,7 +134,10 @@ export class PromiseController {
     operationId: 'createNewPromise',
     summary: '새로운 약속 추가',
   })
-  @ApiOkResponse({ type: OutputCreatePromise, description: '약속 추가 성공' })
+  @ApiCreatedResponse({
+    type: OutputCreatePromise,
+    description: '약속 추가 성공',
+  })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   @ApiBadRequestResponse({ type: HttpException, description: '약속 추가 실패' })
   async createNewPromise(
@@ -158,10 +162,23 @@ export class PromiseController {
     await this.promiseService.update(pid, user.id, input);
   }
 
+  @Get(':pid/start-location')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ operationId: 'getStartLocation', summary: '출발지 확인' })
+  @ApiOkResponse({ type: OutputStartLocation, description: '출발지 확인 성공' })
+  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
+  @ApiNotFoundResponse({ type: HttpException, description: '약속/출발지 없음' })
+  async startLocationCheck(
+    @AuthUser() user: UserEntity,
+    @Param('pid') pid: string
+  ): Promise<OutputStartLocation> {
+    return this.promiseService.getStartLocation(pid, user.id);
+  }
+
   @Post(':pid/start-location')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ operationId: 'setStartLocation', summary: '출발지 설정' })
-  @ApiOkResponse({ description: '출발지 설정 성공' })
+  @ApiCreatedResponse({ description: '출발지 설정 성공' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   @ApiNotFoundResponse({ type: HttpException, description: '약속 없음' })
   @ApiBadRequestResponse({
@@ -179,7 +196,7 @@ export class PromiseController {
   @Post(':pid/attend')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ operationId: 'attendPromise', summary: '약속 참여' })
-  @ApiOkResponse({ description: '약속 참여 성공' })
+  @ApiCreatedResponse({ description: '약속 참여 성공' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   @ApiNotFoundResponse({ type: HttpException, description: '약속 없음' })
   @ApiBadRequestResponse({ type: HttpException, description: '약속 참여 실패' })
