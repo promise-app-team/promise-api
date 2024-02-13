@@ -78,11 +78,7 @@ export class PromiseService {
   }
 
   async findOne(pid: string): Promise<OutputPromiseListItem> {
-    const id = +this.hasher.decode(pid);
-    const promise = await this.promiseRepo.findOne({ where: { id } });
-    if (!promise) {
-      throw new NotFoundException('해당 약속을 찾을 수 없습니다.');
-    }
+    const promise = await this.getPromiseOrThrow(pid);
     return this.transformPromise(promise);
   }
 
@@ -186,20 +182,12 @@ export class PromiseService {
     hostId: number,
     input: InputUpdatePromise
   ): Promise<OutputUpdatePromise> {
+    const promise = await this.getPromiseOrThrow(pid, hostId);
+    if (this.isExpired(promise)) {
+      throw new BadRequestException('만료된 약속은 수정할 수 없습니다.');
+    }
+
     return this.dataSource.transaction(async (em) => {
-      const id = +this.hasher.decode(pid);
-      const promise = await em.findOne(PromiseEntity, {
-        where: { id, hostId },
-      });
-
-      if (!promise) {
-        throw new NotFoundException('해당 약속을 찾을 수 없습니다.');
-      }
-
-      if (this.isExpired(promise)) {
-        throw new BadRequestException('만료된 약속은 수정할 수 없습니다.');
-      }
-
       switch (input.destinationType) {
         case DestinationType.Static:
           const destination = promise.destinationId
@@ -244,16 +232,31 @@ export class PromiseService {
     });
   }
 
+  async getStartLocation(pid: string, userId: number) {
+    const promise = await this.getPromiseOrThrow(pid);
+    const promiseUser = await this.getPromiseUserOrThrow(promise, userId);
+
+    if (!promiseUser.startLocationId) {
+      throw new NotFoundException('출발지를 설정하지 않았습니다.');
+    }
+
+    const location = await this.locationRepo.findOne({
+      where: { id: promiseUser.startLocationId },
+    });
+
+    if (!location) {
+      throw new NotFoundException('출발지를 찾을 수 없습니다.');
+    }
+
+    return location;
+  }
+
   async updateStartLocation(
     pid: string,
     userId: number,
     input: InputUpdateUserStartLocation
   ) {
-    const id = +this.hasher.decode(pid);
-    const promise = await this.promiseRepo.findOne({ where: { id } });
-    if (!promise) {
-      throw new NotFoundException('해당 약속을 찾을 수 없습니다.');
-    }
+    const promise = await this.getPromiseOrThrow(pid);
 
     if (this.isExpired(promise)) {
       throw new BadRequestException(
@@ -261,13 +264,7 @@ export class PromiseService {
       );
     }
 
-    const promiseUser = await this.promiseUserRepo.findOne({
-      where: { userId, promiseId: id },
-    });
-
-    if (!promiseUser) {
-      throw new BadRequestException('참여하지 않은 약속입니다.');
-    }
+    const promiseUser = await this.getPromiseUserOrThrow(promise, userId);
 
     await this.dataSource.transaction(async (em) => {
       const location = promiseUser.startLocationId
@@ -289,11 +286,7 @@ export class PromiseService {
   }
 
   async attend(pid: string, userId: number) {
-    const id = +this.hasher.decode(pid);
-    const promise = await this.promiseRepo.findOne({ where: { id } });
-    if (!promise) {
-      throw new NotFoundException('해당 약속을 찾을 수 없습니다.');
-    }
+    const promise = await this.getPromiseOrThrow(pid);
 
     if (this.isExpired(promise)) {
       throw new BadRequestException('만료된 약속은 참여할 수 없습니다.');
@@ -313,11 +306,7 @@ export class PromiseService {
   }
 
   async cancel(pid: string, userId: number) {
-    const id = +this.hasher.decode(pid);
-    const promise = await this.promiseRepo.findOne({ where: { id } });
-    if (!promise) {
-      throw new NotFoundException('해당 약속을 찾을 수 없습니다.');
-    }
+    const promise = await this.getPromiseOrThrow(pid);
 
     if (this.isExpired(promise)) {
       throw new BadRequestException('만료된 약속은 참여를 취소할 수 없습니다.');
@@ -344,5 +333,36 @@ export class PromiseService {
 
   isExpired(promise: PromiseEntity) {
     return isPast(promise.promisedAt) || !!promise.completedAt;
+  }
+
+  private async getPromiseOrThrow(pid: string, hostId?: number) {
+    const id = +this.hasher.decode(pid);
+    const promise = await this.promiseRepo.findOne({ where: { id, hostId } });
+    if (!promise) {
+      throw new NotFoundException('해당 약속을 찾을 수 없습니다.');
+    }
+    return promise;
+  }
+
+  private async getPromiseUserOrThrow(
+    promise: PromiseEntity,
+    userId: number
+  ): Promise<PromiseUserEntity>;
+  private async getPromiseUserOrThrow(
+    pid: string,
+    userId: number
+  ): Promise<PromiseUserEntity>;
+  private async getPromiseUserOrThrow(
+    p: string | PromiseEntity,
+    userId: number
+  ) {
+    const id = typeof p === 'string' ? +this.hasher.decode(p) : p.id;
+    const promiseUser = await this.promiseUserRepo.findOne({
+      where: { userId, promiseId: id },
+    });
+    if (!promiseUser) {
+      throw new NotFoundException('참여하지 않은 약속입니다.');
+    }
+    return promiseUser;
   }
 }
