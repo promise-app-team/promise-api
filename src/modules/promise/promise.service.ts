@@ -4,7 +4,15 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { DataSource, In, LessThan, MoreThan, Repository } from 'typeorm';
+import {
+  DataSource,
+  In,
+  IsNull,
+  LessThan,
+  MoreThan,
+  Not,
+  Repository,
+} from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   DestinationType,
@@ -24,6 +32,7 @@ import {
 import { UserEntity } from '../user/user.entity';
 import { HasherService } from '../common/services/HasherService.service';
 import { isPast } from 'date-fns';
+import { findGeometricMedian } from '@/utils/math/geometric';
 
 @Injectable()
 export class PromiseService {
@@ -183,35 +192,16 @@ export class PromiseService {
     input: InputUpdatePromise
   ): Promise<OutputUpdatePromise> {
     const promise = await this.getPromiseOrThrow(pid, hostId);
+
     if (this.isExpired(promise)) {
       throw new BadRequestException('만료된 약속은 수정할 수 없습니다.');
     }
 
+    if (promise.hostId !== hostId) {
+      throw new BadRequestException('약속장만 약속을 수정할 수 있습니다.');
+    }
+
     return this.dataSource.transaction(async (em) => {
-      switch (input.destinationType) {
-        case DestinationType.Static:
-          const destination = promise.destinationId
-            ? await em.findOne(LocationEntity, {
-                where: { id: promise.destinationId },
-              })
-            : null;
-
-          if (destination) {
-            await em.save(
-              em.merge(LocationEntity, destination, { ...input.destination })
-            );
-          } else {
-            await em.save(em.create(LocationEntity, { ...input.destination }));
-          }
-          break;
-        case DestinationType.Dynamic:
-          await em.delete(LocationEntity, { id: promise.destinationId });
-          await em.save(
-            em.merge(PromiseEntity, promise, { destinationId: undefined })
-          );
-          break;
-      }
-
       if (input.themeIds?.length) {
         const themes = await em.find(ThemeEntity, {
           where: { id: In(input.themeIds) },
@@ -227,7 +217,87 @@ export class PromiseService {
         );
       }
 
+      const destination = promise.destinationId
+        ? await em.findOne(LocationEntity, {
+            where: { id: promise.destinationId },
+          })
+        : null;
+
+      if (input.destinationType === DestinationType.Static) {
+        if (!input.destination) {
+          throw new BadRequestException('목적지를 입력해주세요.');
+        }
+
+        if (destination) {
+          await em.save(
+            em.merge(LocationEntity, destination, { ...input.destination })
+          );
+        } else {
+          const { id } = await em.save(
+            em.create(LocationEntity, { ...input.destination })
+          );
+          promise.destinationId = id;
+          await em.save(promise);
+        }
+      }
+
+      if (input.destinationType === DestinationType.Dynamic) {
+        if (input.destination) {
+          if (destination) {
+            await em.save(
+              em.merge(LocationEntity, destination, { ...input.destination })
+            );
+          } else {
+            const { id } = await em.save(
+              em.create(LocationEntity, { ...input.destination })
+            );
+            promise.destinationId = id;
+            await em.save(promise);
+          }
+        } else {
+          const attendees = await em.find(PromiseUserEntity, {
+            where: { promiseId: promise.id, startLocationId: Not(IsNull()) },
+          });
+
+          const startLocations = await em.find(LocationEntity, {
+            where: { id: In(attendees.map((a) => a.startLocationId)) },
+          });
+
+          if (startLocations.length >= 2) {
+            const { latitude, longitude } = findGeometricMedian(startLocations);
+            const location = {
+              city: '[calculated]',
+              district: '',
+              address: '',
+              latitude,
+              longitude,
+            };
+
+            const destination = promise.destinationId
+              ? await em.findOne(LocationEntity, {
+                  where: { id: promise.destinationId },
+                })
+              : null;
+
+            if (destination) {
+              await em.save(
+                em.merge(LocationEntity, destination, { ...location })
+              );
+            } else {
+              const { id } = await em.save(
+                em.create(LocationEntity, { ...location })
+              );
+              promise.destinationId = id;
+              await em.save(promise);
+            }
+          } else {
+            await em.delete(LocationEntity, { id: promise.destinationId });
+          }
+        }
+      }
+
       await em.save(this.promiseRepo.merge(promise, { ...input }));
+
       return { pid };
     });
   }
@@ -275,13 +345,50 @@ export class PromiseService {
 
       if (location) {
         await em.save(em.merge(LocationEntity, location, { ...input }));
-        promiseUser.startLocationId = location.id;
       } else {
         const { id } = await em.save(em.create(LocationEntity, { ...input }));
         promiseUser.startLocationId = id;
+        await em.save(promiseUser);
       }
 
-      await em.save(promiseUser);
+      if (promise.destinationType === DestinationType.Dynamic) {
+        const attendees = await em.find(PromiseUserEntity, {
+          where: { promiseId: promise.id, startLocationId: Not(IsNull()) },
+        });
+
+        const startLocations = await em.find(LocationEntity, {
+          where: { id: In(attendees.map((a) => a.startLocationId)) },
+        });
+
+        if (startLocations.length >= 2) {
+          const { latitude, longitude } = findGeometricMedian(startLocations);
+          const location = {
+            city: '[calculated]',
+            district: '',
+            address: '',
+            latitude,
+            longitude,
+          };
+
+          const destination = promise.destinationId
+            ? await em.findOne(LocationEntity, {
+                where: { id: promise.destinationId },
+              })
+            : null;
+
+          if (destination) {
+            await em.save(
+              em.merge(LocationEntity, destination, { ...location })
+            );
+          } else {
+            const { id } = await em.save(
+              em.create(LocationEntity, { ...location })
+            );
+            promise.destinationId = id;
+            await em.save(promise);
+          }
+        }
+      }
     });
   }
 

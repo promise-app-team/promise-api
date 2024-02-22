@@ -168,7 +168,7 @@ export class PromiseController {
   @ApiOkResponse({ type: OutputStartLocation, description: '출발지 확인 성공' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   @ApiNotFoundResponse({ type: HttpException, description: '약속/출발지 없음' })
-  async startLocationCheck(
+  async getStartLocation(
     @AuthUser() user: UserEntity,
     @Param('pid') pid: string
   ): Promise<OutputStartLocation> {
@@ -185,7 +185,7 @@ export class PromiseController {
     type: HttpException,
     description: '출발지 설정 실패',
   })
-  async startLocation(
+  async updateStartLocation(
     @AuthUser() user: UserEntity,
     @Param('pid') pid: string,
     @Body() input: InputUpdateUserStartLocation

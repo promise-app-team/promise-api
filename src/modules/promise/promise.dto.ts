@@ -19,7 +19,6 @@ import {
   IsString,
   MaxLength,
   Min,
-  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -71,7 +70,7 @@ export class OutputPromiseListItem extends OmitType(PromiseEntity, [
 
 export class InputCreatePromise {
   @IsString()
-  @MaxLength(20)
+  @MaxLength(50)
   @IsNotEmpty({ message: '약속 제목을 입력해주세요.' })
   title!: string;
 
@@ -89,7 +88,6 @@ export class InputCreatePromise {
   @IsEnum(DestinationType)
   destinationType!: DestinationType;
 
-  @ValidateIf((o) => o.destinationType === DestinationType.Static)
   @ValidateNested()
   @IsNotEmptyObject()
   @Type(() => InputDestination)

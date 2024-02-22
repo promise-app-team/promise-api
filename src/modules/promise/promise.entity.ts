@@ -72,4 +72,10 @@ export class PromiseUserEntity {
 
   @Column('int', { name: 'start_location_id', nullable: true })
   startLocationId!: number | null;
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt!: Date;
 }
