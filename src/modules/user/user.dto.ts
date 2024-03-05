@@ -1,7 +1,7 @@
 import { PartialType, PickType } from '@nestjs/swagger';
 import { Provider } from './user.entity';
 import { IsEnum, IsOptional, IsString, Length } from 'class-validator';
-import { IsProfileUrl } from '../common/decorators/is-profile-url.decorator';
+import { IsProfileUrl } from '@/common/decorators/is-profile-url.decorator';
 
 export class InputCreateUser {
   @IsOptional()

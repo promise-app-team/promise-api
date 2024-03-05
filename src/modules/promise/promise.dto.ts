@@ -23,8 +23,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { IsAfter } from '../common/decorators/is-after.decorator';
 import { addMinutes } from 'date-fns';
+import { IsAfter } from '@/common/decorators/is-after.decorator';
 
 class Host extends PickType(UserEntity, ['id', 'username', 'profileUrl']) {}
 

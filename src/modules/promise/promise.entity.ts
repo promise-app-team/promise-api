@@ -1,3 +1,4 @@
+import { DateColumn } from '@/common/decorators/date-column.decorator';
 import {
   Entity,
   Column,
@@ -5,7 +6,6 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { DateColumn } from '../common/decorators/date-column.decorator';
 
 export enum DestinationType {
   Static = 'STATIC', // 장소 지정

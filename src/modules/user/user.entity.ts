@@ -1,3 +1,4 @@
+import { DateColumn } from '@/common/decorators/date-column.decorator';
 import { ApiHideProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import {
@@ -8,7 +9,6 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
 } from 'typeorm';
-import { DateColumn } from '../common/decorators/date-column.decorator';
 
 export enum Provider {
   Kakao = 'KAKAO',

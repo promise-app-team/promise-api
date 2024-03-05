@@ -22,8 +22,8 @@ import {
   OutputUpdatePromise,
 } from './promise.dto';
 import { UserEntity } from '../user/user.entity';
-import { HasherService } from '../common/services/hasher.service';
 import { isPast } from 'date-fns';
+import { HasherService } from '@/common/services/hasher.service';
 
 @Injectable()
 export class PromiseService {

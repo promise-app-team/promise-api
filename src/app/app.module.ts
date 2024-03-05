@@ -13,10 +13,11 @@ import { UserModule } from '@/modules/user/user.module';
 import { jwtConfig } from '@/config/token';
 import { PromiseModule } from '@/modules/promise/promise.module';
 import { FileUploadModule } from '@/modules/upload/upload.module';
-import { CommonModule } from '@/modules/common/common.module';
-import { LoggerMiddleware } from '@/modules/common/middlewares/logger.middleware';
 import { CacheModule } from '@nestjs/cache-manager';
-import { TrimMiddleware } from '@/modules/common/middlewares/trim.middleware';
+import { CommonModule } from '@/common/common.module';
+import { LoggerMiddleware } from '@/common/middlewares/logger.middleware';
+import { TrimMiddleware } from '@/common/middlewares/trim.middleware';
+import { PrismaModule } from '@/prisma/prisma.module';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { TrimMiddleware } from '@/modules/common/middlewares/trim.middleware';
     PromiseModule,
     FileUploadModule,
     CommonModule,
+    PrismaModule,
   ],
   controllers: [AppController],
 })

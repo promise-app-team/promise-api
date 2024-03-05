@@ -9,13 +9,13 @@ import {
 } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { StringifyDateInterceptor } from '@/modules/common/interceptors/stringify-date.interceptor';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { AppModule } from '@/app/app.module';
 import { join } from 'path';
 import logger from '@/utils/logger';
 import { ConfigService } from '@nestjs/config';
-import { TimeoutInterceptor } from './modules/common/interceptors/timeout.interceptor';
+import { StringifyDateInterceptor } from './common/interceptors/stringify-date.interceptor';
+import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
 
 async function initializeApp<App extends NestExpressApplication>() {
   const app = await NestFactory.create<App>(AppModule, {
