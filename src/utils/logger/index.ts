@@ -1,13 +1,8 @@
 import winston from 'winston';
-import NestLogger from './nest-logger';
-import TypeOrmLogger from './typeorm-logger';
+import NestLogger from './nest';
+import TypeOrmLogger from './typeorm';
 import { formatISO } from 'date-fns';
 import { LoggerOptions } from 'typeorm';
-
-const NO_COLOR = !!process.env.NO_COLOR;
-const colorize = NO_COLOR
-  ? (_level: string, message: string) => message
-  : winston.format.colorize().colorize;
 
 const colors = {
   dim: 'dim',
@@ -23,6 +18,15 @@ const colors = {
   white: 'white',
   gray: 'gray',
 } as const;
+
+const NO_COLOR = !!process.env.NO_COLOR;
+function colorize(color: keyof typeof colors, message: string) {
+  if (NO_COLOR) {
+    return message;
+  }
+
+  return winston.format.colorize().colorize(color, message);
+}
 
 const logger = winston.createLogger({
   transports: [
@@ -58,33 +62,33 @@ const logger = winston.createLogger({
           } = args;
 
           function build(body: string, meta = '') {
-            const header = `${colorize(colors.dim, `${timestamp}`)}`;
-            const name = label ? colorize(colors.magenta, `${label} `) : '';
-            const footer = `${colorize(colors.dim, `${ms ? `+${ms}ms` : ''}`)}`;
+            const header = `${colorize('dim', `${timestamp}`)}`;
+            const name = label ? colorize('magenta', `${label} `) : '';
+            const footer = `${colorize('dim', `${ms ? `+${ms}ms` : ''}`)}`;
             return `${header} ${level} ${name}${body} ${footer} ${meta}`;
           }
 
           if (isRequest(request) && isResponse(response)) {
-            const method = colorize(colors.blue, request.method);
-            const path = colorize(colors.magenta, `${request.url}`);
+            const method = colorize('blue', request.method);
+            const path = colorize('magenta', `${request.url}`);
             const status = `${response.statusCode}`;
             const color =
               status.startsWith('2') || status.startsWith('3')
-                ? colors.green
+                ? 'green'
                 : status.startsWith('4')
-                  ? colors.yellow
+                  ? 'yellow'
                   : status.startsWith('5')
-                    ? colors.red
-                    : colors.gray;
+                    ? 'red'
+                    : 'gray';
             return build(`${method} ${path} ${colorize(color, status)}`);
           }
 
           if (error instanceof Error) {
             const errorMessage = (error.stack ?? error.message) || `${error}`;
-            const stack = colorize(colors.yellow, errorMessage);
+            const stack = colorize('yellow', errorMessage);
             return build(message, `\n${stack}`);
           } else if (typeof error === 'string') {
-            const stack = colorize(colors.yellow, error);
+            const stack = colorize('yellow', error);
             return build(message, `\n${stack}`);
           }
 
