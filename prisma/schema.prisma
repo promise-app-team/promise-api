@@ -1,0 +1,197 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DB_URL")
+  shadowDatabaseUrl = env("DB_SHADOW_URL")
+}
+
+enum Provder {
+  KAKAO
+  GOOGLE
+  APPLE
+}
+
+enum DestinationType {
+  STATIC
+  DYNAMIC
+}
+
+enum LocationShareType {
+  DISTANCE
+  TIME
+}
+
+model User {
+  id Int @id @default(autoincrement()) @db.UnsignedInt
+
+  // 사용자 이름
+  username String? @map("username") @db.VarChar(80)
+
+  // 프로필 이미지 URL
+  profileUrl String? @map("profile_url") @db.Text
+
+  // OAuth 공급자
+  provider Provder? @map("provider")
+
+  // OAuth 공급자에서 제공하는 사용자 ID
+  providerId String? @map("provider_id") @db.VarChar(100)
+
+  // 마지막 로그인 시간
+  lastSignedAt DateTime @default(now()) @map("last_signed_at") @db.Timestamp(0)
+
+  // 탈퇴 시간
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp(0)
+
+  // 탈퇴 사유
+  leaveReason String? @map("leave_reason") @db.VarChar(255)
+
+  // 생성일
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+
+  // 수정일
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // relation fields
+  myPromises Promise[]
+  promises   PromiseUser[]
+
+  @@unique(name: "identifier", fields: [provider, providerId])
+  @@map("pm_users")
+}
+
+model Promise {
+  id Int @id @default(autoincrement()) @db.UnsignedInt
+
+  // 약속장 ID
+  hostId Int  @map("host_id") @db.UnsignedInt
+  host   User @relation(fields: [hostId], references: [id])
+
+  // 약속 제목
+  title String @map("title") @db.VarChar(50)
+
+  // 목적지 유형
+  destinationType DestinationType @map("destination_type")
+
+  // 목적지 ID
+  destinationId Int?      @map("destination_id") @db.UnsignedInt
+  destination   Location? @relation(fields: [destinationId], references: [id])
+
+  // 위치 공유 시작 유형
+  locationShareStartType LocationShareType @map("location_share_start_type")
+
+  // 위치 공유 시작 값
+  locationShareStartValue Int @map("location_share_start_value") @db.UnsignedInt
+
+  // 위치 공유 종료 유형
+  locationShareEndType LocationShareType @map("location_share_end_type")
+
+  // 위치 공유 종료 값
+  locationShareEndValue Int @map("location_share_end_value") @db.UnsignedInt
+
+  // 약속 시간
+  promisedAt DateTime @map("promised_at") @db.Timestamp(0)
+
+  // 약속 완료 시간
+  completedAt DateTime? @map("completed_at") @db.Timestamp(0)
+
+  // 생성일
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+
+  // 수정일
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // relation fields
+  users  PromiseUser[]
+  themes PromiseTheme[]
+
+  @@map("pm_promises")
+}
+
+model PromiseUser {
+  // 약속 참여자 ID
+  userId Int  @map("user_id") @db.UnsignedInt
+  user   User @relation(fields: [userId], references: [id])
+
+  // 약속 ID
+  promiseId Int     @map("promise_id") @db.UnsignedInt
+  promise   Promise @relation(fields: [promiseId], references: [id])
+
+  // 약속 참여자 출발지 ID
+  startLocationId Int?      @unique @map("start_location_id") @db.UnsignedInt
+  startLocation   Location? @relation(fields: [startLocationId], references: [id], onDelete: Cascade)
+
+  // 생성일
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+
+  // 수정일
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@unique(name: "promiseUser", fields: [promiseId, userId])
+  @@map("pm_promise_users")
+}
+
+model Theme {
+  id Int @id @default(autoincrement()) @db.UnsignedInt
+
+  // 테마 이름
+  name String @map("name") @db.VarChar(10)
+
+  // relation fields
+  promises PromiseTheme[]
+
+  @@map("pm_themes")
+}
+
+model PromiseTheme {
+  // 약속 ID
+  promiseId Int     @map("promise_id") @db.UnsignedInt
+  promise   Promise @relation(fields: [promiseId], references: [id])
+
+  // 테마 ID
+  themeId Int   @map("theme_id") @db.UnsignedInt
+  theme   Theme @relation(fields: [themeId], references: [id])
+
+  @@unique(name: "promiseTheme", fields: [promiseId, themeId])
+  @@map("pm_promise_themes")
+}
+
+model Location {
+  id Int @id @default(autoincrement()) @db.UnsignedInt
+
+  // 시/도
+  city String? @map("city") @db.VarChar(10)
+
+  // 구/군
+  district String? @map("district") @db.VarChar(10)
+
+  // 동/읍/면 (상세주소)
+  address String? @map("address") @db.VarChar(100)
+
+  // 위도 (-90 ~ 90)
+  latitude Decimal @map("latitude") @db.Decimal(10, 8)
+
+  // 경도 (-180 ~ 180)
+  longitude Decimal @map("longitude") @db.Decimal(11, 8)
+
+  // 생성일
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+
+  // 수정일
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  // relation fields
+  destinations   Promise[]
+  startLocations PromiseUser[]
+
+  @@map("pm_locations")
+}

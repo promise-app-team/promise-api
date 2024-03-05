@@ -9,6 +9,8 @@ export const schema = Joi.object({
   JWT_ACCESS_EXPIRES_IN: Joi.string().required(),
   JWT_REFRESH_EXPIRES_IN: Joi.string().required(),
 
+  INTHASH_KEY: Joi.string().required(),
+
   DB_HOST: Joi.string().required(),
   DB_PORT: Joi.number().required(),
   DB_USERNAME: Joi.string().required(),

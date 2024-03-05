@@ -16,13 +16,13 @@ import { LocationEntity } from './location.entity';
 import {
   InputCreatePromise,
   InputUpdatePromise,
-  InputUpdateUserStartLocation as InputUpdateUserStartLocation,
+  InputUpdateUserStartLocation,
   OutputCreatePromise,
   OutputPromiseListItem,
   OutputUpdatePromise,
 } from './promise.dto';
 import { UserEntity } from '../user/user.entity';
-import { HasherService } from '../common/services/HasherService.service';
+import { HasherService } from '../common/services/hasher.service';
 import { isPast } from 'date-fns';
 
 @Injectable()
