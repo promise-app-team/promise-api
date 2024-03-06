@@ -40,28 +40,28 @@ It will create a `dockerdata` directory in the project root and store the databa
 $ bun run start:dev
 
 # production mode
-$ bun run build && bun run start:prod
+$ bun run build
+$ bun run start:prod
 ```
 
 ### Database Migration
 
-Use `migration` command to manage database migration.
+Edit [schema.prisma](./prisma/schema.prisma) to define the database schema.
+
+Use the following commands to run migration.
 
 ```bash
-# generate migration file
-$ bun run migration new [name]
+# initialize migration. run first time only
+$ bun run migrate:init
 
 # run migration
-$ bun run migration up
+$ bun run migrate
 
-# revert last migration
-$ bun run migration down
+# show migration status
+$ bun run migrate:stat
 
-# revert migrations
-$ bun run migration down [number]
-
-# list migrations
-$ bun run migration list
+# deploy migration
+$ bun run migrate:prod
 ```
 
 #### Remote Database Migration
@@ -69,16 +69,16 @@ $ bun run migration list
 Use `ssh` to tunnel the remote database and run migration.
 
 ```bash
+# checkout to develop branch and pull the latest code
+$ git checkout develop
+$ git pull origin develop
+
 # copy env file and fill the variables
 $ cp .env-cmdrc.example .env-cmdrc
 
-# tunnel remote database (replace <DB_PORT> and <DB_HOST> with your environment variables)
-$ ssh -i ~/path/to/[filename].pem -L <DB_PORT>:<DB_HOST>:3306 ubuntu@43.201.12.251 -N
+# tunnel remote database (replace <port> and <hostname> with your environment variables)
+$ ssh -i ~/path/to/[filename].pem -L <port>:<hostname>:3306 [ec2-host-name]@[ec2-public-ip] -N
 
-# run migration development
-$ bun run migration:dev [new|up|down|list]
+# deploy migration
+$ bun run migrate:dev
 ```
-
-## Project Structure
-
-TODO
