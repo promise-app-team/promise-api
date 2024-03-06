@@ -1,4 +1,3 @@
-import { JwtAuthGuard } from '@/modules/auth/jwt.guard';
 import {
   Post,
   Controller,
@@ -8,6 +7,7 @@ import {
   BadRequestException,
   ParseFilePipeBuilder,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -17,9 +17,10 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { FileUploadService } from './upload.service';
-import { FileUploadOutput } from './upload.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
+
+import { JwtAuthGuard } from '@/modules/auth/jwt.guard';
+import { FileUploadOutput } from '@/modules/upload/upload.dto';
+import { FileUploadService } from '@/modules/upload/upload.service';
 import { HttpException } from '@/schema/exception';
 
 @ApiTags('File Upload')

@@ -1,6 +1,6 @@
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { format } from 'date-fns';
 import { v4 as uuid } from 'uuid';
 

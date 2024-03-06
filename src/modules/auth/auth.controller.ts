@@ -7,9 +7,10 @@ import {
   ApiTags,
   ApiCreatedResponse,
 } from '@nestjs/swagger';
-import { InputCreateUser } from '../user/user.dto';
-import { AuthService } from './auth.service';
-import { AuthToken, InputRefreshToken } from './auth.dto';
+
+import { AuthToken, InputRefreshToken } from '@/modules/auth/auth.dto';
+import { AuthService } from '@/modules/auth/auth.service';
+import { InputCreateUser } from '@/modules/user/user.dto';
 import { HttpException } from '@/schema/exception';
 
 @ApiTags('Auth')

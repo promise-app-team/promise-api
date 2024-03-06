@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { FileUploadService } from './upload.service';
-import { FileUploadController } from './upload.controller';
-import { UserModule } from '../user/user.module';
+
+import { FileUploadController } from '@/modules/upload/upload.controller';
+import { FileUploadService } from '@/modules/upload/upload.service';
+import { UserModule } from '@/modules/user/user.module';
 
 @Module({
   imports: [UserModule],

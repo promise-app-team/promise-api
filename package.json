@@ -2,7 +2,11 @@
   "name": "promise-api",
   "version": "0.0.0",
   "description": "Promise API Server",
-  "author": "jinyongp <dev.jinyongp@gmail.com>",
+  "author": {
+    "name": "jinyongp",
+    "email": "dev.jinyongp@gmail.com",
+    "url": "https://jinyongp.dev"
+  },
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -18,8 +22,8 @@
     "migrate:prod": "prisma migrate deploy",
     "deploy": "sls deploy --verbose --force",
     "format": "prettier --write **/* --ext .ts",
-    "lint": "DEBUG=eslint:cli-engine eslint \"src/**/*\" --ext .ts",
-    "lint:fix": "eslint --fix src/**/*.ts",
+    "lint": "DEBUG=eslint:cli-engine eslint \"src/**/*.ts\"",
+    "lint:fix": "DEBUG=eslint:cli-engine eslint --fix \"src/**/*.ts\"",
     "lint:tsc": "tsc --noEmit",
     "test": "jest --coverage",
     "update": "bunx npm-check-updates -ui"

@@ -1,8 +1,9 @@
-import { HttpException } from '@/schema/exception';
 import { ArgumentsHost, Catch } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Prisma } from '@prisma/client';
 import { Response } from 'express';
+
+import { HttpException } from '@/schema/exception';
 
 @Catch(Prisma.PrismaClientKnownRequestError)
 export class PrismaExceptionFilter extends BaseExceptionFilter {
@@ -23,9 +24,7 @@ export class PrismaExceptionFilter extends BaseExceptionFilter {
         break;
 
       default:
-        console.error(
-          `Unhandled PrismaExceptionFilter: ${exception.message} ${exception.code}`
-        );
+        console.error(`Unhandled PrismaExceptionFilter: ${exception.message} ${exception.code}`);
         super.catch(exception, host);
         break;
     }

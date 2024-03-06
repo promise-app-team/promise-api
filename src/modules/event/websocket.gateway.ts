@@ -1,3 +1,5 @@
+import { IncomingMessage } from 'http';
+
 import { Logger } from '@nestjs/common';
 import {
   WebSocketGateway,
@@ -7,9 +9,8 @@ import {
   WebSocketServer,
   SubscribeMessage,
 } from '@nestjs/websockets';
-import { IncomingMessage } from 'http';
-import { WebSocket } from 'ws';
 import { v4 as uuid } from 'uuid';
+import { WebSocket } from 'ws';
 
 interface WebSocketClient extends WebSocket {
   id: string;
