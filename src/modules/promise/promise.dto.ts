@@ -1,38 +1,71 @@
-import { OmitType, PartialType, PickType } from '@nestjs/swagger';
-import {
-  DestinationType,
-  LocationShareType,
-  PromiseEntity,
-} from './promise.entity';
-import { LocationEntity } from './location.entity';
-import { UserEntity } from '../user/user.entity';
+import { PickType } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsEnum,
-  IsISO8601,
   IsInt,
+  IsISO8601,
   IsLatitude,
   IsLongitude,
   IsNotEmpty,
-  IsNotEmptyObject,
   IsOptional,
   IsString,
   MaxLength,
   Min,
-  ValidateIf,
+  ValidateBy,
   ValidateNested,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 import { addMinutes } from 'date-fns';
+import { filter, map, pick, pipe } from 'remeda';
+
+import { LocationDTO } from './location.dto';
+
 import { IsAfter } from '@/common/decorators/is-after.decorator';
+import { ApplyDTO } from '@/common/mixins/dto.mixin';
+import { DestinationType, LocationShareType, PromiseEntity, UserEntity } from '@/prisma';
 
-class Host extends PickType(UserEntity, ['id', 'username', 'profileUrl']) {}
+const promiseKeys = [
+  'id',
+  'pid',
+  'title',
+  'destinationType',
+  'locationShareStartType',
+  'locationShareStartValue',
+  'locationShareEndType',
+  'locationShareEndValue',
+  'promisedAt',
+  'completedAt',
+  'createdAt',
+] as const;
 
-class Attendee extends PickType(UserEntity, ['id', 'username', 'profileUrl']) {}
+const hostKeys = ['id', 'username', 'profileUrl'] as const;
 
-class OutputDestination extends LocationEntity {}
+const attendeeKeys = ['id', 'username', 'profileUrl'] as const;
 
-class InputDestination {
+class Host extends PickType(UserEntity, hostKeys) {}
+
+class Attendee extends PickType(UserEntity, attendeeKeys) {}
+
+export class PromiseDTO extends ApplyDTO(PickType(PromiseEntity, promiseKeys), (obj: PromiseEntity) => ({
+  ...pick(obj, promiseKeys),
+  host: pick(obj.host, hostKeys),
+  themes: map(obj.themes, ({ theme }) => theme.name),
+  destination: obj.destination ? LocationDTO.from(obj.destination) : null,
+  attendees: pipe(
+    obj.users,
+    filter(({ user }) => user.id !== obj.host.id),
+    map(({ user }) => pick(user, attendeeKeys))
+  ),
+})) {
+  host!: Host;
+  themes!: string[];
+  destination!: LocationDTO | null;
+  attendees!: Attendee[];
+}
+
+export class PublicPromiseDTO extends PromiseDTO {}
+
+export class InputLocationDTO {
   @IsString()
   @MaxLength(50)
   @IsNotEmpty()
@@ -57,21 +90,9 @@ class InputDestination {
   longitude!: number;
 }
 
-export class OutputPromiseListItem extends OmitType(PromiseEntity, [
-  'id',
-  'hostId',
-  'destinationId',
-]) {
-  pid!: string;
-  themes!: string[];
-  host!: Host;
-  destination!: OutputDestination | null;
-  attendees!: Attendee[];
-}
-
-export class InputCreatePromise {
+export class InputPromiseDTO {
   @IsString()
-  @MaxLength(20)
+  @MaxLength(50)
   @IsNotEmpty({ message: '약속 제목을 입력해주세요.' })
   title!: string;
 
@@ -81,19 +102,22 @@ export class InputCreatePromise {
   themeIds!: number[];
 
   @IsISO8601({ strict: true })
-  @IsAfter(addMinutes(new Date(), 10), {
-    message: '약속 시간을 최소 10분 이후로 설정해주세요.',
-  })
+  @IsAfter(() => addMinutes(new Date(), 10))
   promisedAt!: string;
 
   @IsEnum(DestinationType)
   destinationType!: DestinationType;
 
-  @ValidateIf((o) => o.destinationType === DestinationType.Static)
   @ValidateNested()
-  @IsNotEmptyObject()
-  @Type(() => InputDestination)
-  destination!: InputDestination | null;
+  @IsOptional()
+  @ValidateBy({
+    name: 'isNotEmptyObject',
+    validator(value: any) {
+      console.log(value);
+    },
+  })
+  @Type(() => InputLocationDTO)
+  destination!: InputLocationDTO | null;
 
   @IsEnum(LocationShareType)
   locationShareStartType!: LocationShareType;
@@ -110,20 +134,22 @@ export class InputCreatePromise {
   locationShareEndValue!: number;
 }
 
-export class OutputCreatePromise {
-  pid!: string;
+export class PromisePidDTO extends ApplyDTO(PickType(PromiseEntity, ['pid']), (obj: PromiseEntity) =>
+  pick(obj, ['pid'])
+) {}
+
+export class NestedTestDTO {
+  @IsString()
+  @IsNotEmpty()
+  title!: string;
 }
 
-export class InputUpdatePromise extends PartialType(InputCreatePromise) {}
+export class TestDTO {
+  @IsString()
+  @IsNotEmpty()
+  title!: string;
 
-export class OutputUpdatePromise {
-  pid!: string;
-}
-
-export class OutputStartLocation extends OutputDestination {}
-
-export class InputUpdateUserStartLocation extends InputDestination {}
-
-export class OutputCheckPromiseQueue {
-  pid!: string;
+  @ValidateNested()
+  @Type(() => NestedTestDTO)
+  subtitle!: NestedTestDTO | null;
 }

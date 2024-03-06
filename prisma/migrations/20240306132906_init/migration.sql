@@ -83,16 +83,16 @@ ALTER TABLE `pm_promises` ADD CONSTRAINT `pm_promises_host_id_fkey` FOREIGN KEY 
 ALTER TABLE `pm_promises` ADD CONSTRAINT `pm_promises_destination_id_fkey` FOREIGN KEY (`destination_id`) REFERENCES `pm_locations`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `pm_promise_users` ADD CONSTRAINT `pm_promise_users_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `pm_users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `pm_promise_users` ADD CONSTRAINT `pm_promise_users_user_id_fkey` FOREIGN KEY (`user_id`) REFERENCES `pm_users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `pm_promise_users` ADD CONSTRAINT `pm_promise_users_promise_id_fkey` FOREIGN KEY (`promise_id`) REFERENCES `pm_promises`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `pm_promise_users` ADD CONSTRAINT `pm_promise_users_promise_id_fkey` FOREIGN KEY (`promise_id`) REFERENCES `pm_promises`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `pm_promise_users` ADD CONSTRAINT `pm_promise_users_start_location_id_fkey` FOREIGN KEY (`start_location_id`) REFERENCES `pm_locations`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE `pm_promise_users` ADD CONSTRAINT `pm_promise_users_start_location_id_fkey` FOREIGN KEY (`start_location_id`) REFERENCES `pm_locations`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `pm_promise_themes` ADD CONSTRAINT `pm_promise_themes_promise_id_fkey` FOREIGN KEY (`promise_id`) REFERENCES `pm_promises`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `pm_promise_themes` ADD CONSTRAINT `pm_promise_themes_promise_id_fkey` FOREIGN KEY (`promise_id`) REFERENCES `pm_promises`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `pm_promise_themes` ADD CONSTRAINT `pm_promise_themes_theme_id_fkey` FOREIGN KEY (`theme_id`) REFERENCES `pm_themes`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `pm_promise_themes` ADD CONSTRAINT `pm_promise_themes_theme_id_fkey` FOREIGN KEY (`theme_id`) REFERENCES `pm_themes`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;

@@ -1,7 +1,7 @@
 import { registerDecorator, ValidationOptions } from 'class-validator';
-import { fromUnixTime, isAfter, isValid } from 'date-fns';
+import { formatISO, fromUnixTime, isAfter, isValid } from 'date-fns';
 
-export function IsAfter(date: Date, validationOptions?: ValidationOptions): PropertyDecorator {
+export function IsAfter(date: () => Date, validationOptions?: ValidationOptions): PropertyDecorator {
   return function (object, propertyName) {
     registerDecorator({
       name: 'isAfterNow',
@@ -21,12 +21,12 @@ export function IsAfter(date: Date, validationOptions?: ValidationOptions): Prop
             }
           }
           if (isValid(value)) {
-            return isAfter(value, date);
+            return isAfter(value, date());
           }
           return false;
         },
         defaultMessage(args) {
-          return `${args?.property} must be a date after now`;
+          return `${args?.property} must be a date after ${formatISO(date())}`;
         },
       },
     });

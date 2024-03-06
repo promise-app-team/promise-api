@@ -1,368 +1,307 @@
-import {
-  BadRequestException,
-  Inject,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
-import { DataSource, In, LessThan, MoreThan, Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
-import {
-  DestinationType,
-  PromiseEntity,
-  PromiseUserEntity,
-} from './promise.entity';
-import { PromiseThemeEntity, ThemeEntity } from './theme.entity';
-import { LocationEntity } from './location.entity';
-import {
-  InputCreatePromise,
-  InputUpdatePromise,
-  InputUpdateUserStartLocation,
-  OutputCreatePromise,
-  OutputPromiseListItem,
-  OutputUpdatePromise,
-} from './promise.dto';
-import { UserEntity } from '../user/user.entity';
+import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { isPast } from 'date-fns';
+import { difference, map, pick, pipe } from 'remeda';
+
+import { InputLocationDTO, InputPromiseDTO } from './promise.dto';
+
 import { HasherService } from '@/common/services/hasher.service';
+import { PrismaService, UserEntity } from '@/prisma';
+import { ifs, guard } from '@/utils/guard';
 
 @Injectable()
 export class PromiseService {
   constructor(
-    private readonly dataSource: DataSource,
-
-    @Inject(HasherService)
-    private readonly hasher: HasherService,
-
-    @InjectRepository(UserEntity)
-    private readonly userRepo: Repository<UserEntity>,
-
-    @InjectRepository(PromiseEntity)
-    private readonly promiseRepo: Repository<PromiseEntity>,
-
-    @InjectRepository(PromiseUserEntity)
-    private readonly promiseUserRepo: Repository<PromiseUserEntity>,
-
-    @InjectRepository(ThemeEntity)
-    private readonly themeRepo: Repository<ThemeEntity>,
-
-    @InjectRepository(PromiseThemeEntity)
-    private readonly promiseThemeRepo: Repository<PromiseThemeEntity>,
-
-    @InjectRepository(LocationEntity)
-    private readonly locationRepo: Repository<LocationEntity>
+    private readonly prisma: PrismaService,
+    private readonly hasher: HasherService
   ) {}
+
+  private promiseInclude: Prisma.PromiseInclude = {
+    host: {
+      select: {
+        id: true,
+        username: true,
+        profileUrl: true,
+      },
+    },
+    users: {
+      select: { user: true },
+    },
+    themes: {
+      select: { theme: true },
+    },
+    destination: true,
+  };
 
   async exists(pid: string): Promise<boolean> {
     const id = +this.hasher.decode(pid);
-    return this.promiseRepo.exists({ where: { id } });
+    const exists = await this.prisma.promise.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    return !!exists;
   }
 
-  async findAllByUser(
-    userId: number,
-    status?: 'all' | 'available' | 'unavailable'
-  ): Promise<OutputPromiseListItem[]> {
-    const promiseUsers = await this.promiseUserRepo.find({ where: { userId } });
-    const promises = await this.promiseRepo.find({
+  async findAllByUser(user: UserEntity, status?: 'all' | 'available' | 'unavailable') {
+    const now = new Date();
+    return this.prisma.promise.findMany({
       where: {
-        id: In(promiseUsers.map(({ promiseId }) => promiseId)),
-        promisedAt:
-          status === 'available'
-            ? MoreThan(new Date())
-            : status === 'unavailable'
-              ? LessThan(new Date())
-              : undefined,
+        users: {
+          some: {
+            userId: user.id,
+          },
+        },
+        promisedAt: ifs([
+          [status === 'available', { gt: now }],
+          [status === 'unavailable', { lt: now }],
+        ]),
+      },
+      include: this.promiseInclude,
+    });
+  }
+
+  async findOneByPid(pid: string) {
+    const id = +this.hasher.decode(pid);
+    return this.prisma.promise.findUniqueOrThrow({
+      where: { id },
+      include: {
+        themes: {
+          select: { theme: true },
+        },
+        host: {
+          select: {
+            id: true,
+            username: true,
+            profileUrl: true,
+          },
+        },
+        destination: true,
+        users: {
+          select: { user: true },
+        },
       },
     });
-
-    return Promise.all(promises.map(this.transformPromise.bind(this)));
   }
 
-  async findOne(pid: string): Promise<OutputPromiseListItem> {
-    const promise = await this.getPromiseOrThrow(pid);
-    return this.transformPromise(promise);
-  }
-
-  private async transformPromise(
-    promise: PromiseEntity
-  ): Promise<OutputPromiseListItem> {
-    const result: OutputPromiseListItem = {
-      ...promise,
-      pid: this.hasher.encode(promise.id),
-      themes: [],
-      host: { id: 0, username: '', profileUrl: '' },
-      destination: null,
-      attendees: [],
-    };
-
-    Reflect.deleteProperty(result, 'id');
-    Reflect.deleteProperty(result, 'hostId');
-    Reflect.deleteProperty(result, 'destinationId');
-
-    const [themes, host, promiseUsers] = await Promise.all([
-      this.promiseThemeRepo.find({ where: { promiseId: promise.id } }),
-      this.userRepo.findOneOrFail({
-        where: { id: promise.hostId },
-        select: ['id', 'username', 'profileUrl'],
-      }),
-      this.promiseUserRepo.find({ where: { promiseId: promise.id } }),
-    ]);
-
-    result.themes = (
-      await this.themeRepo.find({
-        where: { id: In(themes.map(({ themeId }) => themeId)) },
-        select: ['theme'],
-      })
-    ).map(({ theme }) => theme);
-
-    result.host = host;
-
-    const attendeeIds = promiseUsers
-      .filter(({ userId }) => userId !== promise.hostId)
-      .map(({ userId }) => userId);
-
-    result.attendees = await this.userRepo.find({
-      where: { id: In(attendeeIds) },
-      select: ['id', 'username', 'profileUrl'],
+  async create(host: UserEntity, input: InputPromiseDTO) {
+    return this.prisma.promise.create({
+      data: {
+        ...pick(input, [
+          'title',
+          'destinationType',
+          'locationShareStartType',
+          'locationShareStartValue',
+          'locationShareEndType',
+          'locationShareEndValue',
+          'promisedAt',
+        ]),
+        host: {
+          connect: {
+            id: host.id,
+          },
+        },
+        users: {
+          create: {
+            userId: host.id,
+          },
+        },
+        themes: {
+          createMany: {
+            data: input.themeIds.map((themeId) => ({ themeId })),
+          },
+        },
+        destination: input.destination
+          ? {
+              create: input.destination,
+            }
+          : undefined,
+      },
+      include: this.promiseInclude,
     });
-
-    if (promise.destinationId) {
-      result.destination = await this.locationRepo.findOne({
-        where: { id: promise.destinationId },
-      });
-    }
-
-    return result;
   }
 
-  async create(
-    hostId: number,
-    input: InputCreatePromise
-  ): Promise<OutputCreatePromise> {
-    return this.dataSource.transaction(async (em) => {
-      let destinationId: number | undefined;
-      if (input.destination) {
-        const destination = await em.save(
-          em.create(LocationEntity, { ...input.destination })
-        );
-        destinationId = destination.id;
-      }
+  async update(pid: string, host: UserEntity, input: InputPromiseDTO) {
+    return this.prisma.$transaction(async (tx) => {
+      const id = +this.hasher.decode(pid);
 
-      const promise = await em.save(
-        em.create(PromiseEntity, {
-          ...input,
-          hostId,
-          destinationId,
-        })
-      );
-
-      const themes = await em.find(ThemeEntity, {
-        where: { id: In(input.themeIds) },
-      });
-      await em.save([
-        em.create(PromiseUserEntity, {
-          userId: hostId,
-          promiseId: promise.id,
+      const [themes, dest] = await Promise.all([
+        tx.promiseTheme.findMany({
+          where: { promiseId: id },
         }),
-        ...themes.map((theme) =>
-          em.create(PromiseThemeEntity, {
-            themeId: theme.id,
-            promiseId: promise.id,
-          })
-        ),
+        tx.promise.findUnique({
+          where: { id, hostId: host.id },
+          select: { destinationId: true },
+        }),
       ]);
 
-      return {
-        pid: this.hasher.encode(promise.id),
-      };
+      return tx.promise.update({
+        where: { id, hostId: host.id },
+        data: {
+          ...pick(input, [
+            'title',
+            'destinationType',
+            'locationShareStartType',
+            'locationShareStartValue',
+            'locationShareEndType',
+            'locationShareEndValue',
+            'promisedAt',
+          ]),
+          themes: {
+            deleteMany: {
+              themeId: {
+                in: pipe(
+                  themes,
+                  map((theme) => theme.themeId),
+                  difference(input.themeIds)
+                ),
+              },
+            },
+            createMany: {
+              data: pipe(
+                input.themeIds,
+                difference(map(themes, (theme) => theme.themeId)),
+                map((themeId) => ({ themeId }))
+              ),
+            },
+          },
+          destination: {
+            connect: input.destination
+              ? await tx.location.upsert({
+                  where: { id: dest?.destinationId ?? 0 },
+                  create: input.destination,
+                  update: input.destination,
+                })
+              : await guard(
+                  async () =>
+                    (await tx.location.delete({
+                      where: { id: dest?.destinationId ?? 0 },
+                    })) && undefined
+                ),
+          },
+          // TODO: https://github.com/prisma/prisma/issues/4072#issue-731421569
+          // destination: input.destination
+          //   ? {
+          //       upsert: {
+          //         create: input.destination,
+          //         update: input.destination,
+          //       },
+          //     }
+          //   : {
+          //       delete: true,
+          //     },
+        },
+        include: this.promiseInclude,
+      });
     });
   }
 
-  async update(
-    pid: string,
-    hostId: number,
-    input: InputUpdatePromise
-  ): Promise<OutputUpdatePromise> {
-    const promise = await this.getPromiseOrThrow(pid, hostId);
-    if (this.isExpired(promise)) {
-      throw new BadRequestException('만료된 약속은 수정할 수 없습니다.');
-    }
+  async getStartLocation(pid: string, user: UserEntity) {
+    return this.prisma.promiseUser
+      .findFirstOrThrow({
+        where: { userId: user.id, promiseId: +this.hasher.decode(pid) },
+        include: { startLocation: true },
+      })
+      .then(({ startLocation }) => startLocation);
+  }
 
-    return this.dataSource.transaction(async (em) => {
-      switch (input.destinationType) {
-        case DestinationType.Static:
-          const destination = promise.destinationId
-            ? await em.findOne(LocationEntity, {
-                where: { id: promise.destinationId },
-              })
-            : null;
+  async updateStartLocation(pid: string, attendee: UserEntity, input: InputLocationDTO) {
+    return this.prisma.promiseUser
+      .update({
+        where: { identifier: { userId: attendee.id, promiseId: +this.hasher.decode(pid) } },
+        data: {
+          startLocation: {
+            upsert: {
+              create: input,
+              update: input,
+            },
+          },
+        },
+        include: { startLocation: true },
+      })
+      .then(({ startLocation }) => startLocation);
+  }
 
-          if (destination) {
-            await em.save(
-              em.merge(LocationEntity, destination, { ...input.destination })
-            );
-          } else {
-            await em.save(em.create(LocationEntity, { ...input.destination }));
-          }
-          break;
-        case DestinationType.Dynamic:
-          await em.delete(LocationEntity, { id: promise.destinationId });
-          await em.save(
-            em.merge(PromiseEntity, promise, { destinationId: undefined })
-          );
-          break;
+  async deleteStartLocation(pid: string, user: UserEntity) {
+    return this.prisma.$transaction(async (tx) => {
+      const id = +this.hasher.decode(pid);
+
+      const promiseUser = await tx.promiseUser.findFirst({
+        where: { userId: user.id, promiseId: id },
+        select: { startLocationId: true },
+      });
+
+      await tx.location.delete({
+        where: { id: promiseUser?.startLocationId ?? 0 },
+      });
+    });
+  }
+
+  async attend(pid: string, user: UserEntity) {
+    return this.prisma.$transaction(async (tx) => {
+      const id = +this.hasher.decode(pid);
+
+      const promise = await tx.promise.findUniqueOrThrow({
+        where: { id },
+        select: { promisedAt: true, completedAt: true },
+      });
+
+      if (this.isExpired(promise)) {
+        throw new Error('만료된 약속은 참여할 수 없습니다.');
       }
 
-      if (input.themeIds?.length) {
-        const themes = await em.find(ThemeEntity, {
-          where: { id: In(input.themeIds) },
-        });
-        await em.delete(PromiseThemeEntity, { promiseId: promise.id });
-        await em.save(
-          themes.map((theme) =>
-            em.create(PromiseThemeEntity, {
-              themeId: theme.id,
-              promiseId: promise.id,
-            })
-          )
-        );
+      const promiseUser = await tx.promiseUser.findUnique({
+        where: { identifier: { userId: user.id, promiseId: id } },
+      });
+
+      if (promiseUser) {
+        throw new Error('이미 참여한 약속입니다.');
       }
 
-      await em.save(this.promiseRepo.merge(promise, { ...input }));
-      return { pid };
+      return tx.promiseUser
+        .create({
+          data: {
+            user: {
+              connect: { id: user.id },
+            },
+            promise: {
+              connect: { id },
+            },
+          },
+        })
+        .then(({ promiseId }) => ({
+          pid: this.hasher.encode(promiseId),
+        }));
     });
   }
 
-  async getStartLocation(pid: string, userId: number) {
-    const promise = await this.getPromiseOrThrow(pid);
-    const promiseUser = await this.getPromiseUserOrThrow(promise, userId);
+  async leave(pid: string, user: UserEntity) {
+    return this.prisma.$transaction(async (tx) => {
+      const id = +this.hasher.decode(pid);
 
-    if (!promiseUser.startLocationId) {
-      throw new NotFoundException('출발지를 설정하지 않았습니다.');
-    }
+      const promise = await tx.promise.findUniqueOrThrow({
+        where: { id },
+        select: { hostId: true, promisedAt: true, completedAt: true },
+      });
 
-    const location = await this.locationRepo.findOne({
-      where: { id: promiseUser.startLocationId },
-    });
-
-    if (!location) {
-      throw new NotFoundException('출발지를 찾을 수 없습니다.');
-    }
-
-    return location;
-  }
-
-  async updateStartLocation(
-    pid: string,
-    userId: number,
-    input: InputUpdateUserStartLocation
-  ) {
-    const promise = await this.getPromiseOrThrow(pid);
-
-    if (this.isExpired(promise)) {
-      throw new BadRequestException(
-        '만료된 약속은 출발지를 설정할 수 없습니다.'
-      );
-    }
-
-    const promiseUser = await this.getPromiseUserOrThrow(promise, userId);
-
-    await this.dataSource.transaction(async (em) => {
-      const location = promiseUser.startLocationId
-        ? await em.findOne(LocationEntity, {
-            where: { id: promiseUser.startLocationId },
-          })
-        : null;
-
-      if (location) {
-        await em.save(em.merge(LocationEntity, location, { ...input }));
-        promiseUser.startLocationId = location.id;
-      } else {
-        const { id } = await em.save(em.create(LocationEntity, { ...input }));
-        promiseUser.startLocationId = id;
+      if (this.isExpired(promise)) {
+        throw new Error('만료된 약속은 참여를 취소할 수 없습니다.');
       }
 
-      await em.save(promiseUser);
+      if (promise.hostId === user.id) {
+        throw new Error('약속장은 약속을 취소할 수 없습니다.');
+      }
+
+      await tx.promiseUser.delete({
+        where: { identifier: { userId: user.id, promiseId: id } },
+      });
     });
   }
 
-  async attend(pid: string, userId: number) {
-    const promise = await this.getPromiseOrThrow(pid);
-
-    if (this.isExpired(promise)) {
-      throw new BadRequestException('만료된 약속은 참여할 수 없습니다.');
-    }
-
-    const promiseUser = await this.promiseUserRepo.findOne({
-      where: { userId, promiseId: promise.id },
-    });
-
-    if (promiseUser) {
-      throw new BadRequestException('이미 참여한 약속입니다.');
-    }
-
-    await this.promiseUserRepo.save(
-      this.promiseUserRepo.create({ userId, promiseId: promise.id })
-    );
+  async themes() {
+    return this.prisma.theme.findMany();
   }
 
-  async cancel(pid: string, userId: number) {
-    const promise = await this.getPromiseOrThrow(pid);
-
-    if (this.isExpired(promise)) {
-      throw new BadRequestException('만료된 약속은 참여를 취소할 수 없습니다.');
-    }
-
-    const promiseUser = await this.promiseUserRepo.findOne({
-      where: { userId, promiseId: promise.id },
-    });
-
-    if (!promiseUser) {
-      throw new BadRequestException('참여하지 않은 약속입니다.');
-    }
-
-    if (promise.hostId === userId) {
-      throw new BadRequestException('약속장은 약속을 취소할 수 없습니다.');
-    }
-
-    await this.promiseUserRepo.delete({ userId, promiseId: promise.id });
-  }
-
-  async themes(): Promise<ThemeEntity[]> {
-    return this.themeRepo.find();
-  }
-
-  isExpired(promise: PromiseEntity) {
+  isExpired<T extends { promisedAt: Date; completedAt: Date | null }>(promise: T) {
     return isPast(promise.promisedAt) || !!promise.completedAt;
-  }
-
-  private async getPromiseOrThrow(pid: string, hostId?: number) {
-    const id = +this.hasher.decode(pid);
-    const promise = await this.promiseRepo.findOne({ where: { id, hostId } });
-    if (!promise) {
-      throw new NotFoundException('해당 약속을 찾을 수 없습니다.');
-    }
-    return promise;
-  }
-
-  private async getPromiseUserOrThrow(
-    promise: PromiseEntity,
-    userId: number
-  ): Promise<PromiseUserEntity>;
-  private async getPromiseUserOrThrow(
-    pid: string,
-    userId: number
-  ): Promise<PromiseUserEntity>;
-  private async getPromiseUserOrThrow(
-    p: string | PromiseEntity,
-    userId: number
-  ) {
-    const id = typeof p === 'string' ? +this.hasher.decode(p) : p.id;
-    const promiseUser = await this.promiseUserRepo.findOne({
-      where: { userId, promiseId: id },
-    });
-    if (!promiseUser) {
-      throw new NotFoundException('참여하지 않은 약속입니다.');
-    }
-    return promiseUser;
   }
 }

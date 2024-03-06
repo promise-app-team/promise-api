@@ -1,18 +1,19 @@
-import type { Handler } from 'aws-lambda';
+import { join } from 'path';
 
 import serverlessExpress from '@codegenie/serverless-express';
-import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { Logger, ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
+import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import type { Handler } from 'aws-lambda';
+
 import { AppModule } from '@/app/app.module';
-import { join } from 'path';
+import { PrismaExceptionFilter } from '@/common/filters/prisma-exception.filter';
+import { StringifyDateInterceptor } from '@/common/interceptors/stringify-date.interceptor';
+import { TimeoutInterceptor } from '@/common/interceptors/timeout.interceptor';
 import logger from '@/utils/logger';
-import { ConfigService } from '@nestjs/config';
-import { StringifyDateInterceptor } from './common/interceptors/stringify-date.interceptor';
-import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
-import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 
 async function initializeApp<App extends NestExpressApplication>() {
   const app = await NestFactory.create<App>(AppModule, {
@@ -24,7 +25,7 @@ async function initializeApp<App extends NestExpressApplication>() {
 
   app
     .useStaticAssets(join(__dirname, 'assets'), { prefix: '/assets' })
-    .useGlobalPipes(new ValidationPipe({ transform: true }))
+    .useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, stopAtFirstError: false }))
     .useGlobalFilters(new PrismaExceptionFilter(httpAdapter))
     .useGlobalInterceptors(
       new ClassSerializerInterceptor(app.get(Reflector)),

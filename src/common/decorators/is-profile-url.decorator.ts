@@ -1,13 +1,6 @@
-import {
-  registerDecorator,
-  ValidationOptions,
-  isURL,
-  isNumberString,
-} from 'class-validator';
+import { registerDecorator, ValidationOptions, isURL, isNumberString } from 'class-validator';
 
-export function IsProfileUrl(
-  validationOptions?: ValidationOptions
-): PropertyDecorator {
+export function IsProfileUrl(validationOptions?: ValidationOptions): PropertyDecorator {
   return function (object, propertyName) {
     registerDecorator({
       name: 'isProfileUrl',

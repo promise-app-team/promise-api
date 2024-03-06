@@ -74,13 +74,11 @@ model User {
 model Promise {
   id Int @id @default(autoincrement()) @db.UnsignedInt
 
-  pid String @unique @map("pid") @ignore
-
   /// 약속장 ID
   hostId Int @map("host_id") @db.UnsignedInt
 
   /// 약속장
-  host User @relation(name: "Promise.host", fields: [hostId], references: [id])
+  host User @relation(name: "Promise.host", fields: [hostId], references: [id], onDelete: Restrict)
 
   /// 약속 제목
   title String @map("title") @db.VarChar(50)
@@ -92,7 +90,7 @@ model Promise {
   destinationId Int? @map("destination_id") @db.UnsignedInt
 
   /// 목적지
-  destination Location? @relation(name: "Promise.destination", fields: [destinationId], references: [id])
+  destination Location? @relation(name: "Promise.destination", fields: [destinationId], references: [id], onDelete: SetNull)
 
   /// 위치 공유 시작 유형
   locationShareStartType LocationShareType @map("location_share_start_type")
@@ -132,19 +130,19 @@ model PromiseUser {
   userId Int @map("user_id") @db.UnsignedInt
 
   /// 약속 참여자
-  user User @relation(name: "PromiseUser.user", fields: [userId], references: [id])
+  user User @relation(name: "PromiseUser.user", fields: [userId], references: [id], onDelete: Cascade)
 
   /// 약속 ID
   promiseId Int @map("promise_id") @db.UnsignedInt
 
   /// 약속
-  promise Promise @relation(name: "PromiseUser.promise", fields: [promiseId], references: [id])
+  promise Promise @relation(name: "PromiseUser.promise", fields: [promiseId], references: [id], onDelete: Cascade)
 
   /// 약속 참여자 출발지 ID
   startLocationId Int? @unique @map("start_location_id") @db.UnsignedInt
 
   /// 약속 참여자 출발지
-  startLocation Location? @relation(name: "PromiseUser.startLocation", fields: [startLocationId], references: [id], onDelete: Cascade)
+  startLocation Location? @relation(name: "PromiseUser.startLocation", fields: [startLocationId], references: [id], onDelete: SetNull)
 
   /// 생성일
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
@@ -170,12 +168,16 @@ model Theme {
 
 model PromiseTheme {
   /// 약속 ID
-  promiseId Int     @map("promise_id") @db.UnsignedInt
-  promise   Promise @relation(name: "PromiseTheme.promise", fields: [promiseId], references: [id])
+  promiseId Int @map("promise_id") @db.UnsignedInt
+
+  /// 약속
+  promise Promise @relation(name: "PromiseTheme.promise", fields: [promiseId], references: [id], onDelete: Cascade)
 
   /// 테마 ID
-  themeId Int   @map("theme_id") @db.UnsignedInt
-  theme   Theme @relation(name: "PromiseTheme.theme", fields: [themeId], references: [id])
+  themeId Int @map("theme_id") @db.UnsignedInt
+
+  /// 테마
+  theme Theme @relation(name: "PromiseTheme.theme", fields: [themeId], references: [id], onDelete: Cascade)
 
   @@id(name: "identifier", fields: [promiseId, themeId])
   @@map("pm_promise_themes")

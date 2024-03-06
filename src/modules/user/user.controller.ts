@@ -18,10 +18,7 @@ export class UserController {
 
   @Get('profile')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({
-    operationId: 'getMyProfile',
-    summary: '인증 사용자 정보 조회',
-  })
+  @ApiOperation({ operationId: 'getMyProfile', summary: '인증 사용자 정보 조회' })
   @ApiOkResponse({ type: UserDTO, description: '인증 사용자 정보' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   async getMyProfile(@AuthUser() user: User): Promise<UserDTO> {
@@ -30,14 +27,8 @@ export class UserController {
 
   @Patch('profile')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({
-    operationId: 'updateMyProfile',
-    summary: '인증 사용자 정보 수정',
-  })
-  @ApiOkResponse({
-    type: UserDTO,
-    description: '수정된 인증 사용자 정보',
-  })
+  @ApiOperation({ operationId: 'updateMyProfile', summary: '인증 사용자 정보 수정' })
+  @ApiOkResponse({ type: UserDTO, description: '수정된 인증 사용자 정보' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   async updateMyProfile(@AuthUser() user: User, @Body() body: InputUpdateUser): Promise<UserDTO> {
     return UserDTO.from(await this.userService.update(user, body));
@@ -45,10 +36,7 @@ export class UserController {
 
   @Delete('profile')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({
-    operationId: 'deleteMyProfile',
-    summary: '인증 사용자 정보 삭제',
-  })
+  @ApiOperation({ operationId: 'deleteMyProfile', summary: '인증 사용자 정보 삭제' })
   @ApiOkResponse({ description: '인증 사용자 정보 삭제 성공' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   async deleteMyProfile(@AuthUser() user: User, @Body() body: InputDeleteUser): Promise<OutputDeleteUser> {
