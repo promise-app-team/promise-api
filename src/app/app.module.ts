@@ -1,8 +1,6 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { TypeOrmModule } from '@nestjs/typeorm';
 // import { RedisModule } from '@nestjs-modules/ioredis';
-import { typeormConfig } from '@/config/orm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthModule } from '../modules/auth/auth.module';
 import { extraEnv } from '../config/env';
@@ -17,7 +15,7 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { CommonModule } from '@/common/common.module';
 import { LoggerMiddleware } from '@/common/middlewares/logger.middleware';
 import { TrimMiddleware } from '@/common/middlewares/trim.middleware';
-import { PrismaModule } from '@/prisma/prisma.module';
+import { PrismaModule } from '@/prisma';
 
 @Module({
   imports: [
@@ -27,10 +25,6 @@ import { PrismaModule } from '@/prisma/prisma.module';
       envFilePath: ['.env'],
       validationSchema: schema,
       expandVariables: true,
-    }),
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => typeormConfig(config),
     }),
     // RedisModule.forRootAsync({
     //   inject: [ConfigService],

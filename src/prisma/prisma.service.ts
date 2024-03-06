@@ -2,10 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
 
 @Injectable()
-export class PrismaService extends PrismaClient<
-  Prisma.PrismaClientOptions,
-  'query' | 'info' | 'warn' | 'error'
-> {
+export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'query' | 'info' | 'warn' | 'error'> {
   constructor(private readonly logger: Logger) {
     super({
       log: [
@@ -30,9 +27,8 @@ export class PrismaService extends PrismaClient<
 
     this.$on('query', ({ query, params, duration }) => {
       const sanitizedQuery = query
-        .replace(/`promise.+?`\./g, '')
-        .replace(/`|`\./g, '')
-        .replace(/SELECT\s+(.*?)\s+FROM/, 'SELECT * FROM');
+        .replace(/`promise[\-a-z]+?`\./g, '')
+        .replace(/^SELECT\s+(.*?)\s+FROM/, 'SELECT * FROM');
 
       const _params = JSON.parse(params);
       const injectedQuery = sanitizedQuery.replace(/\?/g, () => {

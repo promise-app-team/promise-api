@@ -2,42 +2,39 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { UserService } from '../user/user.service';
 import { JwtService } from '@nestjs/jwt';
-import { InputCreateUser } from '../user/user.dto';
-import { DataSource } from 'typeorm';
 import { AuthToken } from './auth.dto';
+import { Prisma } from '@prisma/client';
+import { PrismaService } from '@/prisma';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly dataSource: DataSource,
-    private readonly userService: UserService,
+    private readonly prisma: PrismaService,
+    private readonly user: UserService,
     private readonly config: ConfigService,
     private readonly jwt: JwtService
   ) {}
 
-  async authenticate(user: InputCreateUser): Promise<AuthToken> {
+  async authenticate(user: Prisma.UserCreateInput): Promise<AuthToken> {
     const { provider, providerId } = user;
     if (!provider || !providerId) {
       throw new BadRequestException('로그인을 실패했습니다.');
     }
 
-    const node = await this.dataSource.transaction(async (em) => {
-      const node = await this.userService
-        .findOneByProvider(provider, providerId)
-        .then((node) => node ?? this.userService.create(user))
-        .then((node) => this.userService.login(node));
-
-      return em.save(node);
+    const signedUser = await this.prisma.user.upsert({
+      where: { identifier: { provider, providerId } },
+      update: { lastSignedAt: new Date() },
+      create: user,
     });
 
-    return this._generateToken({ id: `${node.id}` });
+    return this._generateToken({ id: `${signedUser.id}` });
   }
 
   async refresh(token: string): Promise<AuthToken> {
     // TODO: AuthToken 모듈로 분리
     try {
       const payload = this.jwt.verify(token);
-      const node = await this.userService.findOneById(payload.id);
+      const node = await this.user.findOneById(payload.id);
       if (!node) throw new Error('로그인을 실패했습니다.');
       return this._generateToken({ id: `${node.id}` });
     } catch (error) {

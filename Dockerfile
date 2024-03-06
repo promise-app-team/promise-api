@@ -9,7 +9,7 @@ COPY package.json bun.lockb /deps/prod/
 COPY prisma /deps/prod/prisma
 
 RUN cd /deps/dev && bun install --frozen-lockfile
-RUN cd /deps/prod && bun install --frozen-lockfile --production && bunx prisma generate
+RUN cd /deps/prod && bun install --frozen-lockfile --production && bun run prisma generate
 
 FROM base AS build
 

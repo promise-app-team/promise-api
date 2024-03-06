@@ -18,7 +18,7 @@
     "mikro",
     "nestjs",
     "predeploy",
-    "typeorm",
+    "radash",
     "uncolorize",
     "websockets"
   ],
@@ -44,11 +44,17 @@
     "*.type.ts": "nest-filter",
     "*.schema.ts": "nest-pipe"
   },
-  "typescript.inlayHints.enumMemberValues.enabled": true,
-  "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "typescript.inlayHints.enumMemberValues.enabled": false,
+  "typescript.inlayHints.functionLikeReturnTypes.enabled": false,
   "typescript.inlayHints.parameterNames.enabled": "all",
-  "typescript.inlayHints.parameterTypes.enabled": true,
+  "typescript.inlayHints.parameterTypes.enabled": false,
   "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
-  "typescript.inlayHints.variableTypes.enabled": true,
+  "typescript.inlayHints.variableTypes.enabled": false,
   "typescript.tsdk": "node_modules/typescript/lib"
 }

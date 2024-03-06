@@ -1,12 +1,8 @@
 import type { Handler } from 'aws-lambda';
 
 import serverlessExpress from '@codegenie/serverless-express';
-import { NestFactory, Reflector } from '@nestjs/core';
-import {
-  Logger,
-  ValidationPipe,
-  ClassSerializerInterceptor,
-} from '@nestjs/common';
+import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
+import { Logger, ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
@@ -16,23 +12,29 @@ import logger from '@/utils/logger';
 import { ConfigService } from '@nestjs/config';
 import { StringifyDateInterceptor } from './common/interceptors/stringify-date.interceptor';
 import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
+import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 
 async function initializeApp<App extends NestExpressApplication>() {
   const app = await NestFactory.create<App>(AppModule, {
     logger: logger.nest(),
   });
+
   const config = app.get(ConfigService);
-  app.useStaticAssets(join(__dirname, 'assets'), { prefix: '/assets' });
-  app.useGlobalInterceptors(
-    new ClassSerializerInterceptor(app.get(Reflector)),
-    new StringifyDateInterceptor(),
-    new TimeoutInterceptor()
-  );
-  app.useGlobalPipes(new ValidationPipe({ transform: true }));
-  app.useWebSocketAdapter(new WsAdapter(app));
-  app.useBodyParser('urlencoded', { limit: '5mb', extended: true });
-  app.useBodyParser('json', { limit: '5mb' });
-  app.enableCors();
+  const { httpAdapter } = app.get(HttpAdapterHost);
+
+  app
+    .useStaticAssets(join(__dirname, 'assets'), { prefix: '/assets' })
+    .useGlobalPipes(new ValidationPipe({ transform: true }))
+    .useGlobalFilters(new PrismaExceptionFilter(httpAdapter))
+    .useGlobalInterceptors(
+      new ClassSerializerInterceptor(app.get(Reflector)),
+      new StringifyDateInterceptor(),
+      new TimeoutInterceptor()
+    )
+    .useWebSocketAdapter(new WsAdapter(app))
+    .useBodyParser('urlencoded', { limit: '5mb', extended: true })
+    .useBodyParser('json', { limit: '5mb' })
+    .enableCors();
 
   const openApiConfig = new DocumentBuilder()
     .setTitle('Promise API')
@@ -63,10 +65,9 @@ async function startLocalServer() {
   Logger.log(`🌈 Server running on ${await app.getUrl()}`, 'Bootstrap');
 }
 
-let count = 1;
 async function startServerless() {
   const app = await initializeApp().then((app) => app.init());
-  Logger.log(`🚀 Serverless app initialized [${count++}]`, 'Bootstrap');
+  Logger.log(`🚀 Serverless app initialized`, 'Bootstrap');
   return serverlessExpress({ app: app.getHttpAdapter().getInstance() });
 }
 

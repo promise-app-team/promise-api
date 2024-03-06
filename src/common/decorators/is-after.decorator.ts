@@ -1,10 +1,7 @@
 import { registerDecorator, ValidationOptions } from 'class-validator';
 import { fromUnixTime, isAfter, isValid } from 'date-fns';
 
-export function IsAfter(
-  date: Date,
-  validationOptions?: ValidationOptions
-): PropertyDecorator {
+export function IsAfter(date: Date, validationOptions?: ValidationOptions): PropertyDecorator {
   return function (object, propertyName) {
     registerDecorator({
       name: 'isAfterNow',

@@ -3,7 +3,7 @@ CREATE TABLE `pm_users` (
     `id` INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
     `username` VARCHAR(80) NULL,
     `profile_url` TEXT NULL,
-    `provider` ENUM('KAKAO', 'GOOGLE', 'APPLE') NULL,
+    `provider` ENUM('KAKAO', 'GOOGLE', 'APPLE') NOT NULL,
     `provider_id` VARCHAR(100) NULL,
     `last_signed_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     `deleted_at` TIMESTAMP(0) NULL,
@@ -43,7 +43,7 @@ CREATE TABLE `pm_promise_users` (
     `updated_at` TIMESTAMP(0) NOT NULL,
 
     UNIQUE INDEX `pm_promise_users_start_location_id_key`(`start_location_id`),
-    UNIQUE INDEX `pm_promise_users_promise_id_user_id_key`(`promise_id`, `user_id`)
+    PRIMARY KEY (`promise_id`, `user_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
@@ -59,14 +59,14 @@ CREATE TABLE `pm_promise_themes` (
     `promise_id` INTEGER UNSIGNED NOT NULL,
     `theme_id` INTEGER UNSIGNED NOT NULL,
 
-    UNIQUE INDEX `pm_promise_themes_promise_id_theme_id_key`(`promise_id`, `theme_id`)
+    PRIMARY KEY (`promise_id`, `theme_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `pm_locations` (
     `id` INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
-    `city` VARCHAR(10) NULL,
-    `district` VARCHAR(10) NULL,
+    `city` VARCHAR(50) NULL,
+    `district` VARCHAR(50) NULL,
     `address` VARCHAR(100) NULL,
     `latitude` DECIMAL(10, 8) NOT NULL,
     `longitude` DECIMAL(11, 8) NOT NULL,

@@ -1,8 +1,6 @@
 import winston from 'winston';
 import NestLogger from './nest';
-import TypeOrmLogger from './typeorm';
 import { formatISO } from 'date-fns';
-import { LoggerOptions } from 'typeorm';
 
 const colors = {
   dim: 'dim',
@@ -42,24 +40,12 @@ const logger = winston.createLogger({
           },
         },
         winston.format.timestamp({
-          format: formatISO(new Date()),
+          format: () => formatISO(new Date()),
         }),
         // winston.format.ms(),
-        NO_COLOR
-          ? winston.format.uncolorize()
-          : winston.format.colorize({ colors }),
+        NO_COLOR ? winston.format.uncolorize() : winston.format.colorize({ colors }),
         winston.format.printf((args) => {
-          const {
-            timestamp,
-            level,
-            message,
-            request,
-            response,
-            error,
-            ms,
-            label,
-            ...meta
-          } = args;
+          const { timestamp, level, message, request, response, error, ms, label, ...meta } = args;
 
           function build(body: string, meta = '') {
             const header = `${colorize('dim', `${timestamp}`)}`;
@@ -111,5 +97,4 @@ function isResponse(response: any): boolean {
 
 export default {
   nest: () => new NestLogger(logger),
-  typeorm: (options?: LoggerOptions) => new TypeOrmLogger(logger, options),
 };

@@ -12,10 +12,21 @@ export default class NestLogger implements LoggerService {
   }
 
   error(message: any, ...optionalParams: any[]) {
-    this.logger.error(message, {
-      error: optionalParams[0],
-      label: optionalParams[1],
-    });
+    if (typeof optionalParams[1] === 'string') {
+      return this.logger.error('', {
+        error: optionalParams[0],
+        label: optionalParams[1],
+      });
+    }
+
+    if (typeof optionalParams[0] === 'object') {
+      return this.logger.error('', {
+        error: optionalParams[0].error,
+        label: optionalParams[0].label,
+      });
+    }
+
+    this.logger.error(message, ...optionalParams);
   }
 
   warn(message: any, ...optionalParams: any[]) {
