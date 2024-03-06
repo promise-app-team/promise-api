@@ -2,8 +2,7 @@ import { PartialType, PickType } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString, Length } from 'class-validator';
 import { pick } from 'remeda';
 
-import { IsProfileUrl } from '@/common/decorators/is-profile-url.decorator';
-import { ApplyDTO } from '@/common/mixins/dto.mixin';
+import { IsProfileUrl, ApplyDTO } from '@/common';
 import { Provider, UserEntity } from '@/prisma';
 
 const userKeys = ['id', 'username', 'profileUrl', 'provider', 'createdAt'] as const;

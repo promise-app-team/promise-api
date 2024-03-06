@@ -1,25 +1,25 @@
 import { Controller, Get } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-import { EntryResponse } from './entry.dto';
+import { EntryDTO } from '@/app/entry.dto';
+import { TypedConfigService } from '@/common';
 
 @ApiTags('App')
 @Controller()
 export class AppController {
-  constructor(private readonly config: ConfigService) {}
+  constructor(private readonly config: TypedConfigService) {}
 
   @Get()
   @ApiOperation({ operationId: 'ping', summary: 'Ping / Pong' })
-  @ApiOkResponse({ description: 'ping', type: EntryResponse })
-  ping() {
+  @ApiOkResponse({ type: EntryDTO, description: 'ping' })
+  ping(): EntryDTO {
     return {
       message: 'pong',
-      version: this.config.get('API_VERSION'),
-      build: this.config.get('BUILD'),
-      deploy: this.config.get('DEPLOY'),
-      env: this.config.get('NODE_ENV'),
-      tz: this.config.get('TZ'),
+      version: this.config.get('version'),
+      build: this.config.get('build'),
+      deploy: this.config.get('deploy'),
+      env: this.config.get('env'),
+      tz: this.config.get('tz'),
     };
   }
 }

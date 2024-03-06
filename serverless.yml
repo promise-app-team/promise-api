@@ -63,9 +63,6 @@ provider:
     DB_DATABASE: ${env:DB_DATABASE}
     DB_TIMEZONE: ${env:DB_TIMEZONE}
 
-    REDIS_URL: ${env:REDIS_URL}
-    REDIS_PASSWORD: ${env:REDIS_PASSWORD}
-
     AWS_S3_BUCKET_NAME: ${env:AWS_S3_BUCKET_NAME}
 
 functions:

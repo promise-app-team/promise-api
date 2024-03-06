@@ -1,7 +1,7 @@
 import { PickType } from '@nestjs/swagger';
 import { pick } from 'remeda';
 
-import { ApplyDTO } from '@/common/mixins/dto.mixin';
+import { ApplyDTO } from '@/common';
 import { ThemeEntity } from '@/prisma';
 
 const themeKeys = ['id', 'name'] as const;

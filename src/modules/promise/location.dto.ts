@@ -1,7 +1,7 @@
 import { PickType } from '@nestjs/swagger';
 import { pick } from 'remeda';
 
-import { ApplyDTO } from '@/common/mixins/dto.mixin';
+import { ApplyDTO } from '@/common';
 import { LocationEntity } from '@/prisma';
 
 const locationKeys = ['id', 'city', 'district', 'address'] as const;

@@ -1,8 +1,8 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Prisma } from '@prisma/client';
 
+import { TypedConfigService } from '@/common';
 import { AuthToken } from '@/modules/auth/auth.dto';
 import { UserService } from '@/modules/user/user.service';
 import { PrismaService } from '@/prisma';
@@ -12,7 +12,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly user: UserService,
-    private readonly config: ConfigService,
+    private readonly config: TypedConfigService,
     private readonly jwt: JwtService
   ) {}
 
@@ -54,10 +54,10 @@ export class AuthService {
   // TODO: AuthToken 모듈로 분리
   async _generateToken(payload: object) {
     const accessToken = this.jwt.sign(payload, {
-      expiresIn: this.config.get('JWT_ACCESS_EXPIRES_IN'),
+      expiresIn: this.config.get('jwt.expires.access'),
     });
     const refreshToken = this.jwt.sign(payload, {
-      expiresIn: this.config.get('JWT_REFRESH_EXPIRES_IN'),
+      expiresIn: this.config.get('jwt.expires.refresh'),
     });
     return { accessToken, refreshToken };
   }

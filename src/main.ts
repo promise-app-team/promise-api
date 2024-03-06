@@ -2,7 +2,6 @@ import { join } from 'path';
 
 import serverlessExpress from '@codegenie/serverless-express';
 import { Logger, ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
@@ -10,9 +9,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { Handler } from 'aws-lambda';
 
 import { AppModule } from '@/app/app.module';
-import { PrismaExceptionFilter } from '@/common/filters/prisma-exception.filter';
-import { StringifyDateInterceptor } from '@/common/interceptors/stringify-date.interceptor';
-import { TimeoutInterceptor } from '@/common/interceptors/timeout.interceptor';
+import { PrismaExceptionFilter, StringifyDateInterceptor, TimeoutInterceptor, TypedConfigService } from '@/common';
 import logger from '@/utils/logger';
 
 async function initializeApp<App extends NestExpressApplication>() {
@@ -20,7 +17,7 @@ async function initializeApp<App extends NestExpressApplication>() {
     logger: logger.nest(),
   });
 
-  const config = app.get(ConfigService);
+  const config = app.get(TypedConfigService);
   const { httpAdapter } = app.get(HttpAdapterHost);
 
   app
@@ -39,7 +36,7 @@ async function initializeApp<App extends NestExpressApplication>() {
 
   const openApiConfig = new DocumentBuilder()
     .setTitle('Promise API')
-    .setVersion(`${config.get('API_VERSION')}`)
+    .setVersion(`${config.get('version')}`)
     .addTag('App', 'Entry point of API')
     .addSecurity('bearer', { type: 'http', scheme: 'bearer' })
     .setExternalDoc('OpenAPI Specification (JSON)', `/api-json`)
@@ -61,8 +58,8 @@ async function initializeApp<App extends NestExpressApplication>() {
 
 async function startLocalServer() {
   const app = await initializeApp();
-  const config = app.get(ConfigService);
-  await app.listen(`${config.get('PORT')}`, '0.0.0.0');
+  const config = app.get(TypedConfigService);
+  await app.listen(`${config.get('port')}`, '0.0.0.0');
   Logger.log(`🌈 Server running on ${await app.getUrl()}`, 'Bootstrap');
 }
 

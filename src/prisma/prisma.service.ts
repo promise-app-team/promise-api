@@ -1,7 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
 
-import { HasherService } from '@/common/services/hasher.service';
+import { HasherService } from '@/common';
 
 @Injectable()
 export class PrismaService

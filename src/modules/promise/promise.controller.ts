@@ -42,7 +42,6 @@ import { HttpException } from '@/schema/exception';
 @Controller('promises')
 export class PromiseController {
   constructor(
-    // @InjectRedis() private readonly redis: Redis,
     @Inject(CACHE_MANAGER) private readonly cache: Cache,
     private readonly promiseService: PromiseService
   ) {}

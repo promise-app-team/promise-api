@@ -1,4 +1,4 @@
-export class EntryResponse {
+export class EntryDTO {
   /**
    * @example pong
    */

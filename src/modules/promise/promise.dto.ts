@@ -20,8 +20,7 @@ import { filter, map, pick, pipe } from 'remeda';
 
 import { LocationDTO } from './location.dto';
 
-import { IsAfter } from '@/common/decorators/is-after.decorator';
-import { ApplyDTO } from '@/common/mixins/dto.mixin';
+import { IsAfter, ApplyDTO } from '@/common';
 import { DestinationType, LocationShareType, PromiseEntity, UserEntity } from '@/prisma';
 
 const promiseKeys = [

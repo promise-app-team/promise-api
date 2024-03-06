@@ -1,16 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { Hasher } from 'inthash';
 
+import { TypedConfigService } from '@/common/services/typed-config.service';
+
 @Injectable()
 export class HasherService {
   private readonly hasher: Hasher;
 
-  constructor() {
+  constructor(private readonly config: TypedConfigService) {
     this.hasher = new Hasher({
-      bits: 53,
-      prime: '7027677444274793',
-      inverse: '5119353352861145',
-      xor: '8722148419296618',
+      bits: config.get('inthash.bits'),
+      prime: config.get('inthash.prime'),
+      inverse: config.get('inthash.inverse'),
+      xor: config.get('inthash.xor'),
     });
   }
 

@@ -22,9 +22,9 @@ Copy `.env.example` to `.env` and fill the variables.
 $ cp .env.example .env
 ```
 
-### Setup MySQL Database and Redis
+### Setup MySQL Databases
 
-Using [docker-compose](https://www.docker.com/) to setup MySQL and Redis.
+Using [docker-compose](https://www.docker.com/) to setup MySQL.
 
 ```bash
 # build and run containers

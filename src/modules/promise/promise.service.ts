@@ -5,7 +5,7 @@ import { difference, map, pick, pipe } from 'remeda';
 
 import { InputLocationDTO, InputPromiseDTO } from './promise.dto';
 
-import { HasherService } from '@/common/services/hasher.service';
+import { HasherService } from '@/common';
 import { PrismaService, UserEntity } from '@/prisma';
 import { ifs, guard } from '@/utils/guard';
 
