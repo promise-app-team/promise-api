@@ -1,7 +1,6 @@
 # HTTPS on localhost
 
-- https://api.promise.local
-- https://api.local.promise.co
+- https://api.promise-app.local
 
 ## Usage
 
@@ -12,18 +11,16 @@
     $ brew install mkcert
     ```
 
-2. Run docker application.
-3. Run commands below: (It will ask you for a password.)
-  
+2. Run commands below: (It will ask you for a password.)
+
     ```sh
     $ make install
-    $ make run
     ```
 
-4. Open https://api.local.promise.co in your browser.
-5. Run commands below to uninstall: (It will ask you for a password.)
+3. Open https://api.promise-app.local in your browser.
+
+4. Run commands below to uninstall: (It will ask you for a password.)
 
     ```sh
-    $ make clean
     $ make uninstall
     ```
