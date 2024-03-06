@@ -1,13 +1,14 @@
 import { PartialType, PickType } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString, Length } from 'class-validator';
+import { pick } from 'remeda';
+
 import { IsProfileUrl } from '@/common/decorators/is-profile-url.decorator';
-import { Provider, UserEntity } from '@/prisma';
 import { ApplyDTO } from '@/common/mixins/dto.mixin';
-import { pick } from 'ramda';
+import { Provider, UserEntity } from '@/prisma';
 
 const userKeys = ['id', 'username', 'profileUrl', 'provider', 'createdAt'] as const;
 
-export class UserDTO extends ApplyDTO(PickType(UserEntity, userKeys), (obj: UserEntity) => pick(userKeys, obj)) {}
+export class UserDTO extends ApplyDTO(PickType(UserEntity, userKeys), (obj: UserEntity) => pick(obj, userKeys)) {}
 
 export class InputCreateUser {
   @IsOptional()

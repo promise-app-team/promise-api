@@ -1,11 +1,14 @@
 import { Body, Controller, Delete, Get, Patch, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/jwt.guard';
-import { AuthUser } from '../auth/auth.decorator';
-import { UserService } from './user.service';
-import { InputDeleteUser, InputUpdateUser, OutputDeleteUser, UserDTO } from './user.dto';
-import { HttpException } from '@/schema/exception';
 import { User } from '@prisma/client';
+
+import { AuthUser } from '../auth/auth.decorator';
+import { JwtAuthGuard } from '../auth/jwt.guard';
+
+import { InputDeleteUser, InputUpdateUser, OutputDeleteUser, UserDTO } from './user.dto';
+import { UserService } from './user.service';
+
+import { HttpException } from '@/schema/exception';
 
 @ApiTags('User')
 @ApiBearerAuth()

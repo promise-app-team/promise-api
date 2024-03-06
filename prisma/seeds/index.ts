@@ -1,4 +1,4 @@
-import { Provider, DestinationType, LocationShareType, PrismaClient, Prisma } from '@prisma/client';
+import { Provider, DestinationType, LocationShareType, PrismaClient } from '@prisma/client';
 import { addHours } from 'date-fns';
 
 function shuffle<T>(array: T[]): T[] {
@@ -63,7 +63,7 @@ async function main(prisma: PrismaClient) {
         data: [...Array(NUMBER_OF_USERS).keys()].map((num) => ({
           username: `test${num}`,
           profileUrl: random(0, 1) ? `${random(0, 9)}` : null,
-          provider: randomPick(constant.providers),
+          provider: num ? randomPick(constant.providers) : Provider.KAKAO,
           providerId: `${num}`,
         })),
       });

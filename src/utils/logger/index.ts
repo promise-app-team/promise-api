@@ -1,6 +1,7 @@
-import winston from 'winston';
-import NestLogger from './nest';
 import { formatISO } from 'date-fns';
+import { format, createLogger, transports } from 'winston';
+
+import NestLogger from './nest';
 
 const colors = {
   dim: 'dim',
@@ -23,13 +24,13 @@ function colorize(color: keyof typeof colors, message: string) {
     return message;
   }
 
-  return winston.format.colorize().colorize(color, message);
+  return format.colorize().colorize(color, message);
 }
 
-const logger = winston.createLogger({
+const logger = createLogger({
   transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
+    new transports.Console({
+      format: format.combine(
         {
           transform(info) {
             return {
@@ -39,12 +40,12 @@ const logger = winston.createLogger({
             };
           },
         },
-        winston.format.timestamp({
+        format.timestamp({
           format: () => formatISO(new Date()),
         }),
-        // winston.format.ms(),
-        NO_COLOR ? winston.format.uncolorize() : winston.format.colorize({ colors }),
-        winston.format.printf((args) => {
+        // format.ms(),
+        NO_COLOR ? format.uncolorize() : format.colorize({ colors }),
+        format.printf((args) => {
           const { timestamp, level, message, request, response, error, ms, label, ...meta } = args;
 
           function build(body: string, meta = '') {

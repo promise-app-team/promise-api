@@ -1,8 +1,8 @@
 import type { LoggerService } from '@nestjs/common';
-import winston from 'winston';
+import type { Logger } from 'winston';
 
 export default class NestLogger implements LoggerService {
-  constructor(private readonly logger: winston.Logger) {}
+  constructor(private readonly logger: Logger) {}
 
   log(message: any, ...optionalParams: any[]) {
     if (typeof optionalParams[0] === 'string') {

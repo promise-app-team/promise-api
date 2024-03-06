@@ -1,4 +1,5 @@
 import { Global, Logger, Module } from '@nestjs/common';
+
 import { HasherService } from './services/hasher.service';
 
 @Global()
