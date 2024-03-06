@@ -1,25 +1,11 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Patch,
-  UseGuards,
-} from '@nestjs/common';
-import {
-  ApiBearerAuth,
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, Patch, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt.guard';
-import { UserEntity } from './user.entity';
 import { AuthUser } from '../auth/auth.decorator';
 import { UserService } from './user.service';
-import { InputDeleteUser, InputUpdateUser } from './user.dto';
+import { InputDeleteUser, InputUpdateUser, OutputDeleteUser, UserDTO } from './user.dto';
 import { HttpException } from '@/schema/exception';
+import { User } from '@prisma/client';
 
 @ApiTags('User')
 @ApiBearerAuth()
@@ -33,10 +19,10 @@ export class UserController {
     operationId: 'getMyProfile',
     summary: '인증 사용자 정보 조회',
   })
-  @ApiOkResponse({ type: UserEntity, description: '인증 사용자 정보' })
+  @ApiOkResponse({ type: UserDTO, description: '인증 사용자 정보' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
-  async getMyProfile(@AuthUser() user: UserEntity): Promise<UserEntity> {
-    return user;
+  async getMyProfile(@AuthUser() user: User): Promise<UserDTO> {
+    return UserDTO.from(user);
   }
 
   @Patch('profile')
@@ -45,13 +31,13 @@ export class UserController {
     operationId: 'updateMyProfile',
     summary: '인증 사용자 정보 수정',
   })
-  @ApiOkResponse({ type: UserEntity, description: '수정된 인증 사용자 정보' })
+  @ApiOkResponse({
+    type: UserDTO,
+    description: '수정된 인증 사용자 정보',
+  })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
-  async updateMyProfile(
-    @AuthUser() user: UserEntity,
-    @Body() body: InputUpdateUser
-  ): Promise<UserEntity> {
-    return this.userService.update(user, body);
+  async updateMyProfile(@AuthUser() user: User, @Body() body: InputUpdateUser): Promise<UserDTO> {
+    return UserDTO.from(await this.userService.update(user, body));
   }
 
   @Delete('profile')
@@ -62,10 +48,8 @@ export class UserController {
   })
   @ApiOkResponse({ description: '인증 사용자 정보 삭제 성공' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
-  async deleteMyProfile(
-    @AuthUser() user: UserEntity,
-    @Body() body: InputDeleteUser
-  ): Promise<void> {
-    await this.userService.delete(user, body.reason);
+  async deleteMyProfile(@AuthUser() user: User, @Body() body: InputDeleteUser): Promise<OutputDeleteUser> {
+    const { id } = await this.userService.delete(user, body.reason);
+    return { id };
   }
 }

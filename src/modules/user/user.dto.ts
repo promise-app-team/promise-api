@@ -1,7 +1,13 @@
 import { PartialType, PickType } from '@nestjs/swagger';
-import { Provider } from './user.entity';
 import { IsEnum, IsOptional, IsString, Length } from 'class-validator';
 import { IsProfileUrl } from '@/common/decorators/is-profile-url.decorator';
+import { Provider, UserEntity } from '@/prisma';
+import { ApplyDTO } from '@/common/mixins/dto.mixin';
+import { pick } from 'ramda';
+
+const userKeys = ['id', 'username', 'profileUrl', 'provider', 'createdAt'] as const;
+
+export class UserDTO extends ApplyDTO(PickType(UserEntity, userKeys), (obj: UserEntity) => pick(userKeys, obj)) {}
 
 export class InputCreateUser {
   @IsOptional()
@@ -21,9 +27,7 @@ export class InputCreateUser {
   providerId!: string;
 }
 
-export class InputUpdateUser extends PartialType(
-  PickType(InputCreateUser, ['username', 'profileUrl'])
-) {}
+export class InputUpdateUser extends PartialType(PickType(InputCreateUser, ['username', 'profileUrl'])) {}
 
 export class InputDeleteUser {
   @IsString({ message: '탈퇴 사유를 입력해주세요' })
@@ -31,4 +35,8 @@ export class InputDeleteUser {
     message: '탈퇴 사유는 10자 이상 200자 이하로 입력해주세요.',
   })
   reason!: string;
+}
+
+export class OutputDeleteUser {
+  id!: number;
 }
