@@ -9,7 +9,8 @@ COPY ssl ./ssl
 ARG PORT
 ENV PORT=$PORT
 
-ARG DOMAIN
-ENV DOMAIN=$DOMAIN
+ARG HTTPS
+ENV HTTPS=$HTTPS
 
-RUN envsubst '$PORT $DOMAIN' <./conf.d/promise.conf | tee ./conf.d/promise.conf
+RUN envsubst '$PORT $HTTPS' <./conf.d/promise.conf >./conf.d/promise.conf.tmp
+RUN mv ./conf.d/promise.conf.tmp ./conf.d/promise.conf && rm -f ./conf.d/promise.conf.tmp

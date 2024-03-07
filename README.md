@@ -2,13 +2,17 @@
 
 Promise API Server
 
-**[How do I access https on localhost?](/https/README.md)**
-
 ## Development
 
-This project is using [Bun.js](https://bun.sh) as a typescript runtime & toolkit.
+### Prerequisites
+
+- [bun.js](https://bun.sh)
+- [docker-compose](https://www.docker.com/)
+- [mkcert](https://github.com/FiloSottile/mkcert) for local https
 
 ### Installing Packages
+
+This project is using [bun.js](https://bun.sh) as a typescript runtime & toolkit.
 
 ```bash
 $ bun install
@@ -22,18 +26,28 @@ Copy `.env.example` to `.env` and fill the variables.
 $ cp .env.example .env
 ```
 
-### Setup MySQL Databases
+### Setup MySQL Database
 
 Using [docker-compose](https://www.docker.com/) to setup MySQL.
 
 ```bash
-# build and run containers
-$ docker compose up -d
+$ make start_mysql
 ```
 
 It will create a `dockerdata` directory in the project root and store the database data.
 
-### Run Server
+If you want to remove the database, use the following command.
+
+```bash
+$ make stop_mysql
+
+# if you want to remove the database data
+$ rm -rf dockerdata
+```
+
+### Run Local Server
+
+Local development server will run on `http://localhost:$PORT`.
 
 ```bash
 # development mode
@@ -42,6 +56,20 @@ $ bun run start:dev
 # production mode
 $ bun run build
 $ bun run start:prod
+```
+
+### Run Local Server with HTTPS
+
+Local development server will run on `https://api.local.promise-app.com`.
+
+```bash
+$ make start_https # It will ask you for a password.
+```
+
+If you want to remove the certificate, use the following command.
+
+```bash
+$ make stop_https # It will ask you for a password.
 ```
 
 ### Database Migration

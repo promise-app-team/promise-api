@@ -21,15 +21,12 @@ jobs:
       NO_COLOR: ${{ vars.NO_COLOR }}
 
       JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+      INTHASH_KEY: ${{ secrets.INTHASH_KEY }}
+
       JWT_ACCESS_EXPIRES_IN: ${{ vars.JWT_ACCESS_EXPIRES_IN }}
       JWT_REFRESH_EXPIRES_IN: ${{ vars.JWT_REFRESH_EXPIRES_IN }}
 
-      DB_HOST: ${{ vars.DB_HOST }}
-      DB_PORT: ${{ vars.DB_PORT }}
-      DB_USERNAME: ${{ vars.DB_USERNAME }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      DB_DATABASE: ${{ vars.DB_DATABASE }}
-      DB_TIMEZONE: ${{ vars.DB_TIMEZONE }}
+      DB_URL: ${{ vars.DB_URL }}
 
       AWS_DEFAULT_REGION: ${{ vars.AWS_DEFAULT_REGION }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
