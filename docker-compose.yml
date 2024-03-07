@@ -13,7 +13,7 @@ services:
       - --collation-server=utf8mb4_unicode_ci
       - --performance-schema=OFF
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}

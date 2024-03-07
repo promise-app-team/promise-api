@@ -22,16 +22,19 @@
     "uncolorize",
     "websockets"
   ],
+
   "editor.codeActionsOnSave": {
     "source.fixAll": "explicit"
   },
   "editor.formatOnSave": true,
+
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": {
     ".env.example": ".env, .env.*",
-    ".env-cmdrc.example": ".env-cmdrc, .env-cmdrc.*",
+    ".env-cmdrc.example.js": ".env-cmdrc, .env-cmdrc.*",
     "package.json": "package-lock.json, yarn.lock, bun.lockb"
   },
+
   "material-icon-theme.activeIconPack": "nest",
   "material-icon-theme.files.associations": {
     "*.entity.ts": "nest-pipe",
@@ -44,10 +47,14 @@
     "*.type.ts": "nest-filter",
     "*.schema.ts": "nest-pipe"
   },
+
   "[json]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[javascript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
 

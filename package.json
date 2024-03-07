@@ -20,7 +20,7 @@
     "migrate": "prisma migrate dev",
     "migrate:init": "prisma migrate dev --name init && prisma db seed",
     "migrate:stat": "prisma migrate status",
-    "migrate:dev": "bunx env-cmd -e dev prisma migrate deploy",
+    "migrate:dev": "bunx env-cmd -e dev --use-shell ./scripts/migration.sh",
     "deploy": "sls deploy --verbose --force",
     "format": "prettier --write **/* --ext .ts",
     "lint": "DEBUG=eslint:cli-engine eslint \"src/**/*.ts\"",

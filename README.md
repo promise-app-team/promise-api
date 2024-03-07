@@ -1,6 +1,19 @@
-# Promise API
+# Promise API <!-- omit in toc -->
 
 Promise API Server
+
+**Table of Contents**
+
+- [Development](#development)
+  - [Prerequisites](#prerequisites)
+  - [Installing Dependencies](#installing-dependencies)
+  - [Setup Environment Variables](#setup-environment-variables)
+  - [Setup MySQL Database](#setup-mysql-database)
+  - [Run Local Server](#run-local-server)
+  - [Run Local Server with HTTPS](#run-local-server-with-https)
+  - [Database Migration](#database-migration)
+    - [For Development Environment](#for-development-environment)
+    - [For Remote Environment](#for-remote-environment)
 
 ## Development
 
@@ -8,9 +21,9 @@ Promise API Server
 
 - [bun.js](https://bun.sh)
 - [docker-compose](https://www.docker.com/)
-- [mkcert](https://github.com/FiloSottile/mkcert) for local https
+- [mkcert](https://github.com/FiloSottile/mkcert) (for [HTTPS](#run-local-server-with-https))
 
-### Installing Packages
+### Installing Dependencies
 
 This project is using [bun.js](https://bun.sh) as a typescript runtime & toolkit.
 
@@ -30,24 +43,26 @@ $ cp .env.example .env
 
 Using [docker-compose](https://www.docker.com/) to setup MySQL.
 
+>It will create a `dockerdata` directory in the project root and store the database data.
+
 ```bash
 $ make start_mysql
 ```
-
-It will create a `dockerdata` directory in the project root and store the database data.
 
 If you want to remove the database, use the following command.
 
 ```bash
 $ make stop_mysql
 
-# if you want to remove the database data
+# if you want to remove the database data as well
 $ rm -rf dockerdata
 ```
 
 ### Run Local Server
 
-Local development server will run on `http://localhost:$PORT`.
+Run the following commands to start the local development server.
+
+>It will run on `http://localhost:$PORT`.
 
 ```bash
 # development mode
@@ -58,15 +73,20 @@ $ bun run build
 $ bun run start:prod
 ```
 
+
 ### Run Local Server with HTTPS
 
-Local development server will run on `https://api.local.promise-app.com`.
+Run the following commands to start the local development server with HTTPS.
+
+>It will run on `https://api.local.promise-app.com`.
 
 ```bash
 $ make start_https # It will ask you for a password.
 ```
 
-If you want to remove the certificate, use the following command.
+
+
+If you want to remove the HTTPS certificate, use the following command.
 
 ```bash
 $ make stop_https # It will ask you for a password.
@@ -74,38 +94,38 @@ $ make stop_https # It will ask you for a password.
 
 ### Database Migration
 
-Edit [schema.prisma](./prisma/schema.prisma) to define the database schema.
+#### For Development Environment
 
-Use the following commands to run migration.
+If you are running the migration for the first time, you need to initialize it.
+
+>It will also create dummy data for testing.
 
 ```bash
-# initialize migration. run first time only
 $ bun run migrate:init
+```
+ 
+Edit [schema.prisma](./prisma/schema.prisma) to define the database schema.
 
-# run migration
+And then run the following commands to migrate the database.
+
+```bash
 $ bun run migrate
 
-# show migration status
+# to check the migration status
 $ bun run migrate:stat
-
-# deploy migration
-$ bun run migrate:prod
 ```
 
-#### Remote Database Migration
+#### For Remote Environment
 
-Use `ssh` to tunnel the remote database and run migration.
+Must be able to access the remote database.
 
 ```bash
 # checkout to develop branch and pull the latest code
 $ git checkout develop
 $ git pull origin develop
 
-# copy env file and fill the variables
-$ cp .env-cmdrc.example .env-cmdrc
-
-# tunnel remote database (replace <port> and <hostname> with your environment variables)
-$ ssh -i ~/path/to/[filename].pem -L <port>:<hostname>:3306 [ec2-host-name]@[ec2-public-ip] -N
+# copy env-cmdrc file and fill the environment variables
+$ cp .env-cmdrc.example.js .env-cmdrc.js
 
 # deploy migration
 $ bun run migrate:dev
