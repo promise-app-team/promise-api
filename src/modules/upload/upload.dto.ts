@@ -1,3 +1,3 @@
-export class FileUploadOutput {
+export class OutputUploadFileDTO {
   url!: string;
 }

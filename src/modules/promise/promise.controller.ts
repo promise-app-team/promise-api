@@ -26,12 +26,18 @@ import {
 } from '@nestjs/swagger';
 import { Cache } from 'cache-manager';
 
-import { AuthUser } from '../auth/auth.decorator';
-import { JwtAuthGuard } from '../auth/jwt.guard';
-
-import { InputPromiseDTO, PromisePidDTO, PromiseDTO, PublicPromiseDTO, TestDTO, InputLocationDTO } from './promise.dto';
-
+import { AuthUser } from '@/modules/auth/auth.decorator';
+import { JwtAuthGuard } from '@/modules/auth/jwt.guard';
 import { LocationDTO } from '@/modules/promise/location.dto';
+import {
+  InputCreatePromiseDTO,
+  InputLocationDTO,
+  InputUpdatePromiseDTO,
+  PromiseDTO,
+  PromisePidDTO,
+  PromiseStatus,
+  PublicPromiseDTO,
+} from '@/modules/promise/promise.dto';
 import { PromiseService } from '@/modules/promise/promise.service';
 import { ThemeDTO } from '@/modules/promise/theme.dto';
 import { UserEntity } from '@/prisma';
@@ -48,13 +54,13 @@ export class PromiseController {
 
   @Get('')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'getPromiseList', summary: '약속 목록' })
-  @ApiQuery({ name: 'status', enum: ['all', 'available', 'unavailable'], required: false })
+  @ApiOperation({ operationId: 'getMyPromises', summary: '약속 목록' })
+  @ApiQuery({ name: 'status', enum: PromiseStatus, required: false })
   @ApiOkResponse({ type: [PromiseDTO], description: '약속 목록' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   async getMyPromises(
     @AuthUser() user: UserEntity,
-    @Query('status') status: 'all' | 'available' | 'unavailable' = 'all'
+    @Query('status') status: PromiseStatus = PromiseStatus.ALL
   ): Promise<PromiseDTO[]> {
     return this.promiseService
       .findAllByUser(user, status)
@@ -62,14 +68,14 @@ export class PromiseController {
   }
 
   @Get('themes')
-  @ApiOperation({ operationId: 'themes', summary: '약속 테마 목록' })
+  @ApiOperation({ operationId: 'getThemes', summary: '약속 테마 목록' })
   @ApiOkResponse({ type: [ThemeDTO], description: '약속 테마 목록' })
-  async findAllThemes(): Promise<ThemeDTO[]> {
+  async getThemes(): Promise<ThemeDTO[]> {
     return this.promiseService.themes().then((themes) => themes.map((theme) => ThemeDTO.from(theme)));
   }
 
   @Get('queue')
-  @ApiOperation({ operationId: 'checkPromiseQueue', summary: '약속 대기열을 확인' })
+  @ApiOperation({ operationId: 'dequeuePromise', summary: '약속 대기열을 확인' })
   @ApiOkResponse({ type: PromisePidDTO, description: '약속 대기열 확인 성공' })
   @ApiNotFoundResponse({ type: HttpException, description: '약속 대기열 없음' })
   async dequeuePromise(@Query('deviceId') deviceId: string): Promise<PromisePidDTO> {
@@ -104,17 +110,17 @@ export class PromiseController {
   @ApiOkResponse({ type: PublicPromiseDTO, description: '약속 상세 정보' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   @ApiNotFoundResponse({ type: HttpException, description: '약속 없음' })
-  async getPromiseDetail(@Param('pid') pid: string): Promise<PublicPromiseDTO> {
+  async getPromise(@Param('pid') pid: string): Promise<PublicPromiseDTO> {
     return this.promiseService.findOneByPid(pid).then((promise) => PromiseDTO.from(promise));
   }
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'createNewPromise', summary: '새로운 약속 추가' })
+  @ApiOperation({ operationId: 'createPromise', summary: '새로운 약속 추가' })
   @ApiCreatedResponse({ type: PublicPromiseDTO, description: '약속 추가 성공' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   @ApiBadRequestResponse({ type: HttpException, description: '약속 추가 실패' })
-  async createNewPromise(@AuthUser() user: UserEntity, @Body() input: InputPromiseDTO): Promise<PublicPromiseDTO> {
+  async createPromise(@AuthUser() user: UserEntity, @Body() input: InputCreatePromiseDTO): Promise<PublicPromiseDTO> {
     return this.promiseService
       .create(user, input)
       .then((promises) => {
@@ -134,14 +140,9 @@ export class PromiseController {
   async updatePromise(
     @AuthUser() user: UserEntity,
     @Param('pid') pid: string,
-    @Body() input: InputPromiseDTO
+    @Body() input: InputUpdatePromiseDTO
   ): Promise<PublicPromiseDTO> {
     return this.promiseService.update(pid, user, input).then((promise) => PublicPromiseDTO.from(promise));
-  }
-
-  @Post('test')
-  async test(@Body() input: TestDTO) {
-    return input;
   }
 
   @Get(':pid/start-location')

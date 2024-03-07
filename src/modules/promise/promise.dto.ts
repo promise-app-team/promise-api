@@ -18,10 +18,10 @@ import {
 import { addMinutes } from 'date-fns';
 import { filter, map, pick, pipe } from 'remeda';
 
-import { LocationDTO } from './location.dto';
-
 import { IsAfter, ApplyDTO } from '@/common';
-import { DestinationType, LocationShareType, PromiseEntity, UserEntity } from '@/prisma';
+import { LocationDTO } from '@/modules/promise/location.dto';
+import { AttendeeDTO, HostDTO } from '@/modules/user/user.dto';
+import { DestinationType, LocationShareType, PromiseEntity } from '@/prisma';
 
 const promiseKeys = [
   'id',
@@ -37,29 +37,27 @@ const promiseKeys = [
   'createdAt',
 ] as const;
 
-const hostKeys = ['id', 'username', 'profileUrl'] as const;
-
-const attendeeKeys = ['id', 'username', 'profileUrl'] as const;
-
-class Host extends PickType(UserEntity, hostKeys) {}
-
-class Attendee extends PickType(UserEntity, attendeeKeys) {}
+export enum PromiseStatus {
+  ALL = 'all',
+  AVAILABLE = 'available',
+  UNAVAILABLE = 'unavailable',
+}
 
 export class PromiseDTO extends ApplyDTO(PickType(PromiseEntity, promiseKeys), (obj: PromiseEntity) => ({
   ...pick(obj, promiseKeys),
-  host: pick(obj.host, hostKeys),
+  host: HostDTO.from(obj.host),
   themes: map(obj.themes, ({ theme }) => theme.name),
   destination: obj.destination ? LocationDTO.from(obj.destination) : null,
   attendees: pipe(
     obj.users,
     filter(({ user }) => user.id !== obj.host.id),
-    map(({ user }) => pick(user, attendeeKeys))
+    map(({ user }) => AttendeeDTO.from(user))
   ),
 })) {
-  host!: Host;
+  host!: HostDTO;
   themes!: string[];
   destination!: LocationDTO | null;
-  attendees!: Attendee[];
+  attendees!: AttendeeDTO[];
 }
 
 export class PublicPromiseDTO extends PromiseDTO {}
@@ -89,7 +87,7 @@ export class InputLocationDTO {
   longitude!: number;
 }
 
-export class InputPromiseDTO {
+export class InputCreatePromiseDTO {
   @IsString()
   @MaxLength(50)
   @IsNotEmpty({ message: '약속 제목을 입력해주세요.' })
@@ -133,22 +131,8 @@ export class InputPromiseDTO {
   locationShareEndValue!: number;
 }
 
+export class InputUpdatePromiseDTO extends InputCreatePromiseDTO {}
+
 export class PromisePidDTO extends ApplyDTO(PickType(PromiseEntity, ['pid']), (obj: PromiseEntity) =>
   pick(obj, ['pid'])
 ) {}
-
-export class NestedTestDTO {
-  @IsString()
-  @IsNotEmpty()
-  title!: string;
-}
-
-export class TestDTO {
-  @IsString()
-  @IsNotEmpty()
-  title!: string;
-
-  @ValidateNested()
-  @Type(() => NestedTestDTO)
-  subtitle!: NestedTestDTO | null;
-}

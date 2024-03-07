@@ -3,9 +3,8 @@ import { Prisma } from '@prisma/client';
 import { isPast } from 'date-fns';
 import { difference, map, pick, pipe } from 'remeda';
 
-import { InputLocationDTO, InputPromiseDTO } from './promise.dto';
-
 import { HasherService } from '@/common';
+import { InputCreatePromiseDTO, InputLocationDTO } from '@/modules/promise/promise.dto';
 import { PrismaService, UserEntity } from '@/prisma';
 import { ifs, guard } from '@/utils/guard';
 
@@ -83,7 +82,7 @@ export class PromiseService {
     });
   }
 
-  async create(host: UserEntity, input: InputPromiseDTO) {
+  async create(host: UserEntity, input: InputCreatePromiseDTO) {
     return this.prisma.promise.create({
       data: {
         ...pick(input, [
@@ -120,7 +119,7 @@ export class PromiseService {
     });
   }
 
-  async update(pid: string, host: UserEntity, input: InputPromiseDTO) {
+  async update(pid: string, host: UserEntity, input: InputCreatePromiseDTO) {
     return this.prisma.$transaction(async (tx) => {
       const id = +this.hasher.decode(pid);
 

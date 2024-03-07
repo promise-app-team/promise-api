@@ -19,7 +19,7 @@ import {
 } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from '@/modules/auth/jwt.guard';
-import { FileUploadOutput } from '@/modules/upload/upload.dto';
+import { OutputUploadFileDTO } from '@/modules/upload/upload.dto';
 import { FileUploadService } from '@/modules/upload/upload.service';
 import { HttpException } from '@/schema/exception';
 
@@ -49,7 +49,7 @@ export class FileUploadController {
     summary: '이미지 파일 업로드',
   })
   @ApiCreatedResponse({
-    type: FileUploadOutput,
+    type: OutputUploadFileDTO,
     description: '이미지 파일 업로드 성공',
   })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
@@ -64,7 +64,7 @@ export class FileUploadController {
         .build()
     )
     file: Express.Multer.File
-  ) {
+  ): Promise<OutputUploadFileDTO> {
     try {
       return { url: await this.uploader.upload(file) };
     } catch (error) {

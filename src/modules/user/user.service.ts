@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, Provider, User } from '@prisma/client';
+import { Provider, User } from '@prisma/client';
 
+import { InputCreateUserDTO, InputUpdateUserDTO } from '@/modules/user/user.dto';
 import { PrismaService } from '@/prisma';
 
 @Injectable()
@@ -28,13 +29,13 @@ export class UserService {
     });
   }
 
-  async create(user: Prisma.UserCreateInput) {
-    user.profileUrl ||= `${~~(Math.random() * 10)}`;
-    return this.prisma.user.create({ data: user });
+  async create(input: InputCreateUserDTO) {
+    input.profileUrl ||= `${~~(Math.random() * 10)}`;
+    return this.prisma.user.create({ data: input });
   }
 
-  async update(user: User, input: Prisma.UserUpdateInput) {
-    user.profileUrl ||= `${~~(Math.random() * 10)}`;
+  async update(user: User, input: InputUpdateUserDTO) {
+    input.profileUrl ||= `${~~(Math.random() * 10)}`;
     return this.prisma.user.update({
       where: { id: user.id },
       data: input,

@@ -1,7 +1,7 @@
 import { formatISO } from 'date-fns';
 import { format, createLogger, transports } from 'winston';
 
-import NestLogger from './nest';
+import NestLogger from '@/utils/logger/nest';
 
 const colors = {
   dim: 'dim',

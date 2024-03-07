@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { join } from 'node:path';
 
 import serverlessExpress from '@codegenie/serverless-express';
 import { Logger, ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
