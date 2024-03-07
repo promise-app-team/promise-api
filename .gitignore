@@ -139,13 +139,13 @@ web_modules/
 
 # dotenv environment variable files
 .env
-.env.development
-.env.production
-.env.local
-.env.test
+.env.*
+!.env.example
 
 # env-cmd environment variable files
 .env-cmdrc
+.env-cmdrc.*
+!.env-cmdrc.example.js
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -209,6 +209,7 @@ dist
 
 ### Custom ###
 
+_*
 .build
 .serverless
 .tsbuildinfo

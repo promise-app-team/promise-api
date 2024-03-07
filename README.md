@@ -1,14 +1,31 @@
-# Promise API
+# Promise API <!-- omit in toc -->
 
 Promise API Server
 
-**[How do I access https on localhost?](/https/README.md)**
+**Table of Contents**
+
+- [Development](#development)
+  - [Prerequisites](#prerequisites)
+  - [Installing Dependencies](#installing-dependencies)
+  - [Setup Environment Variables](#setup-environment-variables)
+  - [Setup MySQL Database](#setup-mysql-database)
+  - [Run Local Server](#run-local-server)
+  - [Run Local Server with HTTPS](#run-local-server-with-https)
+  - [Database Migration](#database-migration)
+    - [For Development Environment](#for-development-environment)
+    - [For Remote Environment](#for-remote-environment)
 
 ## Development
 
-This project is using [Bun.js](https://bun.sh) as a typescript runtime & toolkit.
+### Prerequisites
 
-### Installing Packages
+- [bun.js](https://bun.sh)
+- [docker-compose](https://www.docker.com/)
+- [mkcert](https://github.com/FiloSottile/mkcert) (for [HTTPS](#run-local-server-with-https))
+
+### Installing Dependencies
+
+This project is using [bun.js](https://bun.sh) as a typescript runtime & toolkit.
 
 ```bash
 $ bun install
@@ -22,63 +39,94 @@ Copy `.env.example` to `.env` and fill the variables.
 $ cp .env.example .env
 ```
 
-### Setup MySQL Database and Redis
+### Setup MySQL Database
 
-Using [docker-compose](https://www.docker.com/) to setup MySQL and Redis.
+Using [docker-compose](https://www.docker.com/) to setup MySQL.
+
+>It will create a `dockerdata` directory in the project root and store the database data.
 
 ```bash
-# build and run containers
-$ docker compose up -d
+$ make start_mysql
 ```
 
-It will create a `dockerdata` directory in the project root and store the database data.
+If you want to remove the database, use the following command.
 
-### Run Server
+```bash
+$ make stop_mysql
+
+# if you want to remove the database data as well
+$ rm -rf dockerdata
+```
+
+### Run Local Server
+
+Run the following commands to start the local development server.
+
+>It will run on `http://localhost:$PORT`.
 
 ```bash
 # development mode
 $ bun run start:dev
 
 # production mode
-$ bun run build && bun run start:prod
+$ bun run build
+$ bun run start:prod
+```
+
+
+### Run Local Server with HTTPS
+
+Run the following commands to start the local development server with HTTPS.
+
+>It will run on `https://api.local.promise-app.com`.
+
+```bash
+$ make start_https # It will ask you for a password.
+```
+
+
+
+If you want to remove the HTTPS certificate, use the following command.
+
+```bash
+$ make stop_https # It will ask you for a password.
 ```
 
 ### Database Migration
 
-Use `migration` command to manage database migration.
+#### For Development Environment
+
+If you are running the migration for the first time, you need to initialize it.
+
+>It will also create dummy data for testing.
 
 ```bash
-# generate migration file
-$ bun run migration new [name]
-
-# run migration
-$ bun run migration up
-
-# revert last migration
-$ bun run migration down
-
-# revert migrations
-$ bun run migration down [number]
-
-# list migrations
-$ bun run migration list
+$ bun run migrate:init
 ```
+ 
+Edit [schema.prisma](./prisma/schema.prisma) to define the database schema.
 
-#### Remote Database Migration
-
-Use `ssh` to tunnel the remote database and run migration.
+And then run the following commands to migrate the database.
 
 ```bash
-# copy env file and fill the variables
-$ cp .env-cmdrc.example .env-cmdrc
+$ bun run migrate
 
-# tunnel remote database (replace <DB_PORT> and <DB_HOST> with your environment variables)
-$ ssh -i ~/path/to/[filename].pem -L <DB_PORT>:<DB_HOST>:3306 ubuntu@43.201.12.251 -N
-
-# run migration development
-$ bun run migration:dev [new|up|down|list]
+# to check the migration status
+$ bun run migrate:stat
 ```
 
-## Project Structure
+#### For Remote Environment
 
-TODO
+Must be able to access the remote database.
+
+```bash
+# checkout to develop branch and pull the latest code
+$ git checkout develop
+$ git pull origin develop
+
+# copy env-cmdrc file and fill the environment variables
+$ cp .env-cmdrc.example.js .env-cmdrc.js
+
+# deploy migration
+$ bun run migrate:dev
+```

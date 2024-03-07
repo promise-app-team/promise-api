@@ -1,55 +1,55 @@
 import { Injectable } from '@nestjs/common';
-import { DeepPartial, IsNull, Repository } from 'typeorm';
-import { Provider, UserEntity } from './user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
+import { Provider, User } from '@prisma/client';
+
+import { InputCreateUserDTO, InputUpdateUserDTO } from '@/modules/user/user.dto';
+import { PrismaService } from '@/prisma';
 
 @Injectable()
 export class UserService {
-  constructor(
-    @InjectRepository(UserEntity)
-    private readonly userRepo: Repository<UserEntity>
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async findOneById(id: string) {
-    return this.userRepo.findOneBy({
-      id: +id,
-      deletedAt: IsNull(),
+  async findOneById(id: string): Promise<User> {
+    return this.prisma.user.findUniqueOrThrow({
+      where: {
+        id: +id,
+        deletedAt: null,
+      },
     });
   }
 
   async findOneByProvider(provider: Provider, providerId: string) {
-    return this.userRepo.findOneBy({
-      provider,
-      providerId,
-      deletedAt: IsNull(),
+    return this.prisma.user.findUnique({
+      where: {
+        identifier: {
+          provider,
+          providerId,
+        },
+        deletedAt: null,
+      },
     });
   }
 
-  async create(user: DeepPartial<UserEntity>) {
-    user.profileUrl ||= `${~~(Math.random() * 10)}`;
-    return this.userRepo.create(user);
+  async create(input: InputCreateUserDTO) {
+    input.profileUrl ||= `${~~(Math.random() * 10)}`;
+    return this.prisma.user.create({ data: input });
   }
 
-  async update(user: UserEntity, update: DeepPartial<UserEntity>) {
-    user.profileUrl ||= `${~~(Math.random() * 10)}`;
-    return this.userRepo.save(this.userRepo.merge(user, update));
+  async update(user: User, input: InputUpdateUserDTO) {
+    input.profileUrl ||= `${~~(Math.random() * 10)}`;
+    return this.prisma.user.update({
+      where: { id: user.id },
+      data: input,
+    });
   }
 
-  async login(user: UserEntity): Promise<UserEntity> {
-    return this.userRepo.save(
-      this.userRepo.merge(user, {
-        lastSignedAt: new Date(),
-      })
-    );
-  }
-
-  async delete(user: UserEntity, reason: string) {
-    return this.userRepo.save(
-      this.userRepo.merge(user, {
+  async delete(user: User, reason: string) {
+    return this.prisma.user.update({
+      where: { id: user.id },
+      data: {
         deletedAt: new Date(),
         leaveReason: reason,
         providerId: null,
-      })
-    );
+      },
+    });
   }
 }

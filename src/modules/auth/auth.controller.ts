@@ -7,9 +7,10 @@ import {
   ApiTags,
   ApiCreatedResponse,
 } from '@nestjs/swagger';
-import { InputCreateUser } from '../user/user.dto';
-import { AuthService } from './auth.service';
-import { AuthToken, InputRefreshToken } from './auth.dto';
+
+import { AuthTokenDTO, InputRefreshTokenDTO } from '@/modules/auth/auth.dto';
+import { AuthService } from '@/modules/auth/auth.service';
+import { InputCreateUserDTO } from '@/modules/user/user.dto';
 import { HttpException } from '@/schema/exception';
 
 @ApiTags('Auth')
@@ -20,24 +21,18 @@ export class AuthController {
 
   @Post('login')
   @ApiOperation({ operationId: 'login', summary: '회원가입 / 로그인' })
-  @ApiBody({ type: InputCreateUser, description: '로그인 정보' })
+  @ApiBody({ type: InputCreateUserDTO, description: '로그인 정보' })
   @ApiBadRequestResponse({ type: HttpException, description: '로그인 실패' })
-  async login(@Body() user: InputCreateUser) {
-    return this.authService.authenticate(user);
+  async login(@Body() input: InputCreateUserDTO) {
+    return this.authService.authenticate(input);
   }
 
   @Post('refresh')
-  @ApiOperation({
-    operationId: 'refreshTokens',
-    summary: 'Access Token / Refresh Token 갱신',
-  })
-  @ApiBody({ type: InputRefreshToken, description: '로그인 정보' })
-  @ApiCreatedResponse({ type: AuthToken, description: '토큰 갱신 성공' })
-  @ApiBadRequestResponse({
-    type: HttpException,
-    description: '로그인 실패/토큰 만료',
-  })
-  async refreshTokens(@Body() { refreshToken }: InputRefreshToken) {
+  @ApiOperation({ operationId: 'refreshTokens', summary: 'Access Token / Refresh Token 갱신' })
+  @ApiBody({ type: InputRefreshTokenDTO, description: '로그인 정보' })
+  @ApiCreatedResponse({ type: AuthTokenDTO, description: '토큰 갱신 성공' })
+  @ApiBadRequestResponse({ type: HttpException, description: '로그인 실패/토큰 만료' })
+  async refreshTokens(@Body() { refreshToken }: InputRefreshTokenDTO) {
     return this.authService.refresh(refreshToken);
   }
 }

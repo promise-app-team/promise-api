@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { WebSocketEventGateway } from './websocket.gateway';
+
+import { WebSocketEventGateway } from '@/modules/event/websocket.gateway';
 
 @Module({
   imports: [WebSocketEventGateway],

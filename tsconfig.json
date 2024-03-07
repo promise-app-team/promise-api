@@ -1,11 +1,7 @@
 {
-  "extends": [
-    "./tsconfig.paths.json"
-  ],
+  "extends": ["./tsconfig.paths.json"],
   "compilerOptions": {
-    "lib": [
-      "ESNext"
-    ],
+    "lib": ["ESNext"],
     "target": "ESNext",
     "module": "CommonJS",
     "moduleResolution": "Node",
@@ -17,21 +13,12 @@
     "esModuleInterop": true,
     "sourceMap": false,
     "outDir": "dist",
-    "types": [
-      "jest",
-      "bun-types",
-      "@types/multer"
-    ],
+    "types": ["jest", "bun-types", "@types/multer"],
+    "strictPropertyInitialization": false,
     "incremental": true,
     "skipLibCheck": true,
-    "strict": true
+    "strict": true,
   },
-  "exclude": [
-    "node_modules",
-    "dist",
-  ],
-  "include": [
-    "src/**/*",
-    ".eslintrc.cjs"
-  ]
+  "exclude": ["node_modules", "dist"],
+  "include": ["./src/**/*", ".eslintrc.cjs"],
 }

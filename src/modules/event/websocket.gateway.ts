@@ -1,4 +1,5 @@
-import { uid } from '@/utils/math/random';
+import { IncomingMessage } from 'http';
+
 import { Logger } from '@nestjs/common';
 import {
   WebSocketGateway,
@@ -8,7 +9,7 @@ import {
   WebSocketServer,
   SubscribeMessage,
 } from '@nestjs/websockets';
-import { IncomingMessage } from 'http';
+import { v4 as uuid } from 'uuid';
 import { WebSocket } from 'ws';
 
 interface WebSocketClient extends WebSocket {
@@ -17,9 +18,7 @@ interface WebSocketClient extends WebSocket {
 }
 
 @WebSocketGateway()
-export class WebSocketEventGateway
-  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
-{
+export class WebSocketEventGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   private readonly logger = new Logger(WebSocketEventGateway.name);
 
   @WebSocketServer()
@@ -38,15 +37,13 @@ export class WebSocketEventGateway
     } else if (client.to === 'self') {
       client.send(this.payload(client, data));
     } else if (client.to) {
-      this.clients
-        .filter((c) => c.to === client.to)
-        .forEach((c) => c.send(this.payload(client, data)));
+      this.clients.filter((c) => c.to === client.to).forEach((c) => c.send(this.payload(client, data)));
     }
   }
 
   handleConnection(client: WebSocketClient, incoming: IncomingMessage) {
     const params = new URLSearchParams(incoming.url?.replace('/?', ''));
-    client.id = uid(16).toUpperCase();
+    client.id = uuid();
     client.to = params.get('to') || null;
 
     this.clients.push(client);

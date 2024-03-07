@@ -1,13 +1,7 @@
-import winston from 'winston';
-import NestLogger from './nest-logger';
-import TypeOrmLogger from './typeorm-logger';
 import { formatISO } from 'date-fns';
-import { LoggerOptions } from 'typeorm';
+import { format, createLogger, transports } from 'winston';
 
-const NO_COLOR = !!process.env.NO_COLOR;
-const colorize = NO_COLOR
-  ? (_level: string, message: string) => message
-  : winston.format.colorize().colorize;
+import NestLogger from '@/utils/logger/nest';
 
 const colors = {
   dim: 'dim',
@@ -24,10 +18,19 @@ const colors = {
   gray: 'gray',
 } as const;
 
-const logger = winston.createLogger({
+const NO_COLOR = !!process.env.NO_COLOR;
+function colorize(color: keyof typeof colors, message: string) {
+  if (NO_COLOR) {
+    return message;
+  }
+
+  return format.colorize().colorize(color, message);
+}
+
+const logger = createLogger({
   transports: [
-    new winston.transports.Console({
-      format: winston.format.combine(
+    new transports.Console({
+      format: format.combine(
         {
           transform(info) {
             return {
@@ -37,54 +40,42 @@ const logger = winston.createLogger({
             };
           },
         },
-        winston.format.timestamp({
-          format: formatISO(new Date()),
+        format.timestamp({
+          format: () => formatISO(new Date()),
         }),
-        // winston.format.ms(),
-        NO_COLOR
-          ? winston.format.uncolorize()
-          : winston.format.colorize({ colors }),
-        winston.format.printf((args) => {
-          const {
-            timestamp,
-            level,
-            message,
-            request,
-            response,
-            error,
-            ms,
-            label,
-            ...meta
-          } = args;
+        // format.ms(),
+        NO_COLOR ? format.uncolorize() : format.colorize({ colors }),
+        format.printf((args) => {
+          const { timestamp, level, message, request, response, error, ms, label, ...meta } = args;
 
           function build(body: string, meta = '') {
-            const header = `${colorize(colors.dim, `${timestamp}`)}`;
-            const name = label ? colorize(colors.magenta, `${label} `) : '';
-            const footer = `${colorize(colors.dim, `${ms ? `+${ms}ms` : ''}`)}`;
+            const header = `${colorize('dim', `${timestamp}`)}`;
+            const name = label ? colorize('magenta', `${label} `) : '';
+            const footer = `${colorize('dim', `${ms ? `+${ms}ms` : ''}`)}`;
             return `${header} ${level} ${name}${body} ${footer} ${meta}`;
           }
 
           if (isRequest(request) && isResponse(response)) {
-            const method = colorize(colors.blue, request.method);
-            const path = colorize(colors.magenta, `${request.url}`);
+            const method = colorize('blue', request.method);
+            const path = colorize('magenta', `${request.url}`);
             const status = `${response.statusCode}`;
             const color =
               status.startsWith('2') || status.startsWith('3')
-                ? colors.green
+                ? 'green'
                 : status.startsWith('4')
-                  ? colors.yellow
+                  ? 'yellow'
                   : status.startsWith('5')
-                    ? colors.red
-                    : colors.gray;
+                    ? 'red'
+                    : 'gray';
             return build(`${method} ${path} ${colorize(color, status)}`);
           }
 
           if (error instanceof Error) {
             const errorMessage = (error.stack ?? error.message) || `${error}`;
-            const stack = colorize(colors.yellow, errorMessage);
+            const stack = colorize('yellow', errorMessage);
             return build(message, `\n${stack}`);
           } else if (typeof error === 'string') {
-            const stack = colorize(colors.yellow, error);
+            const stack = colorize('yellow', error);
             return build(message, `\n${stack}`);
           }
 
@@ -107,5 +98,4 @@ function isResponse(response: any): boolean {
 
 export default {
   nest: () => new NestLogger(logger),
-  typeorm: (options?: LoggerOptions) => new TypeOrmLogger(logger, options),
 };

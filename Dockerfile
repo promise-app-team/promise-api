@@ -6,9 +6,10 @@ FROM base AS install
 RUN mkdir -p /deps/dev /deps/prod
 COPY package.json bun.lockb /deps/dev/
 COPY package.json bun.lockb /deps/prod/
+COPY prisma /deps/prod/prisma
 
-RUN bun install --frozen-lockfile --silent --ignore-scripts --cwd /deps/dev
-RUN bun install --frozen-lockfile --silent --ignore-scripts --cwd /deps/prod --production
+RUN cd /deps/dev && bun install --frozen-lockfile
+RUN cd /deps/prod && bun install --frozen-lockfile --production && bun run prisma generate
 
 FROM base AS build
 
