@@ -1,4 +1,4 @@
-DOMAIN=api.promise-app.local
+DOMAIN=api.local.promise-app.com
 
 # https://github.com/FiloSottile/mkcert#readme
 mkcert -install

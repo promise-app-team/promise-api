@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
       args:
         - PORT=8080
-        - DOMAIN=api.promise-app.local
+        - DOMAIN=api.local.promise-app.com
     image: promise-api:https
     container_name: promise-api.https
     ports:
