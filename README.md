@@ -36,7 +36,7 @@ $ bun install
 Copy `.env.example` to `.env` and fill the variables.
 
 ```bash
-$ cp .env.example .env
+$ cp .env.example .env.local
 ```
 
 ### Setup MySQL Database
@@ -65,14 +65,8 @@ Run the following commands to start the local development server.
 >It will run on `http://localhost:$PORT`.
 
 ```bash
-# development mode
 $ bun run start:dev
-
-# production mode
-$ bun run build
-$ bun run start:prod
 ```
-
 
 ### Run Local Server with HTTPS
 
