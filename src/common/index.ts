@@ -2,6 +2,7 @@ export * from './modules/common.module';
 
 export * from './decorators/is-after.decorator';
 export * from './decorators/is-profile-url.decorator';
+export * from './decorators/debug.decorator';
 
 export * from './filters/prisma-exception.filter';
 
