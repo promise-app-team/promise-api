@@ -35,8 +35,9 @@ export class PrismaService
 
     this.$on('query', ({ query, params, duration }) => {
       const sanitizedQuery = query
+        .replace(/^SELECT\s+(.*?)\s+FROM/, 'SELECT * FROM')
         .replace(/`promise[\-a-z]+?`\./g, '')
-        .replace(/^SELECT\s+(.*?)\s+FROM/, 'SELECT * FROM');
+        .replace(/\((?<table>`.+?`).(?<field>`.+?`)\)/g, '$<table>.$<field>');
 
       const _params = JSON.parse(params);
       const injectedQuery = sanitizedQuery.replace(/\?/g, () => {
