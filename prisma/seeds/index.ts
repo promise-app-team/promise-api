@@ -1,6 +1,6 @@
 import { Provider, DestinationType, LocationShareType, PrismaClient } from '@prisma/client';
 import { addHours, subHours } from 'date-fns';
-import { range, shuffle } from 'remeda';
+import { shuffle, times } from 'remeda';
 
 function random(): boolean;
 function random(min: number, max: number): number;
@@ -12,8 +12,8 @@ function random(min?: number, max?: number): number | boolean {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function randomArray<T>(array: T[]): T[] {
-  return shuffle(array).slice(0, random(0, array.length - 1));
+function randomArray<T>(array: T[], length?: number): T[] {
+  return shuffle(array).slice(0, length ?? array.length);
 }
 
 function randomPick<T>(array: T[]): T {
@@ -52,6 +52,7 @@ async function main(prisma: PrismaClient) {
   }
 
   const MAX_USERS = 10;
+  const MAX_PROMISES = 100;
 
   const constant = {
     providers: Object.values(Provider),
@@ -60,7 +61,7 @@ async function main(prisma: PrismaClient) {
   };
 
   await prisma.user.createMany({
-    data: range(0, MAX_USERS).map((num) => ({
+    data: times(MAX_USERS, (num) => ({
       username: `user${num + 1}`,
       profileUrl: `${random(1, 9)}`,
       provider: num === 0 ? Provider.KAKAO : randomPick(constant.providers),
@@ -71,63 +72,66 @@ async function main(prisma: PrismaClient) {
   const users = await prisma.user.findMany();
   const themes = await prisma.theme.findMany();
 
-  await Promise.all(
-    range(0, 20).map(async (num) => {
-      const randomAttendees = randomArray(users).slice(0, random(1, 5));
-      const randomThemes = randomArray(themes).slice(0, random(1, 5));
+  const randomAttendeeMap = times(MAX_PROMISES, () => randomArray(users, random(0, MAX_USERS)));
+  const randomDestinationTypeMap = times(MAX_PROMISES, () => randomPick(constant.destinationTypes));
+  const randomStartLocationsMap = await Promise.all(
+    randomAttendeeMap.map((attendees) =>
+      Promise.all(
+        attendees.map(async () => {
+          if (randomPick(constant.destinationTypes) === DestinationType.STATIC) return null;
 
-      const randomDestinationType = randomPick(constant.destinationTypes);
-      const randomStartLocations = await Promise.all(
-        randomAttendees.map(async () => {
-          if (random(0, 1) || randomDestinationType === DestinationType.STATIC) {
-            return null;
-          }
-
-          const location = await prisma.location.create({
-            data: {
-              city: `Start Location City ${num}`,
-              district: `Start Location District ${num}`,
-              address: `Start Location Address ${num}`,
-              latitude: 37.5665 + Math.random() * 0.1,
-              longitude: 126.978 + Math.random() * 0.1,
-            },
-          });
-          return location.id;
-        })
-      );
-
-      const randomDestination =
-        randomDestinationType === DestinationType.DYNAMIC
-          ? null
-          : await prisma.location.create({
+          return prisma.location
+            .create({
               data: {
-                city: `Destination City ${num}`,
-                district: `Destination District ${num}`,
-                address: `Destination Address ${num}`,
+                city: `Start Location City`,
+                district: `Start Location District`,
+                address: `Start Location Address`,
                 latitude: 37.5665 + Math.random() * 0.1,
                 longitude: 126.978 + Math.random() * 0.1,
               },
-            });
+            })
+            .then(({ id }) => id);
+        })
+      )
+    )
+  );
+  const randomDestinationMap = await Promise.all(
+    randomDestinationTypeMap.map((destinationType) => {
+      if (destinationType === DestinationType.DYNAMIC) return null;
 
-      await prisma.promise.create({
+      return prisma.location.create({
+        data: {
+          city: `Destination City`,
+          district: `Destination District`,
+          address: `Destination Address`,
+          latitude: 37.5665 + Math.random() * 0.1,
+          longitude: 126.978 + Math.random() * 0.1,
+        },
+      });
+    })
+  );
+
+  await Promise.all(
+    times(MAX_PROMISES, (num) => {
+      return prisma.promise.create({
         data: {
           title: `promise ${num}`,
           hostId: randomPick(users).id,
           themes: {
             createMany: {
-              data: randomThemes.map((theme) => ({ themeId: theme.id })),
+              data: randomArray(themes, random(1, 5)).map((theme) => ({ themeId: theme.id })),
             },
           },
           users: {
             createMany: {
-              data: randomAttendees.map((user, index) => ({
+              data: randomAttendeeMap[num].map((user, index) => ({
                 userId: user.id,
-                startLocationId: randomStartLocations[index],
+                startLocationId: randomStartLocationsMap[num][index],
               })),
             },
           },
-          destinationType: randomDestinationType,
-          destinationId: randomDestination?.id,
+          destinationType: randomDestinationTypeMap[num],
+          destinationId: randomDestinationMap[num]?.id,
           locationShareStartType: randomPick(constant.locationShareTypes),
           locationShareStartValue: Math.floor(Math.random() * 100),
           locationShareEndType: randomPick(constant.locationShareTypes),
