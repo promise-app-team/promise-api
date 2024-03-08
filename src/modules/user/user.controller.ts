@@ -29,7 +29,7 @@ export class UserController {
   @ApiOkResponse({ type: UserDTO, description: '수정된 인증 사용자 정보' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   async updateMyProfile(@AuthUser() user: User, @Body() body: InputUpdateUserDTO): Promise<UserDTO> {
-    return UserDTO.from(await this.userService.update(user, body));
+    return this.userService.update(user, body).then((user) => UserDTO.from(user));
   }
 
   @Delete('profile')
@@ -38,7 +38,6 @@ export class UserController {
   @ApiOkResponse({ type: OutputDeleteUserDTO, description: '인증 사용자 정보 삭제 성공' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   async deleteMyProfile(@AuthUser() user: User, @Body() body: InputDeleteUserDTO): Promise<OutputDeleteUserDTO> {
-    const { id } = await this.userService.delete(user, body.reason);
-    return { id };
+    return this.userService.delete(user, body.reason).then(({ id }) => ({ id }));
   }
 }
