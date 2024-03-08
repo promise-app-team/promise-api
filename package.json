@@ -27,7 +27,8 @@
     "lint:fix": "DEBUG=eslint:cli-engine eslint --fix \"src/**/*.ts\"",
     "lint:tsc": "tsc --noEmit",
     "test": "jest --coverage",
-    "update": "bunx npm-check-updates -ui"
+    "update": "bunx npm-check-updates -ui",
+    "inthash": "bun run ./scripts/inthash.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.499.0",
