@@ -1,12 +1,4 @@
-import {
-  Post,
-  Controller,
-  UploadedFile,
-  UseGuards,
-  UseInterceptors,
-  BadRequestException,
-  ParseFilePipeBuilder,
-} from '@nestjs/common';
+import { Post, Controller, UploadedFile, UseGuards, UseInterceptors, ParseFilePipeBuilder } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBearerAuth,
@@ -18,10 +10,10 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 
+import { HttpException } from '@/common';
 import { JwtAuthGuard } from '@/modules/auth/jwt.guard';
 import { OutputUploadFileDTO } from '@/modules/upload/upload.dto';
 import { FileUploadService } from '@/modules/upload/upload.service';
-import { HttpException } from '@/schema/exception';
 
 @ApiTags('File Upload')
 @ApiBearerAuth()
@@ -33,25 +25,9 @@ export class FileUploadController {
   @UseInterceptors(FileInterceptor('file'))
   @UseGuards(JwtAuthGuard)
   @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
-  @ApiOperation({
-    operationId: 'uploadImageFile',
-    summary: '이미지 파일 업로드',
-  })
-  @ApiCreatedResponse({
-    type: OutputUploadFileDTO,
-    description: '이미지 파일 업로드 성공',
-  })
+  @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
+  @ApiOperation({ operationId: 'uploadImageFile', summary: '이미지 파일 업로드' })
+  @ApiCreatedResponse({ type: OutputUploadFileDTO, description: '이미지 파일 업로드 성공' })
   @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   async uploadImageFile(
     @UploadedFile(
@@ -65,10 +41,10 @@ export class FileUploadController {
     )
     file: Express.Multer.File
   ): Promise<OutputUploadFileDTO> {
-    try {
-      return { url: await this.uploader.upload(file) };
-    } catch (error) {
-      throw new BadRequestException('파일 업로드에 실패했습니다.');
-    }
+    return {
+      url: await this.uploader
+        .upload(file)
+        .catch((error) => HttpException.throw('파일 업로드에 실패했습니다.', 'INTERNAL_SERVER_ERROR', error)),
+    };
   }
 }

@@ -22,19 +22,15 @@ export class FileUploadService {
     const bucket = this.config.get('aws.bucket');
     const region = this.config.get('aws.region');
 
-    try {
-      await this.client.send(
-        new PutObjectCommand({
-          Bucket: bucket,
-          Key: path,
-          Body: file.buffer,
-          ContentType: file.mimetype,
-        })
-      );
-      return `https://s3.${region}.amazonaws.com/${bucket}/${path}`;
-    } catch (error) {
-      console.error(error);
-      throw new Error('파일 업로드에 실패했습니다.');
-    }
+    await this.client.send(
+      new PutObjectCommand({
+        Bucket: bucket,
+        Key: path,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+      })
+    );
+
+    return `https://s3.${region}.amazonaws.com/${bucket}/${path}`;
   }
 }

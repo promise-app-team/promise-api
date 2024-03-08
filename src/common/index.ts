@@ -4,7 +4,9 @@ export * from './decorators/is-after.decorator';
 export * from './decorators/is-profile-url.decorator';
 export * from './decorators/debug.decorator';
 
-export * from './filters/prisma-exception.filter';
+export * from './exceptions/http.exception';
+
+export * from './filters/all-exceptions.filter';
 
 export * from './interceptors/stringify-date.interceptor';
 export * from './interceptors/timeout.interceptor';

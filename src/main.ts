@@ -9,7 +9,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { Handler } from 'aws-lambda';
 
 import { AppModule } from '@/app/app.module';
-import { PrismaExceptionFilter, StringifyDateInterceptor, TimeoutInterceptor, TypedConfigService } from '@/common';
+import { AllExceptionsFilter, StringifyDateInterceptor, TimeoutInterceptor, TypedConfigService } from '@/common';
 import logger from '@/utils/logger';
 
 async function initializeApp<App extends NestExpressApplication>() {
@@ -23,7 +23,7 @@ async function initializeApp<App extends NestExpressApplication>() {
   app
     .useStaticAssets(join(__dirname, 'assets'), { prefix: '/assets' })
     .useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, stopAtFirstError: false }))
-    .useGlobalFilters(new PrismaExceptionFilter(httpAdapter))
+    .useGlobalFilters(new AllExceptionsFilter(httpAdapter))
     .useGlobalInterceptors(
       new ClassSerializerInterceptor(app.get(Reflector)),
       new StringifyDateInterceptor(),
