@@ -1,7 +1,7 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
 
-import { HasherService } from '@/common';
+import { HasherService, LoggerService } from '@/common';
 
 @Injectable()
 export class PrismaService
@@ -9,7 +9,7 @@ export class PrismaService
   implements OnModuleInit
 {
   constructor(
-    private readonly logger: Logger,
+    private readonly logger: LoggerService,
     private readonly hasher: HasherService
   ) {
     super({

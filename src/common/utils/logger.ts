@@ -1,8 +1,6 @@
 import { formatISO } from 'date-fns';
 import { format, createLogger, transports } from 'winston';
 
-import NestLogger from '@/utils/logger/nest';
-
 const colors = {
   dim: 'dim',
   underline: 'underline',
@@ -27,7 +25,7 @@ function colorize(color: keyof typeof colors, message: string) {
   return format.colorize().colorize(color, message);
 }
 
-const logger = createLogger({
+export const logger = createLogger({
   transports: [
     new transports.Console({
       format: format.combine(
@@ -95,7 +93,3 @@ function isRequest(request: any): boolean {
 function isResponse(response: any): boolean {
   return response && response.statusCode;
 }
-
-export default {
-  nest: () => new NestLogger(logger),
-};

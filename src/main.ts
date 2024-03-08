@@ -9,19 +9,25 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { Handler } from 'aws-lambda';
 
 import { AppModule } from '@/app/app.module';
-import { AllExceptionsFilter, StringifyDateInterceptor, TimeoutInterceptor, TypedConfigService } from '@/common';
-import logger from '@/utils/logger';
+import {
+  AllExceptionsFilter,
+  LoggerService,
+  StringifyDateInterceptor,
+  TimeoutInterceptor,
+  TypedConfigService,
+} from '@/common';
 
 async function initializeApp<App extends NestExpressApplication>() {
   const app = await NestFactory.create<App>(AppModule, {
-    logger: logger.nest(),
+    bufferLogs: true,
   });
 
+  app.useLogger(app.get(LoggerService));
   const config = app.get(TypedConfigService);
   const { httpAdapter } = app.get(HttpAdapterHost);
 
   app
-    .useStaticAssets(join(__dirname, 'assets'), { prefix: '/assets' })
+    .useStaticAssets(join(__dirname, 'assets'), { prefix: '/' })
     .useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, stopAtFirstError: false }))
     .useGlobalFilters(new AllExceptionsFilter(httpAdapter))
     .useGlobalInterceptors(
@@ -45,8 +51,8 @@ async function initializeApp<App extends NestExpressApplication>() {
   const document = SwaggerModule.createDocument(app, openApiConfig);
   SwaggerModule.setup('api', app, document, {
     customSiteTitle: 'Promise API',
-    customfavIcon: '/assets/favicon.ico',
-    customCssUrl: '/assets/css/swagger.css',
+    customfavIcon: '/favicon.ico',
+    customCssUrl: '/css/swagger.css',
     swaggerOptions: {
       docExpansion: 'none',
       persistAuthorization: true,
