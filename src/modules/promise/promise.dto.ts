@@ -1,4 +1,3 @@
-import { PickType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -12,30 +11,15 @@ import {
   IsString,
   MaxLength,
   Min,
-  ValidateBy,
   ValidateNested,
 } from 'class-validator';
 import { addMinutes } from 'date-fns';
-import { filter, map, pick, pipe } from 'remeda';
+import { filter, map, pipe } from 'remeda';
 
 import { IsAfter, ApplyDTO } from '@/common';
 import { LocationDTO } from '@/modules/promise/location.dto';
 import { AttendeeDTO, HostDTO } from '@/modules/user/user.dto';
 import { DestinationType, LocationShareType, PromiseEntity } from '@/prisma';
-
-const promiseKeys = [
-  'id',
-  'pid',
-  'title',
-  'destinationType',
-  'locationShareStartType',
-  'locationShareStartValue',
-  'locationShareEndType',
-  'locationShareEndValue',
-  'promisedAt',
-  'completedAt',
-  'createdAt',
-] as const;
 
 export enum PromiseStatus {
   ALL = 'all',
@@ -43,17 +27,38 @@ export enum PromiseStatus {
   UNAVAILABLE = 'unavailable',
 }
 
-export class PromiseDTO extends ApplyDTO(PickType(PromiseEntity, promiseKeys), (obj: PromiseEntity) => ({
-  ...pick(obj, promiseKeys),
-  host: HostDTO.from(obj.host),
-  themes: map(obj.themes, ({ theme }) => theme.name),
-  destination: obj.destination ? LocationDTO.from(obj.destination) : null,
-  attendees: pipe(
-    obj.users,
-    filter(({ user }) => user.id !== obj.host.id),
-    map(({ user }) => AttendeeDTO.from(user))
-  ),
-})) {
+export enum PromiseUserRole {
+  ALL = 'all',
+  HOST = 'host',
+  ATTENDEE = 'attendee',
+}
+
+export class PromiseDTO extends ApplyDTO(
+  PromiseEntity,
+  [
+    'id',
+    'pid',
+    'title',
+    'destinationType',
+    'locationShareStartType',
+    'locationShareStartValue',
+    'locationShareEndType',
+    'locationShareEndValue',
+    'promisedAt',
+    'completedAt',
+    'createdAt',
+  ],
+  (obj) => ({
+    host: HostDTO.from(obj.host),
+    themes: map(obj.themes, ({ theme }) => theme.name),
+    destination: obj.destination ? LocationDTO.from(obj.destination) : null,
+    attendees: pipe(
+      obj.users,
+      filter(({ user }) => user.id !== obj.host.id),
+      map(({ user }) => AttendeeDTO.from(user))
+    ),
+  })
+) {
   host!: HostDTO;
   themes!: string[];
   destination!: LocationDTO | null;
@@ -107,12 +112,6 @@ export class InputCreatePromiseDTO {
 
   @ValidateNested()
   @IsOptional()
-  @ValidateBy({
-    name: 'isNotEmptyObject',
-    validator(value: any) {
-      console.log(value);
-    },
-  })
   @Type(() => InputLocationDTO)
   destination!: InputLocationDTO | null;
 
@@ -133,6 +132,4 @@ export class InputCreatePromiseDTO {
 
 export class InputUpdatePromiseDTO extends InputCreatePromiseDTO {}
 
-export class PromisePidDTO extends ApplyDTO(PickType(PromiseEntity, ['pid']), (obj: PromiseEntity) =>
-  pick(obj, ['pid'])
-) {}
+export class PromisePidDTO extends ApplyDTO(PromiseEntity, ['pid']) {}
