@@ -1,22 +1,16 @@
 import { Global, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 
-import { extraEnv } from '@/common/config/env';
-import { schema } from '@/common/config/validation';
 import { LoggerMiddleware } from '@/common/middlewares/logger.middleware';
 import { TrimMiddleware } from '@/common/middlewares/trim.middleware';
 import { LoggerModule } from '@/common/modules/logger.module';
+import { TypedConfigModule } from '@/common/modules/typed-config.module';
 import { HasherService } from '@/common/services/hasher.service';
-import { TypedConfigService } from '@/common/services/typed-config.service';
 
 @Global()
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      load: [extraEnv],
-      envFilePath: ['.env'],
-      validationSchema: schema,
-      expandVariables: true,
+    TypedConfigModule.forRoot({
+      global: true,
     }),
     LoggerModule.forRoot({
       global: true,
@@ -30,8 +24,8 @@ import { TypedConfigService } from '@/common/services/typed-config.service';
       ],
     }),
   ],
-  providers: [HasherService, TypedConfigService],
-  exports: [HasherService, TypedConfigService],
+  providers: [HasherService],
+  exports: [HasherService],
 })
 export class CommonModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
