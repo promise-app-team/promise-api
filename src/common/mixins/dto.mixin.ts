@@ -7,7 +7,7 @@ export function ApplyDTO<T, K extends keyof T, A extends Record<string, any>>(
   keys: readonly K[],
   extend?: (obj: T) => A
 ): Type<Pick<T, (typeof keys)[number]>> & {
-  from(obj: any): Pick<T, (typeof keys)[number]> & A;
+  from(obj: Record<string, any>): Pick<T, (typeof keys)[number]> & A;
 } {
   return class DTO extends (PickType(classRef, keys) as Type) {
     static from(obj: any) {

@@ -1,12 +1,30 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { isPast } from 'date-fns';
 import { difference, map, pick, pipe } from 'remeda';
 
 import { HasherService } from '@/common';
-import { InputCreatePromiseDTO, InputLocationDTO } from '@/modules/promise/promise.dto';
-import { PrismaService, UserEntity } from '@/prisma';
+import { InputCreatePromiseDTO, InputLocationDTO, PromiseUserRole, PromiseStatus } from '@/modules/promise/promise.dto';
+import { PrismaClientError, PrismaService, UserEntity } from '@/prisma';
 import { ifs, guard } from '@/utils/guard';
+
+export enum PromiseServiceError {
+  NotFoundPromise = '약속을 찾을 수 없습니다.',
+  NotFoundStartLocation = '등록한 출발지가 없습니다.',
+  AlreadyAttend = '이미 참여한 약속입니다.',
+  CannotCancel = '약속장은 약속을 취소할 수 없습니다.',
+}
+
+interface PromiseUniqueFilter {
+  id?: number;
+  pid?: string;
+}
+
+interface PromiseFilter {
+  status?: PromiseStatus;
+  role?: PromiseUserRole;
+}
+
+type PromiseFullFilter = PromiseUniqueFilter & PromiseFilter;
 
 @Injectable()
 export class PromiseService {
@@ -15,7 +33,7 @@ export class PromiseService {
     private readonly hasher: HasherService
   ) {}
 
-  private promiseInclude: Prisma.PromiseInclude = {
+  #promiseInclude: Prisma.PromiseInclude = {
     host: {
       select: {
         id: true,
@@ -33,36 +51,27 @@ export class PromiseService {
   };
 
   async exists(pid: string): Promise<boolean> {
-    const id = +this.hasher.decode(pid);
     const exists = await this.prisma.promise.findUnique({
-      where: { id },
+      where: { id: +this.hasher.decode(pid) },
       select: { id: true },
     });
     return !!exists;
   }
 
-  async findAllByUser(user: UserEntity, status?: 'all' | 'available' | 'unavailable') {
-    const now = new Date();
+  async findAllByUser(user: UserEntity, condition?: PromiseFilter) {
     return this.prisma.promise.findMany({
-      where: {
-        users: {
-          some: {
-            userId: user.id,
-          },
-        },
-        promisedAt: ifs([
-          [status === 'available', { gt: now }],
-          [status === 'unavailable', { lt: now }],
-        ]),
-      },
-      include: this.promiseInclude,
+      where: this.makeFilter(condition ?? {}, user),
+      include: this.#promiseInclude,
     });
   }
 
-  async findOneByPid(pid: string) {
-    const id = +this.hasher.decode(pid);
-    return this.prisma.promise.findUniqueOrThrow({
-      where: { id },
+  /**
+   *
+   * @throws {PromiseServiceError.NotFoundPromise}
+   */
+  async findOneByPid(pid: string, condition?: PromiseFilter) {
+    const user = await this.prisma.promise.findUnique({
+      where: this.makeFilter({ pid, ...condition }),
       include: {
         themes: {
           select: { theme: true },
@@ -80,6 +89,12 @@ export class PromiseService {
         },
       },
     });
+
+    if (!user) {
+      throw PromiseServiceError.NotFoundPromise;
+    }
+
+    return user;
   }
 
   async create(host: UserEntity, input: InputCreatePromiseDTO) {
@@ -115,23 +130,30 @@ export class PromiseService {
             }
           : undefined,
       },
-      include: this.promiseInclude,
+      include: this.#promiseInclude,
     });
   }
 
+  /**
+   *
+   * @throws {PromiseServiceError.NotFoundPromise}
+   */
   async update(pid: string, host: UserEntity, input: InputCreatePromiseDTO) {
     return this.prisma.$transaction(async (tx) => {
       const id = +this.hasher.decode(pid);
 
-      const [themes, dest] = await Promise.all([
-        tx.promiseTheme.findMany({
-          where: { promiseId: id },
-        }),
-        tx.promise.findUnique({
-          where: { id, hostId: host.id },
-          select: { destinationId: true },
-        }),
-      ]);
+      const promise = await tx.promise.findUnique({
+        where: { id, hostId: host.id },
+        select: { id: true, destinationId: true },
+      });
+
+      if (!promise) {
+        throw PromiseServiceError.NotFoundPromise;
+      }
+
+      const themes = await tx.promiseTheme.findMany({
+        where: { promiseId: id },
+      });
 
       return tx.promise.update({
         where: { id, hostId: host.id },
@@ -166,14 +188,14 @@ export class PromiseService {
           destination: {
             connect: input.destination
               ? await tx.location.upsert({
-                  where: { id: dest?.destinationId ?? 0 },
+                  where: { id: promise.destinationId ?? 0 },
                   create: input.destination,
                   update: input.destination,
                 })
               : await guard(
                   async () =>
                     (await tx.location.delete({
-                      where: { id: dest?.destinationId ?? 0 },
+                      where: { id: promise.destinationId ?? 0 },
                     })) && undefined
                 ),
           },
@@ -189,37 +211,75 @@ export class PromiseService {
           //       delete: true,
           //     },
         },
-        include: this.promiseInclude,
+        include: this.#promiseInclude,
       });
     });
   }
 
+  /**
+   * @throws {PromiseServiceError.NotFoundPromise}
+   * @throws {PromiseServiceError.NotFoundStartLocation}
+   */
   async getStartLocation(pid: string, user: UserEntity) {
-    return this.prisma.promiseUser
-      .findFirstOrThrow({
+    return this.prisma.$transaction(async (tx) => {
+      const promiseUser = await tx.promiseUser.findFirst({
         where: { userId: user.id, promiseId: +this.hasher.decode(pid) },
-        include: { startLocation: true },
-      })
-      .then(({ startLocation }) => startLocation);
+        select: { startLocationId: true },
+      });
+
+      if (!promiseUser) {
+        throw PromiseServiceError.NotFoundPromise;
+      }
+
+      if (!promiseUser.startLocationId) {
+        throw PromiseServiceError.NotFoundStartLocation;
+      }
+
+      const location = await tx.location.findUnique({
+        where: { id: promiseUser.startLocationId },
+      });
+
+      if (!location) {
+        throw PromiseServiceError.NotFoundStartLocation;
+      }
+
+      return location;
+    });
   }
 
+  /**
+   * @throws {PromiseServiceError.NotFoundPromise}
+   * @throws {PromiseServiceError.NotFoundStartLocation}
+   */
   async updateStartLocation(pid: string, attendee: UserEntity, input: InputLocationDTO) {
-    return this.prisma.promiseUser
-      .update({
-        where: { identifier: { userId: attendee.id, promiseId: +this.hasher.decode(pid) } },
-        data: {
-          startLocation: {
-            upsert: {
-              create: input,
-              update: input,
-            },
-          },
-        },
-        include: { startLocation: true },
-      })
-      .then(({ startLocation }) => startLocation);
+    return this.prisma.$transaction(async (tx) => {
+      const id = +this.hasher.decode(pid);
+
+      const promiseUser = await tx.promiseUser.findFirst({
+        where: { userId: attendee.id, promiseId: id },
+        select: { startLocationId: true },
+      });
+
+      if (!promiseUser) {
+        throw PromiseServiceError.NotFoundPromise;
+      }
+
+      if (!promiseUser.startLocationId) {
+        throw PromiseServiceError.NotFoundStartLocation;
+      }
+
+      return tx.location.upsert({
+        where: { id: promiseUser.startLocationId },
+        create: input,
+        update: input,
+      });
+    });
   }
 
+  /**
+   * @throws {PromiseServiceError.NotFoundPromise}
+   * @throws {PromiseServiceError.NotFoundStartLocation}
+   */
   async deleteStartLocation(pid: string, user: UserEntity) {
     return this.prisma.$transaction(async (tx) => {
       const id = +this.hasher.decode(pid);
@@ -229,6 +289,10 @@ export class PromiseService {
         select: { startLocationId: true },
       });
 
+      if (!promiseUser) {
+        throw PromiseServiceError.NotFoundPromise;
+      }
+
       await tx.location.delete({
         where: { id: promiseUser?.startLocationId ?? 0 },
       });
@@ -236,71 +300,85 @@ export class PromiseService {
   }
 
   async attend(pid: string, user: UserEntity) {
-    return this.prisma.$transaction(async (tx) => {
-      const id = +this.hasher.decode(pid);
-
-      const promise = await tx.promise.findUniqueOrThrow({
-        where: { id },
-        select: { promisedAt: true, completedAt: true },
-      });
-
-      if (this.isExpired(promise)) {
-        throw new Error('만료된 약속은 참여할 수 없습니다.');
-      }
-
-      const promiseUser = await tx.promiseUser.findUnique({
-        where: { identifier: { userId: user.id, promiseId: id } },
-      });
-
-      if (promiseUser) {
-        throw new Error('이미 참여한 약속입니다.');
-      }
-
-      return tx.promiseUser
-        .create({
-          data: {
-            user: {
-              connect: { id: user.id },
-            },
-            promise: {
-              connect: { id },
+    return this.prisma.promiseUser
+      .create({
+        data: {
+          user: {
+            connect: {
+              id: user.id,
             },
           },
-        })
-        .then(({ promiseId }) => ({
-          pid: this.hasher.encode(promiseId),
-        }));
-    });
+          promise: {
+            connect: this.makeFilter({ pid, status: PromiseStatus.AVAILABLE }),
+          },
+        },
+      })
+      .then(({ promiseId }) => ({
+        pid: this.hasher.encode(promiseId),
+      }))
+      .catch((error) => {
+        switch (PrismaClientError.from(error)?.code) {
+          case 'P2002':
+            throw PromiseServiceError.AlreadyAttend;
+          case 'P2025':
+            throw PromiseServiceError.NotFoundPromise;
+          default:
+            throw error;
+        }
+      });
   }
 
+  /**
+   * @throws {PromiseServiceError.NotFoundPromise}
+   * @throws {PromiseServiceError.CannotCancel}
+   */
   async leave(pid: string, user: UserEntity) {
     return this.prisma.$transaction(async (tx) => {
-      const id = +this.hasher.decode(pid);
-
-      const promise = await tx.promise.findUniqueOrThrow({
-        where: { id },
-        select: { hostId: true, promisedAt: true, completedAt: true },
+      const promise = await tx.promise.findUnique({
+        where: this.makeFilter({ pid, status: PromiseStatus.AVAILABLE }),
+        select: { id: true, hostId: true, promisedAt: true, completedAt: true },
       });
 
-      if (this.isExpired(promise)) {
-        throw new Error('만료된 약속은 참여를 취소할 수 없습니다.');
+      if (!promise) {
+        throw PromiseServiceError.NotFoundPromise;
       }
 
       if (promise.hostId === user.id) {
-        throw new Error('약속장은 약속을 취소할 수 없습니다.');
+        throw PromiseServiceError.CannotCancel;
       }
 
       await tx.promiseUser.delete({
-        where: { identifier: { userId: user.id, promiseId: id } },
+        where: { identifier: { userId: user.id, promiseId: promise.id } },
       });
     });
   }
 
-  async themes() {
+  async getThemes() {
     return this.prisma.theme.findMany();
   }
 
-  isExpired<T extends { promisedAt: Date; completedAt: Date | null }>(promise: T) {
-    return isPast(promise.promisedAt) || !!promise.completedAt;
+  private makeFilter(condition: PromiseFullFilter, user?: UserEntity): Prisma.PromiseWhereUniqueInput;
+  private makeFilter(condition: PromiseFullFilter, user?: UserEntity): Prisma.PromiseWhereInput;
+  private makeFilter(condition: PromiseFullFilter, user?: UserEntity) {
+    const { pid, status, role } = condition;
+    const { id = pid ? +this.hasher.decode(pid) : undefined } = condition;
+
+    const now = new Date();
+    return {
+      id,
+
+      ...(status &&
+        ifs([
+          [status === PromiseStatus.AVAILABLE, { promisedAt: { gte: now }, completedAt: null }],
+          [status === PromiseStatus.UNAVAILABLE, { OR: [{ promisedAt: { lt: now } }, { completedAt: { not: null } }] }],
+        ])),
+
+      ...(role &&
+        ifs([
+          [role === PromiseUserRole.ALL, { users: { some: { userId: user?.id } } }],
+          [role === PromiseUserRole.HOST, { hostId: user?.id }],
+          [role === PromiseUserRole.ATTENDEE, { hostId: { not: user?.id }, users: { some: { userId: user?.id } } }],
+        ])),
+    } as Prisma.PromiseWhereInput | Prisma.PromiseWhereUniqueInput;
   }
 }

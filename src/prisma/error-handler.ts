@@ -25,6 +25,10 @@ export enum PrismaErrorCode {
    * Unique constraint failed on the {constraint}
    */
   P2002 = 'P2002',
+
+  /**
+   * Unique constraint failed on the {constraint}
+   */
   P2003 = 'P2003',
   P2004 = 'P2004',
   P2005 = 'P2005',
@@ -47,6 +51,10 @@ export enum PrismaErrorCode {
   P2022 = 'P2022',
   P2023 = 'P2023',
   P2024 = 'P2024',
+
+  /**
+   * An operation failed because it depends on one or more records that were required but not found. {cause}
+   */
   P2025 = 'P2025',
   P2026 = 'P2026',
   P2027 = 'P2027',

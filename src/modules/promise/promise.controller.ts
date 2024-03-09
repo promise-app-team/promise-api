@@ -1,47 +1,25 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import {
-  Get,
-  Put,
-  Body,
-  Post,
-  Param,
-  Query,
-  Delete,
-  Inject,
-  UseGuards,
-  Controller,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiQuery,
-  ApiOkResponse,
-  ApiOperation,
-  ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiNotFoundResponse,
-  ApiBadRequestResponse,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
+import { Body, Param, Query, Inject, Controller } from '@nestjs/common';
+import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Cache } from 'cache-manager';
 
+import { HttpException } from '@/common';
+import { Delete, Get, Post, Put } from '@/customs/nest';
 import { AuthUser } from '@/modules/auth/auth.decorator';
-import { JwtAuthGuard } from '@/modules/auth/jwt.guard';
 import { LocationDTO } from '@/modules/promise/location.dto';
 import {
   InputCreatePromiseDTO,
   InputLocationDTO,
   InputUpdatePromiseDTO,
+  PromiseUserRole,
   PromiseDTO,
   PromisePidDTO,
   PromiseStatus,
   PublicPromiseDTO,
 } from '@/modules/promise/promise.dto';
-import { PromiseService } from '@/modules/promise/promise.service';
+import { PromiseService, PromiseServiceError } from '@/modules/promise/promise.service';
 import { ThemeDTO } from '@/modules/promise/theme.dto';
 import { UserEntity } from '@/prisma';
-import { HttpException } from '@/schema/exception';
 
 @ApiTags('Promise')
 @ApiBearerAuth()
@@ -52,91 +30,40 @@ export class PromiseController {
     private readonly promiseService: PromiseService
   ) {}
 
-  @Get('')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'getMyPromises', summary: '약속 목록' })
+  @Get('', { auth: true, description: '내가 참여한 약속 목록을 불러옵니다.', exceptions: ['BAD_REQUEST'] })
   @ApiQuery({ name: 'status', enum: PromiseStatus, required: false })
-  @ApiOkResponse({ type: [PromiseDTO], description: '약속 목록' })
-  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
+  @ApiQuery({ name: 'role', enum: PromiseUserRole, required: false })
   async getMyPromises(
     @AuthUser() user: UserEntity,
-    @Query('status') status: PromiseStatus = PromiseStatus.ALL
+    @Query('status') status: PromiseStatus = PromiseStatus.ALL,
+    @Query('role') role: PromiseUserRole = PromiseUserRole.ALL
   ): Promise<PromiseDTO[]> {
     return this.promiseService
-      .findAllByUser(user, status)
+      .findAllByUser(user, { status, role })
       .then((promises) => promises.map((promise) => PromiseDTO.from(promise)));
   }
 
-  @Get('themes')
-  @ApiOperation({ operationId: 'getThemes', summary: '약속 테마 목록' })
-  @ApiOkResponse({ type: [ThemeDTO], description: '약속 테마 목록' })
-  async getThemes(): Promise<ThemeDTO[]> {
-    return this.promiseService.themes().then((themes) => themes.map((theme) => ThemeDTO.from(theme)));
-  }
-
-  @Get('queue')
-  @ApiOperation({ operationId: 'dequeuePromise', summary: '약속 대기열을 확인' })
-  @ApiOkResponse({ type: PromisePidDTO, description: '약속 대기열 확인 성공' })
-  @ApiNotFoundResponse({ type: HttpException, description: '약속 대기열 없음' })
-  async dequeuePromise(@Query('deviceId') deviceId: string): Promise<PromisePidDTO> {
-    const key = this.makeDeviceKey(deviceId);
-    const value = await this.cache.get(key);
-    if (value) {
-      await this.cache.del(key);
-      return {
-        pid: `${value}`,
-      };
-    }
-    throw new NotFoundException('약속 대기열을 찾을 수 없습니다.');
-  }
-
-  @Post('queue')
-  @ApiOperation({ operationId: 'enqueuePromise', summary: '약속 대기열에 추가' })
-  @ApiCreatedResponse({ description: '약속 대기열에 추가 성공' })
-  @ApiBadRequestResponse({ type: HttpException, description: '약속 대기열 추가 실패' })
-  @ApiNotFoundResponse({ type: HttpException, description: '약속 없음' })
-  async enqueuePromise(@Query('pid') pid: string, @Query('deviceId') deviceId: string) {
-    const exists = await this.promiseService.exists(pid);
-    if (!exists) {
-      throw new NotFoundException('약속을 찾을 수 없습니다.');
-    }
-    const key = this.makeDeviceKey(deviceId);
-    await this.cache.set(key, pid, 60 * 10 * 1000);
-  }
-
-  @Get(':pid')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'getPromise', summary: '약속 상세 정보' })
-  @ApiOkResponse({ type: PublicPromiseDTO, description: '약속 상세 정보' })
-  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
-  @ApiNotFoundResponse({ type: HttpException, description: '약속 없음' })
+  @Get(':pid', { auth: true, description: '약속 상세 정보를 불러옵니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
   async getPromise(@Param('pid') pid: string): Promise<PublicPromiseDTO> {
-    return this.promiseService.findOneByPid(pid).then((promise) => PromiseDTO.from(promise));
-  }
-
-  @Post()
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'createPromise', summary: '새로운 약속 추가' })
-  @ApiCreatedResponse({ type: PublicPromiseDTO, description: '약속 추가 성공' })
-  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
-  @ApiBadRequestResponse({ type: HttpException, description: '약속 추가 실패' })
-  async createPromise(@AuthUser() user: UserEntity, @Body() input: InputCreatePromiseDTO): Promise<PublicPromiseDTO> {
     return this.promiseService
-      .create(user, input)
-      .then((promises) => {
-        console.log(JSON.stringify(promises, null, 2));
-        return promises;
-      })
-      .then((promise) => PublicPromiseDTO.from(promise));
+      .findOneByPid(pid)
+      .then((promise) => PromiseDTO.from(promise))
+      .catch((error) => {
+        switch (error) {
+          case PromiseServiceError.NotFoundPromise:
+            throw HttpException.new(error, 'NOT_FOUND');
+          default:
+            throw HttpException.new(error);
+        }
+      });
   }
 
-  @Put(':pid')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'updatePromise', summary: '약속 수정' })
-  @ApiOkResponse({ type: PublicPromiseDTO, description: '약속 수정 성공' })
-  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
-  @ApiBadRequestResponse({ type: HttpException, description: '약속 수정 실패' })
-  @ApiNotFoundResponse({ type: HttpException, description: '약속 없음' })
+  @Post('', { auth: true, description: '약속을 생성합니다.', exceptions: ['BAD_REQUEST'] })
+  async createPromise(@AuthUser() user: UserEntity, @Body() input: InputCreatePromiseDTO): Promise<PublicPromiseDTO> {
+    return this.promiseService.create(user, input).then((promise) => PublicPromiseDTO.from(promise));
+  }
+
+  @Put(':pid', { auth: true, description: '약속을 수정합니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
   async updatePromise(
     @AuthUser() user: UserEntity,
     @Param('pid') pid: string,
@@ -145,78 +72,102 @@ export class PromiseController {
     return this.promiseService.update(pid, user, input).then((promise) => PublicPromiseDTO.from(promise));
   }
 
-  @Get(':pid/start-location')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'getStartLocation', summary: '출발지 불러오기' })
-  @ApiOkResponse({ type: LocationDTO, description: '출발지 불러오기 성공' })
-  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
-  @ApiNotFoundResponse({ type: HttpException, description: '약속/출발지 없음' })
+  @Post(':pid/attendees', { auth: true, description: '약속에 참여합니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
+  async attendPromise(@AuthUser() user: UserEntity, @Param('pid') pid: string): Promise<PromisePidDTO> {
+    return this.promiseService.attend(pid, user).then((promise) => PromisePidDTO.from(promise));
+  }
+
+  @Delete(':pid/attendees', { auth: true, description: '약속을 떠납니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
+  async leavePromise(@AuthUser() user: UserEntity, @Param('pid') pid: string) {
+    await this.promiseService.leave(pid, user);
+  }
+
+  @Get(':pid/start-location', {
+    auth: true,
+    description: '약속 출발지를 불러옵니다.',
+    exceptions: ['BAD_REQUEST', 'NOT_FOUND'],
+  })
   async getStartLocation(@AuthUser() user: UserEntity, @Param('pid') pid: string): Promise<LocationDTO> {
     return this.promiseService
       .getStartLocation(pid, user)
       .then((location) => LocationDTO.from(location))
-      .catch(() => {
-        throw new NotFoundException('출발지를 찾을 수 없습니다.');
+      .catch((error) => {
+        switch (error) {
+          case PromiseServiceError.NotFoundPromise:
+          case PromiseServiceError.NotFoundStartLocation:
+            throw HttpException.new(error, 'NOT_FOUND');
+          default:
+            throw HttpException.new(error);
+        }
       });
   }
 
-  @Post(':pid/start-location')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'setStartLocation', summary: '출발지 설정' })
-  @ApiCreatedResponse({ type: LocationDTO, description: '출발지 설정 성공' })
-  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
-  @ApiNotFoundResponse({ type: HttpException, description: '약속 없음' })
-  @ApiBadRequestResponse({ type: HttpException, description: '출발지 설정 실패' })
+  @Post(':pid/start-location', {
+    auth: true,
+    description: '약속 출발지를 설정합니다.',
+    exceptions: ['BAD_REQUEST', 'NOT_FOUND'],
+  })
   async setStartLocation(@AuthUser() user: UserEntity, @Param('pid') pid: string, @Body() input: InputLocationDTO) {
     return this.promiseService
       .updateStartLocation(pid, user, input)
       .then((location) => LocationDTO.from(location))
-      .catch(() => {
-        throw new NotFoundException('출발지를 찾을 수 없습니다.');
+      .catch((error) => {
+        switch (error) {
+          case PromiseServiceError.NotFoundPromise:
+          case PromiseServiceError.NotFoundStartLocation:
+            throw HttpException.new(error, 'NOT_FOUND');
+          default:
+            throw HttpException.new(error);
+        }
       });
   }
 
-  @Delete(':pid/start-location')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'deleteStartLocation', summary: '출발지 삭제' })
-  @ApiOkResponse({ description: '출발지 삭제 성공' })
-  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
-  @ApiNotFoundResponse({ type: HttpException, description: '약속 없음' })
-  @ApiBadRequestResponse({ type: HttpException, description: '출발지 삭제 실패' })
-  async deleteStartLocation(@AuthUser() user: UserEntity, @Param('pid') pid: string) {
+  @Delete(':pid/start-location', {
+    auth: true,
+    description: '약속 출발지를 삭제합니다.',
+    exceptions: ['BAD_REQUEST', 'NOT_FOUND'],
+  })
+  async deleteStartLocation(@AuthUser() user: UserEntity, @Param('pid') pid: string): Promise<void> {
     await this.promiseService.deleteStartLocation(pid, user);
   }
 
-  @Post(':pid/attend')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'attendPromise', summary: '약속 참여' })
-  @ApiCreatedResponse({ type: PromisePidDTO, description: '약속 참여 성공' })
-  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
-  @ApiNotFoundResponse({ type: HttpException, description: '약속 없음' })
-  @ApiBadRequestResponse({ type: HttpException, description: '약속 참여 실패' })
-  async attendPromise(@AuthUser() user: UserEntity, @Param('pid') pid: string): Promise<PromisePidDTO> {
+  @Get('themes', { auth: true, description: '약속 테마 목록을 불러옵니다.' })
+  async getThemes(): Promise<ThemeDTO[]> {
     return this.promiseService
-      .attend(pid, user)
-      .then((promise) => PromisePidDTO.from(promise))
+      .getThemes()
+      .then((themes) => themes.map((theme) => ThemeDTO.from(theme)))
       .catch((error) => {
-        throw new BadRequestException(error.message);
+        switch (error) {
+          case PromiseServiceError.NotFoundPromise:
+            throw HttpException.new(error, 'NOT_FOUND');
+          default:
+            throw HttpException.new(error);
+        }
       });
   }
 
-  @Delete(':pid/attend')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'leavePromise', summary: '약속 탈퇴' })
-  @ApiOkResponse({ description: '약속 탈퇴 성공' })
-  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
-  @ApiNotFoundResponse({ type: HttpException, description: '약속 없음' })
-  @ApiBadRequestResponse({ type: HttpException, description: '약속 탈퇴 실패' })
-  async leavePromise(@AuthUser() user: UserEntity, @Param('pid') pid: string) {
-    await this.promiseService.leave(pid, user).catch((error) => {
-      throw new BadRequestException(error.message);
-    });
+  @Get('queue', { description: '약속 대기열을 확인합니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
+  async dequeuePromise(@Query('deviceId') deviceId: string): Promise<PromisePidDTO> {
+    const key = this.#makeDeviceKey(deviceId);
+    const value = await this.cache.get(key);
+    if (value) {
+      await this.cache.del(key);
+      return { pid: `${value}` };
+    }
+    HttpException.throw('약속 대기열을 찾을 수 없습니다.', 'NOT_FOUND');
   }
 
-  private makeDeviceKey(deviceId: string) {
+  @Post('queue', { description: '약속 대기열에 추가합니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
+  async enqueuePromise(@Query('pid') pid: string, @Query('deviceId') deviceId: string) {
+    const exists = await this.promiseService.exists(pid);
+    if (!exists) {
+      HttpException.throw('약속을 찾을 수 없습니다.', 'NOT_FOUND');
+    }
+    const key = this.#makeDeviceKey(deviceId);
+    await this.cache.set(key, pid, 60 * 10 * 1000);
+  }
+
+  #makeDeviceKey(deviceId: string) {
     const env = process.env.NODE_ENV || 'test';
     return `device:${deviceId}:${env}`;
   }
