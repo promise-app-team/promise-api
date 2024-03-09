@@ -46,14 +46,14 @@ model User {
   /// OAuth 공급자에서 제공하는 사용자 ID
   providerId String? @map("provider_id") @db.VarChar(100)
 
-  /// 마지막 로그인 시간
-  lastSignedAt DateTime @default(now()) @map("last_signed_at") @db.Timestamp(0)
-
   /// 탈퇴 시간
   deletedAt DateTime? @map("deleted_at") @db.Timestamp(0)
 
   /// 탈퇴 사유
   leaveReason String? @map("leave_reason") @db.VarChar(255)
+
+  /// 마지막 로그인 시간
+  lastSignedAt DateTime @default(now()) @map("last_signed_at") @db.Timestamp(0)
 
   /// 생성일
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)

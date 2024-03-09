@@ -1,12 +1,11 @@
-import { Body, Controller, Delete, Get, Put, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { Body, Controller } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { User } from '@prisma/client';
 
+import { Delete, Get, Put } from '@/customs/nest';
 import { AuthUser } from '@/modules/auth/auth.decorator';
-import { JwtAuthGuard } from '@/modules/auth/jwt.guard';
 import { InputDeleteUserDTO, InputUpdateUserDTO, OutputDeleteUserDTO, UserDTO } from '@/modules/user/user.dto';
 import { UserService } from '@/modules/user/user.service';
-import { HttpException } from '@/schema/exception';
 
 @ApiTags('User')
 @ApiBearerAuth()
@@ -14,31 +13,18 @@ import { HttpException } from '@/schema/exception';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get('profile')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'getMyProfile', summary: '인증 사용자 정보 조회' })
-  @ApiOkResponse({ type: UserDTO, description: '인증 사용자 정보' })
-  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
+  @Get('profile', { auth: true, description: '로그인한 사용자 정보를 불러옵니다.' })
   async getMyProfile(@AuthUser() user: User): Promise<UserDTO> {
     return UserDTO.from(user);
   }
 
-  @Put('profile')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'updateMyProfile', summary: '인증 사용자 정보 수정' })
-  @ApiOkResponse({ type: UserDTO, description: '수정된 인증 사용자 정보' })
-  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
+  @Put('profile', { auth: true, description: '로그인한 사용자 정보를 수정합니다.' })
   async updateMyProfile(@AuthUser() user: User, @Body() body: InputUpdateUserDTO): Promise<UserDTO> {
-    return UserDTO.from(await this.userService.update(user, body));
+    return this.userService.update(user, body).then((user) => UserDTO.from(user));
   }
 
-  @Delete('profile')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ operationId: 'deleteMyProfile', summary: '인증 사용자 정보 삭제' })
-  @ApiOkResponse({ type: OutputDeleteUserDTO, description: '인증 사용자 정보 삭제 성공' })
-  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
+  @Delete('profile', { auth: true, description: '로그인한 사용자 정보를 삭제합니다.' })
   async deleteMyProfile(@AuthUser() user: User, @Body() body: InputDeleteUserDTO): Promise<OutputDeleteUserDTO> {
-    const { id } = await this.userService.delete(user, body.reason);
-    return { id };
+    return this.userService.delete(user, body.reason).then((user) => OutputDeleteUserDTO.from(user));
   }
 }

@@ -5,9 +5,9 @@ CREATE TABLE `pm_users` (
     `profile_url` TEXT NULL,
     `provider` ENUM('KAKAO', 'GOOGLE', 'APPLE') NOT NULL,
     `provider_id` VARCHAR(100) NULL,
-    `last_signed_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     `deleted_at` TIMESTAMP(0) NULL,
     `leave_reason` VARCHAR(255) NULL,
+    `last_signed_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     `created_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     `updated_at` TIMESTAMP(0) NOT NULL,
 

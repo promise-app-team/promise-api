@@ -1,20 +1,22 @@
-import { Constructor } from '@/types';
+import { Type } from '@nestjs/common';
+import { PickType } from '@nestjs/swagger';
+import { pick } from 'remeda';
 
-type Transform<T> = (obj: any, dto: T) => T | Record<string, any>;
-
-export function ApplyDTO<T extends Constructor>(Base: T, transform: Transform<T>) {
-  return class DTO extends Base {
-    static from(obj: any): DTO {
+export function ApplyDTO<T, K extends keyof T, A extends Record<string, any>>(
+  classRef: Type<T>,
+  keys: readonly K[],
+  extend?: (obj: T) => A
+): Type<Pick<T, (typeof keys)[number]>> & {
+  from(obj: Record<string, any>): Pick<T, (typeof keys)[number]> & A;
+} {
+  return class DTO extends (PickType(classRef, keys) as Type) {
+    static from(obj: any) {
       if (!obj) throw new Error('obj is missing');
 
       const dto = new DTO();
-      const result = transform(obj, dto);
-
-      if (result instanceof DTO) {
-        return result;
-      }
-
-      return Object.assign(dto, result);
+      const picked = pick(obj, keys);
+      const extended = extend?.(obj) ?? {};
+      return Object.assign(dto, picked, extended);
     }
-  };
+  } as any;
 }

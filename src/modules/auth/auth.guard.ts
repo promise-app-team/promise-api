@@ -1,4 +1,4 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 
@@ -21,7 +21,7 @@ export class JwtAuthGuard implements CanActivate {
       const user = await this.userService.findOneById(payload.id);
       if (!user) throw new UnauthorizedException('로그인이 필요합니다.');
       request.user = user;
-    } catch {
+    } catch (error) {
       throw new UnauthorizedException('로그인이 필요합니다.');
     }
     return true;
@@ -31,4 +31,10 @@ export class JwtAuthGuard implements CanActivate {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
     return type === 'Bearer' ? token : null;
   }
+}
+
+export function AuthGuard(): MethodDecorator {
+  return (target, key, descriptor) => {
+    UseGuards(JwtAuthGuard)(target, key, descriptor);
+  };
 }

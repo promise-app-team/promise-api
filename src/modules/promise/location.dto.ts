@@ -1,13 +1,7 @@
-import { PickType } from '@nestjs/swagger';
-import { pick } from 'remeda';
-
 import { ApplyDTO } from '@/common';
 import { LocationEntity } from '@/prisma';
 
-const locationKeys = ['id', 'city', 'district', 'address'] as const;
-
-export class LocationDTO extends ApplyDTO(PickType(LocationEntity, locationKeys), (obj: LocationEntity) => ({
-  ...pick(obj, locationKeys),
+export class LocationDTO extends ApplyDTO(LocationEntity, ['id', 'city', 'district', 'address'], (obj) => ({
   latitude: parseFloat(`${obj.latitude}`),
   longitude: parseFloat(`${obj.longitude}`),
 })) {

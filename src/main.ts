@@ -9,21 +9,38 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { Handler } from 'aws-lambda';
 
 import { AppModule } from '@/app/app.module';
-import { PrismaExceptionFilter, StringifyDateInterceptor, TimeoutInterceptor, TypedConfigService } from '@/common';
-import logger from '@/utils/logger';
+import {
+  AllExceptionsFilter,
+  HttpException,
+  LoggerService,
+  StringifyDateInterceptor,
+  TimeoutInterceptor,
+  TypedConfigService,
+} from '@/common';
 
 async function initializeApp<App extends NestExpressApplication>() {
   const app = await NestFactory.create<App>(AppModule, {
-    logger: logger.nest(),
+    bufferLogs: true,
   });
 
+  app.useLogger(app.get(LoggerService));
   const config = app.get(TypedConfigService);
   const { httpAdapter } = app.get(HttpAdapterHost);
 
   app
-    .useStaticAssets(join(__dirname, 'assets'), { prefix: '/assets' })
-    .useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, stopAtFirstError: false }))
-    .useGlobalFilters(new PrismaExceptionFilter(httpAdapter))
+    .useStaticAssets(join(__dirname, 'assets'), { prefix: '/' })
+    .useGlobalPipes(
+      new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        stopAtFirstError: false,
+        exceptionFactory(errors) {
+          const error = Object.values(errors[0].constraints ?? {}).pop();
+          return HttpException.new(error ?? 'Unexpected Error', 'BAD_REQUEST');
+        },
+      })
+    )
+    .useGlobalFilters(new AllExceptionsFilter(httpAdapter))
     .useGlobalInterceptors(
       new ClassSerializerInterceptor(app.get(Reflector)),
       new StringifyDateInterceptor(),
@@ -37,7 +54,6 @@ async function initializeApp<App extends NestExpressApplication>() {
   const openApiConfig = new DocumentBuilder()
     .setTitle('Promise API')
     .setVersion(`${config.get('version')}`)
-    .addTag('App', 'Entry point of API')
     .addSecurity('bearer', { type: 'http', scheme: 'bearer' })
     .setExternalDoc('OpenAPI Specification (JSON)', `/api-json`)
     .build();
@@ -45,8 +61,8 @@ async function initializeApp<App extends NestExpressApplication>() {
   const document = SwaggerModule.createDocument(app, openApiConfig);
   SwaggerModule.setup('api', app, document, {
     customSiteTitle: 'Promise API',
-    customfavIcon: '/assets/favicon.ico',
-    customCssUrl: '/assets/css/swagger.css',
+    customfavIcon: '/favicon.ico',
+    customCssUrl: '/css/swagger.css',
     swaggerOptions: {
       docExpansion: 'none',
       persistAuthorization: true,

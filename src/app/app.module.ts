@@ -1,9 +1,9 @@
 import { CacheModule } from '@nestjs/cache-manager';
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 
 import { AppController } from '@/app/app.controller';
-import { TypedConfigService, LoggerMiddleware, TrimMiddleware, CommonModule } from '@/common';
+import { TypedConfigService, CommonModule } from '@/common';
 import { AuthModule } from '@/modules/auth/auth.module';
 import { EventModule } from '@/modules/event/event.module';
 import { PromiseModule } from '@/modules/promise/promise.module';
@@ -33,9 +33,4 @@ import { PrismaModule } from '@/prisma';
   ],
   controllers: [AppController],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(LoggerMiddleware).forRoutes('*');
-    consumer.apply(TrimMiddleware).forRoutes('*');
-  }
-}
+export class AppModule {}

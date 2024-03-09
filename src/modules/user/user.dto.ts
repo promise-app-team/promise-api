@@ -1,23 +1,11 @@
-import { PickType } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString, Length } from 'class-validator';
-import { pick } from 'remeda';
 
 import { IsProfileUrl, ApplyDTO } from '@/common';
 import { Provider, UserEntity } from '@/prisma';
 
-const userKeys = ['id', 'username', 'profileUrl', 'provider', 'createdAt'] as const;
-
-export class UserDTO extends ApplyDTO(PickType(UserEntity, userKeys), (obj: UserEntity) => pick(obj, userKeys)) {}
-
-const hostKeys = ['id', 'username', 'profileUrl'] as const;
-
-export class HostDTO extends ApplyDTO(PickType(UserEntity, hostKeys), (obj: UserEntity) => pick(obj, hostKeys)) {}
-
-const attendeeKeys = ['id', 'username', 'profileUrl'] as const;
-
-export class AttendeeDTO extends ApplyDTO(PickType(UserEntity, attendeeKeys), (obj: UserEntity) =>
-  pick(obj, attendeeKeys)
-) {}
+export class UserDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl', 'provider', 'createdAt']) {}
+export class HostDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl']) {}
+export class AttendeeDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl']) {}
 
 export class InputCreateUserDTO {
   @IsOptional()
@@ -37,7 +25,7 @@ export class InputCreateUserDTO {
   providerId!: string;
 }
 
-export class InputUpdateUserDTO extends PickType(InputCreateUserDTO, ['username', 'profileUrl']) {}
+export class InputUpdateUserDTO extends ApplyDTO(InputCreateUserDTO, ['username', 'profileUrl']) {}
 
 export class InputDeleteUserDTO {
   @IsString({ message: '탈퇴 사유를 입력해주세요' })
@@ -47,6 +35,4 @@ export class InputDeleteUserDTO {
   reason!: string;
 }
 
-export class OutputDeleteUserDTO {
-  id!: number;
-}
+export class OutputDeleteUserDTO extends ApplyDTO(UserEntity, ['id']) {}

@@ -1,17 +1,16 @@
-import { Controller, Get } from '@nestjs/common';
-import { ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Controller } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 import { EntryDTO } from '@/app/entry.dto';
 import { TypedConfigService } from '@/common';
+import { Get } from '@/customs/nest';
 
 @ApiTags('App')
 @Controller()
 export class AppController {
   constructor(private readonly config: TypedConfigService) {}
 
-  @Get()
-  @ApiOperation({ operationId: 'ping', summary: 'Ping / Pong' })
-  @ApiOkResponse({ type: EntryDTO, description: 'ping' })
+  @Get('', { description: '서버 상태를 확인합니다.' })
   ping(): EntryDTO {
     return {
       message: 'pong',

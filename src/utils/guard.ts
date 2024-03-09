@@ -1,8 +1,8 @@
-export function ifs<T>(
-  conditions: [condition: boolean, value: T][],
-  elseValue: T | undefined = undefined
-): T | undefined {
-  for (const [condition, value] of conditions) {
+export function ifs<
+  ConditionMap extends [boolean, any][],
+  PossibleValueType = ConditionMap extends [boolean, infer R][] ? R : never,
+>(conditionMaps: [...ConditionMap], elseValue?: PossibleValueType): PossibleValueType | undefined {
+  for (const [condition, value] of conditionMaps) {
     if (condition) {
       return value;
     }
