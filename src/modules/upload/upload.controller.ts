@@ -1,34 +1,22 @@
-import { Post, Controller, UploadedFile, UseGuards, UseInterceptors, ParseFilePipeBuilder } from '@nestjs/common';
+import { Controller, ParseFilePipeBuilder, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiConsumes,
-  ApiCreatedResponse,
-  ApiOperation,
-  ApiTags,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 
 import { HttpException } from '@/common';
-import { JwtAuthGuard } from '@/modules/auth/jwt.guard';
+import { Post } from '@/customs/nest';
 import { OutputUploadFileDTO } from '@/modules/upload/upload.dto';
 import { FileUploadService } from '@/modules/upload/upload.service';
 
-@ApiTags('File Upload')
+@ApiTags('FileUpload')
 @ApiBearerAuth()
 @Controller('upload')
 export class FileUploadController {
   constructor(private readonly uploader: FileUploadService) {}
 
-  @Post('image')
+  @Post('image', { auth: true, description: '이미지 파일을 업로드합니다.' })
   @UseInterceptors(FileInterceptor('file'))
-  @UseGuards(JwtAuthGuard)
   @ApiConsumes('multipart/form-data')
   @ApiBody({ schema: { type: 'object', properties: { file: { type: 'string', format: 'binary' } } } })
-  @ApiOperation({ operationId: 'uploadImageFile', summary: '이미지 파일 업로드' })
-  @ApiCreatedResponse({ type: OutputUploadFileDTO, description: '이미지 파일 업로드 성공' })
-  @ApiUnauthorizedResponse({ type: HttpException, description: '로그인 필요' })
   async uploadImageFile(
     @UploadedFile(
       new ParseFilePipeBuilder()

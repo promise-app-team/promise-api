@@ -1,7 +1,5 @@
 export type Falsy = null | undefined | false | 0 | -0 | 0n | '';
 
-export type Constructor<T = any> = new (...args: any[]) => T;
-
 export type FlattenObjectKeys<T extends Record<string, any>, K = keyof T> = K extends string
   ? T[K] extends Record<string, any>
     ? `${K}.${FlattenObjectKeys<T[K]>}`

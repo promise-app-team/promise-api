@@ -7,23 +7,24 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
   HttpException as NestHttpException,
+  Type,
 } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
-
-import { Constructor } from '@/types';
 
 export type Status = keyof typeof HttpStatus;
 export type StatusCode = (typeof HttpStatus)[Status];
 
-type ExceptionStatus =
-  | 'CONFLICT'
-  | 'NOT_FOUND'
-  | 'FORBIDDEN'
-  | 'BAD_REQUEST'
-  | 'UNAUTHORIZED'
-  | 'INTERNAL_SERVER_ERROR';
+export type ExceptionStatus = Extract<
+  keyof typeof HttpStatus,
+  | /* 400 */ 'BAD_REQUEST'
+  | /* 401 */ 'UNAUTHORIZED'
+  | /* 403 */ 'FORBIDDEN'
+  | /* 404 */ 'NOT_FOUND'
+  | /* 409 */ 'CONFLICT'
+  | /* 500 */ 'INTERNAL_SERVER_ERROR'
+>;
 
-type ExceptionMap = Record<ExceptionStatus, Constructor<NestHttpException>>;
+type ExceptionMap = Record<ExceptionStatus, Type<NestHttpException>>;
 
 const exceptionMap: ExceptionMap = {
   CONFLICT: ConflictException,
@@ -34,14 +35,18 @@ const exceptionMap: ExceptionMap = {
   INTERNAL_SERVER_ERROR: InternalServerErrorException,
 };
 
+export function isExceptionStatus(status: string): status is ExceptionStatus {
+  return status in exceptionMap;
+}
+
 export class HttpException extends NestHttpException {
-  @ApiProperty()
+  @ApiProperty({ example: 'error message' })
   message!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'status' })
   error!: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: 'status code' })
   statusCode!: number;
 
   constructor(message: string, status: ExceptionStatus, cause?: unknown);
@@ -56,26 +61,26 @@ export class HttpException extends NestHttpException {
     Object.assign(this, new exceptionMap[input.status ?? 'INTERNAL_SERVER_ERROR'](input.message));
   }
 
-  static throw(error: Error | HttpException): never;
-  static throw(message: string, status: ExceptionStatus, cause?: unknown): never;
-  static throw(args: { message: string; status: ExceptionStatus; cause?: unknown }): never;
-  static throw(
-    error: Error | string | { message: string; status: ExceptionStatus; cause?: unknown },
-    status?: ExceptionStatus,
-    cause?: unknown
-  ): never {
+  static new(error: any): NestHttpException;
+  static new(error: Error | HttpException): NestHttpException;
+  static new(error: Error | string, status?: ExceptionStatus, cause?: unknown): NestHttpException;
+  static new(args: { message: string; status: ExceptionStatus; cause?: unknown }): NestHttpException;
+  static new(error: any, status: ExceptionStatus = 'INTERNAL_SERVER_ERROR', cause?: unknown): NestHttpException {
     if (error instanceof NestHttpException) {
-      throw error;
+      return error;
     }
     if (error instanceof Error) {
-      throw new HttpException(error.message, 'INTERNAL_SERVER_ERROR', error);
+      return new HttpException(error.message, 'INTERNAL_SERVER_ERROR', error);
     }
     const input = typeof error === 'string' ? { message: error, status, cause } : error;
-    throw new HttpException(input.message, input.status ?? 'INTERNAL_SERVER_ERROR', input.cause);
+    return new HttpException(input.message, input.status ?? 'INTERNAL_SERVER_ERROR', input.cause);
   }
 
-  static catch(error: any): never {
-    if (error instanceof NestHttpException) throw error;
-    throw HttpException.throw('알 수 없는 에러가 발생했습니다.', 'INTERNAL_SERVER_ERROR', error);
+  static throw(error: any): never;
+  static throw(error: Error | HttpException): never;
+  static throw(error: Error | string, status?: ExceptionStatus, cause?: unknown): never;
+  static throw(args: { message: string; status: ExceptionStatus; cause?: unknown }): never;
+  static throw(error: any, status: ExceptionStatus = 'INTERNAL_SERVER_ERROR', cause?: unknown): never {
+    throw HttpException.new(error, status, cause);
   }
 }

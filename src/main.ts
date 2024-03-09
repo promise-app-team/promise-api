@@ -11,6 +11,7 @@ import type { Handler } from 'aws-lambda';
 import { AppModule } from '@/app/app.module';
 import {
   AllExceptionsFilter,
+  HttpException,
   LoggerService,
   StringifyDateInterceptor,
   TimeoutInterceptor,
@@ -28,7 +29,17 @@ async function initializeApp<App extends NestExpressApplication>() {
 
   app
     .useStaticAssets(join(__dirname, 'assets'), { prefix: '/' })
-    .useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true, stopAtFirstError: false }))
+    .useGlobalPipes(
+      new ValidationPipe({
+        transform: true,
+        whitelist: true,
+        stopAtFirstError: false,
+        exceptionFactory(errors) {
+          const error = Object.values(errors[0].constraints ?? {}).pop();
+          return HttpException.new(error ?? 'Unexpected Error', 'BAD_REQUEST');
+        },
+      })
+    )
     .useGlobalFilters(new AllExceptionsFilter(httpAdapter))
     .useGlobalInterceptors(
       new ClassSerializerInterceptor(app.get(Reflector)),
@@ -43,7 +54,6 @@ async function initializeApp<App extends NestExpressApplication>() {
   const openApiConfig = new DocumentBuilder()
     .setTitle('Promise API')
     .setVersion(`${config.get('version')}`)
-    .addTag('App', 'Entry point of API')
     .addSecurity('bearer', { type: 'http', scheme: 'bearer' })
     .setExternalDoc('OpenAPI Specification (JSON)', `/api-json`)
     .build();

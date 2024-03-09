@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 import { TypedConfigService } from '@/common';
@@ -6,6 +6,12 @@ import { AuthTokenDTO } from '@/modules/auth/auth.dto';
 import { InputCreateUserDTO } from '@/modules/user/user.dto';
 import { UserService } from '@/modules/user/user.service';
 import { PrismaService } from '@/prisma';
+
+export enum AuthServiceError {
+  AuthTokenExpired = '토큰이 만료되었습니다.',
+  InvalidAuthToken = '유효하지 않은 토큰입니다.',
+  UnexpectedError = '예상치 못한 오류가 발생했습니다.',
+}
 
 @Injectable()
 export class AuthService {
@@ -38,12 +44,12 @@ export class AuthService {
       if (error instanceof Error) {
         switch (error.name) {
           case 'TokenExpiredError':
-            throw new BadRequestException('토큰이 만료되었습니다.');
+            throw AuthServiceError.AuthTokenExpired;
           case 'JsonWebTokenError':
-            throw new BadRequestException('토큰이 유효하지 않습니다.');
+            throw AuthServiceError.InvalidAuthToken;
         }
       }
-      throw new BadRequestException('예상치 못한 오류가 발생했습니다.');
+      throw AuthServiceError.UnexpectedError;
     }
   }
 
