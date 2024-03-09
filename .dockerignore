@@ -5,6 +5,6 @@ serverless.yml
 node_modules
 dockerdata
 coverage
-scrips
+scripts
 https
 dist
