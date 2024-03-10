@@ -3,7 +3,7 @@ import { User } from '@prisma/client';
 import { InputCreateUserDTO, InputUpdateUserDTO } from '@/modules/user/user.dto';
 import { UserService, UserServiceError } from '@/modules/user/user.service';
 import { Provider } from '@/prisma';
-import { user as user1 } from '@/tests/services/fixtures/users';
+import { _fixture_validUser } from '@/tests/fixtures/users';
 import { after, sleep } from '@/tests/utils/async';
 import { MethodTypes } from '@/types';
 
@@ -24,7 +24,7 @@ export class MockUserService implements MethodTypes<UserService> {
     await sleep(100);
     switch (id) {
       case MockUserID.Valid:
-        return user1;
+        return _fixture_validUser;
       case MockUserID.NotFound:
         throw UserServiceError.NotFoundUser;
       default:
@@ -36,7 +36,7 @@ export class MockUserService implements MethodTypes<UserService> {
     await sleep(100);
     switch (providerId) {
       case MockUserProviderID.Valid:
-        return user1;
+        return _fixture_validUser;
       case MockUserProviderID.NotFound:
         throw UserServiceError.NotFoundUser;
       default:
@@ -48,9 +48,9 @@ export class MockUserService implements MethodTypes<UserService> {
     await sleep(100);
     switch (input.providerId) {
       case MockUserProviderID.Unknown:
-        return { ...user1, id: MockUserID.Unknown };
+        return { ..._fixture_validUser, id: MockUserID.Unknown };
       default:
-        return after(100, user1);
+        return after(100, _fixture_validUser);
     }
   }
 

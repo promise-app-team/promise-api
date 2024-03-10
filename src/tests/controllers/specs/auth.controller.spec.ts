@@ -5,7 +5,7 @@ import { pick } from 'remeda';
 import { AuthController } from '@/modules/auth/auth.controller';
 import { AuthService, AuthServiceError } from '@/modules/auth/auth.service';
 import { UserService } from '@/modules/user/user.service';
-import { user } from '@/tests/services/fixtures/users';
+import { _fixture_validUser } from '@/tests/fixtures/users';
 import { MockAuthService } from '@/tests/services/mocks/auth.service.mock';
 import { MockTokenStatus } from '@/tests/services/mocks/jwt.service.mock';
 import { MockUserProviderID, MockUserService } from '@/tests/services/mocks/user.service.mock';
@@ -25,8 +25,12 @@ describe(AuthController, () => {
     authController = module.get(AuthController);
   });
 
+  test('should be defined', () => {
+    expect(authController).toBeDefined();
+  });
+
   describe(AuthController.prototype.login, () => {
-    const input = pick(user, ['username', 'profileUrl', 'provider', 'providerId']);
+    const input = pick(_fixture_validUser, ['username', 'profileUrl', 'provider', 'providerId']);
     test('should return tokens when called with a valid user', () => {
       expect(authController.login(input)).resolves.toEqual({
         accessToken: 'accessToken',

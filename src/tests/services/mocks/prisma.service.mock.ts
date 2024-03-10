@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client';
 
-import { user } from '@/tests/services/fixtures/users';
+import { _fixture_validUser } from '@/tests/fixtures/users';
 import { MockUserProviderID, MockUserID } from '@/tests/services/mocks/user.service.mock';
 import { sleep } from '@/tests/utils/async';
 
@@ -12,7 +12,7 @@ export class MockPrismaService {
         if (typeof input.where.id !== 'undefined') {
           switch (input.where.id) {
             case MockUserID.Valid:
-              return user;
+              return _fixture_validUser;
             case MockUserID.NotFound:
               return null;
             default:
@@ -22,7 +22,7 @@ export class MockPrismaService {
         if (typeof input.where.identifier?.providerId !== 'undefined') {
           switch (input.where.identifier.providerId) {
             case MockUserProviderID.Valid:
-              return user;
+              return _fixture_validUser;
             case MockUserProviderID.NotFound:
               return null;
             default:
@@ -36,9 +36,9 @@ export class MockPrismaService {
         await sleep(100);
         switch (input.where.identifier?.providerId) {
           case MockUserProviderID.Valid:
-            return { ...user, ...input.update };
+            return { ..._fixture_validUser, ...input.update };
           case MockUserProviderID.NotFound:
-            return { ...user, ...input.create };
+            return { ..._fixture_validUser, ...input.create };
           default:
             throw new Error();
         }
@@ -48,7 +48,7 @@ export class MockPrismaService {
         await sleep(100);
         switch (input.where.id) {
           case MockUserID.Valid:
-            return { ...user, ...input.data };
+            return { ..._fixture_validUser, ...input.data };
           case MockUserID.NotFound:
             throw new Prisma.PrismaClientKnownRequestError('', { code: 'P2025', clientVersion: '' });
           default:

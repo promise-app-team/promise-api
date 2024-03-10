@@ -1,7 +1,7 @@
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 
-import { TypedConfigService } from '@/common';
+import { TypedConfig } from '@/config/env';
 import { AuthService, AuthServiceError } from '@/modules/auth/auth.service';
 import { UserService } from '@/modules/user/user.service';
 import { PrismaService } from '@/prisma';
@@ -19,12 +19,16 @@ describe(AuthService, () => {
         AuthService,
         { provide: PrismaService, useClass: MockPrismaService },
         { provide: UserService, useClass: MockUserService },
-        { provide: TypedConfigService, useClass: MockTypedConfigService },
+        { provide: TypedConfig, useClass: MockTypedConfigService },
         { provide: JwtService, useClass: MockJwtService },
       ],
     }).compile();
 
     authService = module.get(AuthService);
+  });
+
+  test('should be defined', () => {
+    expect(authService).toBeDefined();
   });
 
   describe(AuthService.prototype.authenticate, () => {

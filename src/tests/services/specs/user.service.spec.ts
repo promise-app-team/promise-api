@@ -16,6 +16,10 @@ describe(UserService, () => {
     userService = module.get(UserService);
   });
 
+  test('should be defined', () => {
+    expect(userService).toBeDefined();
+  });
+
   describe(UserService.prototype.findOneById, () => {
     test('should return a user by id', async () => {
       return expect(userService.findOneById(MockUserID.Valid)).resolves.toMatchObject({ id: 1 });

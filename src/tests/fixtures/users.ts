@@ -1,6 +1,6 @@
 import { Provider } from '@/prisma';
 
-export const user = Object.freeze({
+export const _fixture_validUser = Object.freeze({
   id: 1,
   username: 'username',
   profileUrl: 'http://profile.url',
@@ -13,14 +13,14 @@ export const user = Object.freeze({
   leaveReason: null,
 });
 
-export const unknownUser = Object.freeze({
-  ...user,
+export const _fixture_unknownUser = Object.freeze({
+  ..._fixture_validUser,
   id: 0,
   providerId: '0',
 });
 
-export const invalidUser = Object.freeze({
-  ...user,
+export const _fixture_invalidUser = Object.freeze({
+  ..._fixture_validUser,
   id: -1,
   providerId: '-1',
 });

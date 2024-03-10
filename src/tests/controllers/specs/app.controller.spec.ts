@@ -1,43 +1,36 @@
-import { ConfigService } from '@nestjs/config';
 import { Test } from '@nestjs/testing';
 
 import { AppController } from '@/app/app.controller';
-import { TypedConfigService } from '@/common';
+import { TypedConfig } from '@/config/env';
+import { MockTypedConfigService } from '@/tests/services/mocks/typed-config.service.mock';
 
 describe('AppController', () => {
   let appController: AppController;
-  let typedConfigService: TypedConfigService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [
-        TypedConfigService,
-        {
-          provide: ConfigService,
-          useValue: {
-            get: jest.fn(),
-          },
-        },
-      ],
+      providers: [{ provide: TypedConfig, useClass: MockTypedConfigService }],
     }).compile();
 
     appController = module.get(AppController);
-    typedConfigService = module.get(TypedConfigService);
+  });
+
+  test('should be defined', () => {
+    expect(appController).toBeDefined();
   });
 
   describe('root', () => {
     const result = {
       message: 'pong',
-      version: '0.0.0',
-      build: '0',
-      deploy: '0',
+      version: 'version',
+      build: 'build',
+      deploy: 'deploy',
       env: 'env',
       tz: 'tz',
     };
 
     it('should return pong object', () => {
-      jest.spyOn(typedConfigService, 'get').mockImplementation((key) => result[key as never]);
       expect(appController.ping()).toEqual(result);
     });
   });
