@@ -3,11 +3,11 @@ import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
 
 import { TypedConfigService } from '@/common';
 import { AuthTokenDTO } from '@/modules/auth/auth.dto';
-import { InputCreateUserDTO } from '@/modules/user/user.dto';
 import { UserService } from '@/modules/user/user.service';
 import { PrismaService } from '@/prisma';
 
 export enum AuthServiceError {
+  AuthTokenFailed = '토큰 생성에 실패했습니다.',
   AuthTokenExpired = '토큰이 만료되었습니다.',
   AuthTokenInvalid = '유효하지 않은 토큰입니다.',
   UserNotFound = '사용자를 찾을 수 없습니다.',
@@ -22,15 +22,18 @@ export class AuthService {
     private readonly jwt: JwtService
   ) {}
 
-  async authenticate(input: InputCreateUserDTO): Promise<AuthTokenDTO> {
-    const { provider, providerId } = input;
-    const signedUser = await this.prisma.user.upsert({
-      where: { identifier: { provider, providerId } },
-      update: { lastSignedAt: new Date() },
-      create: input,
+  /**
+   * 사용자를 인증하고 토큰을 발행합니다.
+   *
+   * @param user user object
+   * @returns access token and refresh token
+   *
+   * @throws {AuthServiceError.AuthTokenFailed} when the token generation fails
+   */
+  async authenticate(user: { id: number }): Promise<AuthTokenDTO> {
+    return this.#generateToken({ id: `${user.id}` }).catch(() => {
+      throw AuthServiceError.AuthTokenFailed;
     });
-
-    return this.#generateToken({ id: `${signedUser.id}` });
   }
 
   /**
@@ -47,8 +50,7 @@ export class AuthService {
     // TODO: AuthToken 모듈로 분리
     try {
       const payload = this.jwt.verify(token);
-      const node = await this.user.findOneById(payload.id);
-      if (!node) throw AuthServiceError.UserNotFound;
+      const node = await this.user.findOneById(+payload.id);
       return this.#generateToken({ id: `${node.id}` });
     } catch (error) {
       if (error instanceof TokenExpiredError) throw AuthServiceError.AuthTokenExpired;

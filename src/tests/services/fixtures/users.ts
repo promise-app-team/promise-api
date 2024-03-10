@@ -1,17 +1,26 @@
-import { User } from '@prisma/client';
-import { times } from 'remeda';
-
 import { Provider } from '@/prisma';
 
-export const users: User[] = times(10, (num) => ({
-  id: num + 1,
-  username: `user${num + 1}`,
-  profileUrl: `${num + 1}`,
+export const user = Object.freeze({
+  id: 1,
+  username: 'username',
+  profileUrl: 'http://profile.url',
   provider: Provider.KAKAO,
-  providerId: `${num + 1}`,
-  deletedAt: null,
-  leaveReason: null,
-  lastSignedAt: new Date(),
+  providerId: '1',
   createdAt: new Date(),
   updatedAt: new Date(),
-}));
+  deletedAt: null,
+  lastSignedAt: new Date(),
+  leaveReason: null,
+});
+
+export const unknownUser = Object.freeze({
+  ...user,
+  id: 0,
+  providerId: '0',
+});
+
+export const invalidUser = Object.freeze({
+  ...user,
+  id: -1,
+  providerId: '-1',
+});

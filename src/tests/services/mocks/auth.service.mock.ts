@@ -1,30 +1,33 @@
 import { AuthTokenDTO } from '@/modules/auth/auth.dto';
 import { AuthService, AuthServiceError } from '@/modules/auth/auth.service';
-import { InputCreateUserDTO } from '@/modules/user/user.dto';
+import { MockTokenStatus } from '@/tests/services/mocks/jwt.service.mock';
+import { MockUserID } from '@/tests/services/mocks/user.service.mock';
 import { after, sleep } from '@/tests/utils/async';
 import { MethodTypes } from '@/types';
 
-export class AuthServiceMock implements MethodTypes<AuthService> {
-  async authenticate(_input: InputCreateUserDTO): Promise<AuthTokenDTO> {
+export class MockAuthService implements MethodTypes<AuthService> {
+  async authenticate(user: { id: number }): Promise<AuthTokenDTO> {
+    if (user.id !== MockUserID.Valid) throw new Error();
+
     return after(100, {
       accessToken: 'accessToken',
       refreshToken: 'refreshToken',
     });
   }
 
-  async refresh(token: string): Promise<AuthTokenDTO> {
+  async refresh(token: MockTokenStatus): Promise<AuthTokenDTO> {
     await sleep(100);
     switch (token) {
-      case 'token':
+      case MockTokenStatus.Valid:
         return {
           accessToken: 'accessToken',
           refreshToken: 'refreshToken',
         };
-      case 'expired':
+      case MockTokenStatus.Expired:
         throw AuthServiceError.AuthTokenExpired;
-      case 'invalid':
+      case MockTokenStatus.Invalid:
         throw AuthServiceError.AuthTokenInvalid;
-      case 'not-found':
+      case MockTokenStatus.NotFound:
         throw AuthServiceError.UserNotFound;
       default:
         throw new Error();

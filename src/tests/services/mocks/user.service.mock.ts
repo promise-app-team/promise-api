@@ -3,51 +3,70 @@ import { User } from '@prisma/client';
 import { InputCreateUserDTO, InputUpdateUserDTO } from '@/modules/user/user.dto';
 import { UserService, UserServiceError } from '@/modules/user/user.service';
 import { Provider } from '@/prisma';
-import { users } from '@/tests/services/fixtures/users';
-import { after } from '@/tests/utils/async';
+import { user as user1 } from '@/tests/services/fixtures/users';
+import { after, sleep } from '@/tests/utils/async';
 import { MethodTypes } from '@/types';
 
-export class UserServiceMock implements MethodTypes<UserService> {
-  async findOneById(id: string): Promise<User> {
-    const user = users.find((user) => user.id === +id);
-    if (!user) {
-      throw UserServiceError.NotFoundUser;
+export enum MockUserID {
+  Valid = 1,
+  NotFound = 0,
+  Unknown = -1,
+}
+
+export enum MockUserProviderID {
+  Valid = '1',
+  NotFound = '0',
+  Unknown = '-1',
+}
+
+export class MockUserService implements MethodTypes<UserService> {
+  async findOneById(id: MockUserID): Promise<User> {
+    await sleep(100);
+    switch (id) {
+      case MockUserID.Valid:
+        return user1;
+      case MockUserID.NotFound:
+        throw UserServiceError.NotFoundUser;
+      default:
+        throw new Error();
     }
-    return after(100, user);
   }
 
   async findOneByProvider(provider: Provider, providerId: string): Promise<User> {
-    const user = users.find((user) => user.provider === provider && user.providerId === providerId);
-    if (!user) {
-      throw UserServiceError.NotFoundUser;
+    await sleep(100);
+    switch (providerId) {
+      case MockUserProviderID.Valid:
+        return user1;
+      case MockUserProviderID.NotFound:
+        throw UserServiceError.NotFoundUser;
+      default:
+        throw new Error();
     }
-    return after(100, user);
   }
 
-  async create(input: InputCreateUserDTO): Promise<User> {
-    return after(100, {
-      id: 1,
-      username: input.username,
-      profileUrl: input.profileUrl,
-      provider: input.provider,
-      providerId: input.providerId,
-      deletedAt: null,
-      leaveReason: null,
-      lastSignedAt: new Date(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+  async upsert(input: InputCreateUserDTO): Promise<User> {
+    await sleep(100);
+    switch (input.providerId) {
+      case MockUserProviderID.Unknown:
+        return { ...user1, id: MockUserID.Unknown };
+      default:
+        return after(100, user1);
+    }
   }
 
-  async update(user: User, input: InputUpdateUserDTO): Promise<User> {
-    return after(100, {
+  async update(userId: MockUserID, input: InputUpdateUserDTO): Promise<User> {
+    const user = await this.findOneById(userId);
+    const result = {
       ...user,
       ...input,
       updatedAt: new Date(),
-    });
+    };
+    result.profileUrl ||= '1';
+    return after(100, result);
   }
 
-  async delete(user: User, reason: string): Promise<User> {
+  async delete(userId: MockUserID, reason: string): Promise<User> {
+    const user = await this.findOneById(userId);
     return after(100, {
       ...user,
       providerId: null,

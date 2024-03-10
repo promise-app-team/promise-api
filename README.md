@@ -14,6 +14,7 @@ Promise API Server
   - [Database Migration](#database-migration)
     - [For Development Environment](#for-development-environment)
     - [For Remote Environment](#for-remote-environment)
+- [Testing](#testing)
 
 ## Development
 
@@ -123,4 +124,21 @@ $ cp .env-cmdrc.example.js .env-cmdrc.js
 
 # deploy migration
 $ bun run migrate:dev
+```
+
+## Testing
+
+Run the following commands to run the tests.
+
+```bash
+$ bun run test
+
+# to run tests by keyword (e.g. controller, service, etc.)
+$ bun run test <keyword>
+```
+
+If you want to run the tests with coverage, use the following command.
+
+```bash
+$ bun run test:coverage
 ```

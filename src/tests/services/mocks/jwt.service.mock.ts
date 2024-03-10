@@ -1,22 +1,38 @@
 import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
 
+import { MockUserID } from '@/tests/services/mocks/user.service.mock';
 import { DeepPartial, MethodTypes } from '@/types';
 
-export class JwtServiceMock implements DeepPartial<MethodTypes<JwtService>> {
-  sign(_payload: any, _options?: any): string {
-    return 'token';
+export enum MockTokenStatus {
+  Valid = 'valid',
+  Invalid = 'invalid',
+  Expired = 'expired',
+  NotFound = 'not-found',
+  Unknown = 'unknown',
+}
+
+export class MockJwtService implements DeepPartial<MethodTypes<JwtService>> {
+  sign(payload: { id: string }, _options?: any): string {
+    const id = +payload.id;
+
+    switch (id) {
+      case MockUserID.Valid:
+        return 'token';
+      default:
+        throw new Error();
+    }
   }
 
-  verify(token: string): any {
+  verify(token: MockTokenStatus): any {
     switch (token) {
-      case 'token':
-        return { id: '1' };
-      case 'expired':
-        throw new TokenExpiredError('jwt expired', new Date());
-      case 'invalid':
+      case MockTokenStatus.Valid:
+        return { id: `${MockUserID.Valid}` };
+      case MockTokenStatus.Invalid:
         throw new JsonWebTokenError('invalid token');
-      case 'not-found':
-        return { id: 'not-found' };
+      case MockTokenStatus.Expired:
+        throw new TokenExpiredError('jwt expired', new Date());
+      case MockTokenStatus.NotFound:
+        return { id: `${MockUserID.NotFound}` };
       default:
         throw new Error();
     }

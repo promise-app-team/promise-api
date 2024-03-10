@@ -18,7 +18,7 @@ export class JwtAuthGuard implements CanActivate {
 
     try {
       const payload = this.jwt.verify(token);
-      const user = await this.userService.findOneById(payload.id);
+      const user = await this.userService.findOneById(+payload.id);
       if (!user) throw new UnauthorizedException('로그인이 필요합니다.');
       request.user = user;
     } catch (error) {
