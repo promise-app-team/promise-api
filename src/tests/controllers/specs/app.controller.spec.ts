@@ -10,7 +10,7 @@ describe('AppController', () => {
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [{ provide: TypedConfigService, useClass: MockTypedConfigService }],
+      providers: [{ provide: TypedConfigService, useValue: MockTypedConfigService }],
     }).compile();
 
     appController = module.get(AppController);

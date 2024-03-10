@@ -1,7 +1,7 @@
 import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
 
 import { MockUserID } from '@/tests/services/mocks/user.service.mock';
-import { DeepPartial, MethodTypes } from '@/types';
+import { partialMock } from '@/tests/utils/mock';
 
 export enum MockTokenStatus {
   Valid = 'valid',
@@ -11,8 +11,8 @@ export enum MockTokenStatus {
   Unknown = 'unknown',
 }
 
-export class MockJwtService implements DeepPartial<MethodTypes<JwtService>> {
-  sign(payload: { id: string }, _options?: any): string {
+export const MockJwtService = partialMock<JwtService>({
+  sign(payload: any): string {
     const id = +payload.id;
 
     switch (id) {
@@ -21,7 +21,7 @@ export class MockJwtService implements DeepPartial<MethodTypes<JwtService>> {
       default:
         throw new Error();
     }
-  }
+  },
 
   verify(token: MockTokenStatus): any {
     switch (token) {
@@ -36,5 +36,5 @@ export class MockJwtService implements DeepPartial<MethodTypes<JwtService>> {
       default:
         throw new Error();
     }
-  }
-}
+  },
+});

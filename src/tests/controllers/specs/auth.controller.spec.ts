@@ -12,45 +12,59 @@ import { MockUserProviderID, MockUserService } from '@/tests/services/mocks/user
 
 describe(AuthController, () => {
   let authController: AuthController;
+  let mockAuthService: AuthService;
+  let mockUserService: UserService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-        { provide: AuthService, useClass: MockAuthService },
-        { provide: UserService, useClass: MockUserService },
+        { provide: AuthService, useValue: MockAuthService },
+        { provide: UserService, useValue: MockUserService },
       ],
     }).compile();
 
     authController = module.get(AuthController);
+    mockAuthService = module.get(AuthService);
+    mockUserService = module.get(UserService);
   });
 
   test('should be defined', () => {
     expect(authController).toBeDefined();
+    expect(mockAuthService).toBeDefined();
+    expect(mockUserService).toBeDefined();
   });
 
   describe(AuthController.prototype.login, () => {
     const input = pick(_fixture_validUser, ['username', 'profileUrl', 'provider', 'providerId']);
-    test('should return tokens when called with a valid user', () => {
-      expect(authController.login(input)).resolves.toEqual({
+
+    test('should return tokens when called with a valid user', async () => {
+      await expect(authController.login(input)).resolves.toEqual({
         accessToken: 'accessToken',
         refreshToken: 'refreshToken',
       });
+
+      expect(mockUserService.upsert).toHaveBeenCalledTimes(1);
+      expect(mockAuthService.authenticate).toHaveBeenCalledTimes(1);
     });
 
     test('should throw an error when failed to authenticate', async () => {
-      return expect(authController.login({ ...input, providerId: MockUserProviderID.Unknown })).rejects.toMatchObject({
+      await expect(authController.login({ ...input, providerId: MockUserProviderID.Unknown })).rejects.toMatchObject({
         status: HttpStatus.INTERNAL_SERVER_ERROR,
       });
+
+      expect(mockAuthService.authenticate).toHaveBeenCalledTimes(1);
     });
   });
 
   describe(AuthController.prototype.refreshTokens, () => {
     test('should return tokens when called with a valid token', async () => {
-      return expect(authController.refreshTokens({ refreshToken: MockTokenStatus.Valid })).resolves.toEqual({
+      await expect(authController.refreshTokens({ refreshToken: MockTokenStatus.Valid })).resolves.toEqual({
         accessToken: 'accessToken',
         refreshToken: 'refreshToken',
       });
+
+      expect(mockAuthService.refresh).toHaveBeenCalledTimes(1);
     });
 
     test('should throw an error when called with an expired token', async () => {

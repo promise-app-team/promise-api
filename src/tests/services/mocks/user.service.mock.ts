@@ -5,7 +5,7 @@ import { UserService, UserServiceError } from '@/modules/user/user.service';
 import { Provider } from '@/prisma';
 import { _fixture_validUser } from '@/tests/fixtures/users';
 import { after, sleep } from '@/tests/utils/async';
-import { MethodTypes } from '@/types';
+import { mock } from '@/tests/utils/mock';
 
 export enum MockUserID {
   Valid = 1,
@@ -19,7 +19,7 @@ export enum MockUserProviderID {
   Unknown = '-1',
 }
 
-export class MockUserService implements MethodTypes<UserService> {
+export const MockUserService = mock<UserService>({
   async findOneById(id: MockUserID): Promise<User> {
     await sleep(100);
     switch (id) {
@@ -30,7 +30,7 @@ export class MockUserService implements MethodTypes<UserService> {
       default:
         throw new Error();
     }
-  }
+  },
 
   async findOneByProvider(provider: Provider, providerId: string): Promise<User> {
     await sleep(100);
@@ -42,7 +42,7 @@ export class MockUserService implements MethodTypes<UserService> {
       default:
         throw new Error();
     }
-  }
+  },
 
   async upsert(input: InputCreateUserDTO): Promise<User> {
     await sleep(100);
@@ -52,7 +52,7 @@ export class MockUserService implements MethodTypes<UserService> {
       default:
         return after(100, _fixture_validUser);
     }
-  }
+  },
 
   async update(userId: MockUserID, input: InputUpdateUserDTO): Promise<User> {
     const user = await this.findOneById(userId);
@@ -63,7 +63,7 @@ export class MockUserService implements MethodTypes<UserService> {
     };
     result.profileUrl ||= '1';
     return after(100, result);
-  }
+  },
 
   async delete(userId: MockUserID, reason: string): Promise<User> {
     const user = await this.findOneById(userId);
@@ -74,5 +74,5 @@ export class MockUserService implements MethodTypes<UserService> {
       leaveReason: reason,
       updatedAt: new Date(),
     });
-  }
-}
+  },
+});

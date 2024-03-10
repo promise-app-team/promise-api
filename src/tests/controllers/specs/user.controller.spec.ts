@@ -15,8 +15,8 @@ describe(UserController, () => {
     const module = await Test.createTestingModule({
       controllers: [UserController],
       providers: [
-        { provide: JwtService, useClass: MockJwtService },
-        { provide: UserService, useClass: MockUserService },
+        { provide: JwtService, useValue: MockJwtService },
+        { provide: UserService, useValue: MockUserService },
       ],
     }).compile();
 

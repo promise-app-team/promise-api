@@ -21,7 +21,3 @@ export type DeepPartial<T> = {
       ? ReadonlyArray<DeepPartial<U>>
       : DeepPartial<T[P]>;
 };
-
-export type MethodTypes<T> = {
-  [K in keyof T]: T[K] extends (...args: any[]) => any ? T[K] : never;
-};

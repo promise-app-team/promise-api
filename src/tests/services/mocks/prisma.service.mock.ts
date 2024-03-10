@@ -3,8 +3,9 @@ import { Prisma } from '@prisma/client';
 import { _fixture_validUser } from '@/tests/fixtures/users';
 import { MockUserProviderID, MockUserID } from '@/tests/services/mocks/user.service.mock';
 import { sleep } from '@/tests/utils/async';
+import { mock } from '@/tests/utils/mock';
 
-export class MockPrismaService {
+export const MockPrismaService = mock<any>({
   get user() {
     return {
       async findUnique(input: Prisma.UserFindUniqueArgs) {
@@ -56,5 +57,5 @@ export class MockPrismaService {
         }
       },
     };
-  }
-}
+  },
+});

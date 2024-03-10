@@ -7,22 +7,26 @@ import { MockUserID, MockUserProviderID } from '@/tests/services/mocks/user.serv
 
 describe(UserService, () => {
   let userService: UserService;
+  let mockPrismaService: PrismaService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      providers: [UserService, { provide: PrismaService, useClass: MockPrismaService }],
+      providers: [UserService, { provide: PrismaService, useValue: MockPrismaService }],
     }).compile();
 
     userService = module.get(UserService);
+    mockPrismaService = module.get(PrismaService);
   });
 
   test('should be defined', () => {
     expect(userService).toBeDefined();
+    expect(mockPrismaService).toBeDefined();
   });
 
   describe(UserService.prototype.findOneById, () => {
     test('should return a user by id', async () => {
-      return expect(userService.findOneById(MockUserID.Valid)).resolves.toMatchObject({ id: 1 });
+      await expect(userService.findOneById(MockUserID.Valid)).resolves.toMatchObject({ id: 1 });
+      expect(mockPrismaService.user.findUnique).toHaveBeenCalledTimes(1);
     });
 
     test('should throw an error if a user is not found', async () => {

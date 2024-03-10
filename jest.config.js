@@ -1,4 +1,6 @@
+/** @type {import('jest').Config}  */
 module.exports = {
+  clearMocks: true,
   moduleFileExtensions: ['js', 'ts', 'json'],
   rootDir: 'src',
   moduleNameMapper: {

@@ -1,8 +1,8 @@
 import { TypedConfigService } from '@/config/env';
-import { MethodTypes } from '@/types';
+import { mock } from '@/tests/utils/mock';
 
-export class MockTypedConfigService implements MethodTypes<TypedConfigService> {
+export const MockTypedConfigService = mock<TypedConfigService>({
   get(path: any): any {
     return path as any;
-  }
-}
+  },
+});

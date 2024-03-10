@@ -1,13 +1,13 @@
 import { FileUploadService } from '@/modules/upload/upload.service';
 import { sleep } from '@/tests/utils/async';
-import { MethodTypes } from '@/types';
+import { mock } from '@/tests/utils/mock';
 
 export enum MockFilename {
   Valid = 'file.txt',
   Invalid = 'file',
 }
 
-export class MockFileUploadService implements MethodTypes<FileUploadService> {
+export const MockFileUploadService = mock<FileUploadService>({
   async upload(file: Express.Multer.File): Promise<string> {
     await sleep(200);
     switch (file.originalname) {
@@ -17,5 +17,5 @@ export class MockFileUploadService implements MethodTypes<FileUploadService> {
       default:
         throw new Error();
     }
-  }
-}
+  },
+});

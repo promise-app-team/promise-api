@@ -13,7 +13,7 @@ describe(FileUploadService, () => {
       providers: [
         FileUploadService,
         { provide: S3ClientService, useValue: { send: () => {} } },
-        { provide: TypedConfigService, useClass: MockTypedConfigService },
+        { provide: TypedConfigService, useValue: MockTypedConfigService },
       ],
     }).compile();
 

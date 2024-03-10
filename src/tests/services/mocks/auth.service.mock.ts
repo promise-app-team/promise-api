@@ -3,9 +3,9 @@ import { AuthService, AuthServiceError } from '@/modules/auth/auth.service';
 import { MockTokenStatus } from '@/tests/services/mocks/jwt.service.mock';
 import { MockUserID } from '@/tests/services/mocks/user.service.mock';
 import { after, sleep } from '@/tests/utils/async';
-import { MethodTypes } from '@/types';
+import { mock } from '@/tests/utils/mock';
 
-export class MockAuthService implements MethodTypes<AuthService> {
+export const MockAuthService = mock<AuthService>({
   async authenticate(user: { id: number }): Promise<AuthTokenDTO> {
     if (user.id !== MockUserID.Valid) throw new Error();
 
@@ -13,7 +13,7 @@ export class MockAuthService implements MethodTypes<AuthService> {
       accessToken: 'accessToken',
       refreshToken: 'refreshToken',
     });
-  }
+  },
 
   async refresh(token: MockTokenStatus): Promise<AuthTokenDTO> {
     await sleep(100);
@@ -32,5 +32,5 @@ export class MockAuthService implements MethodTypes<AuthService> {
       default:
         throw new Error();
     }
-  }
-}
+  },
+});
