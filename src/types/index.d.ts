@@ -23,5 +23,5 @@ export type DeepPartial<T> = {
 };
 
 export type MethodTypes<T> = {
-  [K in keyof T]: K extends string ? (T[K] extends (...args: any[]) => any ? T[K] : never) : never;
+  [K in keyof T]: T[K] extends (...args: any[]) => any ? T[K] : never;
 };

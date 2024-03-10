@@ -23,8 +23,8 @@
     "lint": "DEBUG=eslint:cli-engine eslint \"src/**/*.ts\"",
     "lint:fix": "DEBUG=eslint:cli-engine eslint --fix \"src/**/*.ts\"",
     "lint:tsc": "tsc --noEmit",
-    "test": "jest",
-    "coverage": "jest --coverage",
+    "test": "NODE_ENV=test jest",
+    "coverage": "NODE_ENV=test jest --coverage",
     "update": "bunx npm-check-updates -ui",
     "inthash": "bun run ./scripts/inthash.ts"
   },
