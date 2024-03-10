@@ -30,9 +30,10 @@
 
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": {
+    "package.json": "package-lock.json, yarn.lock, bun.lockb",
     ".env.example": ".env, .env.*",
     ".env-cmdrc.example.js": ".env-cmdrc, .env-cmdrc.*",
-    "package.json": "package-lock.json, yarn.lock, bun.lockb"
+    "*.ts": "${capture}.js, ${capture}.d.ts, ${capture}.mock.ts, ${capture}.spec.ts"
   },
 
   "material-icon-theme.activeIconPack": "nest",
@@ -45,7 +46,8 @@
     "*.interceptor.ts": "nest-gateway",
     "*.strategy.ts": "nest-decorator",
     "*.type.ts": "nest-filter",
-    "*.schema.ts": "nest-pipe"
+    "*.schema.ts": "nest-pipe",
+    "*.mock.ts": "test-ts"
   },
 
   "[json]": {

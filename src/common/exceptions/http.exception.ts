@@ -70,10 +70,10 @@ export class HttpException extends NestHttpException {
       return error;
     }
     if (error instanceof Error) {
-      return new HttpException(error.message, 'INTERNAL_SERVER_ERROR', error);
+      return new HttpException(error.message, status, error);
     }
     const input = typeof error === 'string' ? { message: error, status, cause } : error;
-    return new HttpException(input.message, input.status ?? 'INTERNAL_SERVER_ERROR', input.cause);
+    return new HttpException(input.message, input.status, input.cause);
   }
 
   static throw(error: any): never;

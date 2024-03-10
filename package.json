@@ -23,7 +23,8 @@
     "lint": "DEBUG=eslint:cli-engine eslint \"src/**/*.ts\"",
     "lint:fix": "DEBUG=eslint:cli-engine eslint --fix \"src/**/*.ts\"",
     "lint:tsc": "tsc --noEmit",
-    "test": "jest --coverage",
+    "test": "jest",
+    "coverage": "jest --coverage",
     "update": "bunx npm-check-updates -ui",
     "inthash": "bun run ./scripts/inthash.ts"
   },
@@ -71,7 +72,6 @@
     "@types/ws": "^8.5.10",
     "@typescript-eslint/eslint-plugin": "^6.19.1",
     "@typescript-eslint/parser": "^6.19.1",
-    "bun-types": "^1.0.25",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-import-resolver-typescript": "^3.6.1",

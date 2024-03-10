@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
 
 import { TypedConfigService } from '@/common';
 import { AuthTokenDTO } from '@/modules/auth/auth.dto';
@@ -9,8 +9,8 @@ import { PrismaService } from '@/prisma';
 
 export enum AuthServiceError {
   AuthTokenExpired = '토큰이 만료되었습니다.',
-  InvalidAuthToken = '유효하지 않은 토큰입니다.',
-  UnexpectedError = '예상치 못한 오류가 발생했습니다.',
+  AuthTokenInvalid = '유효하지 않은 토큰입니다.',
+  UserNotFound = '사용자를 찾을 수 없습니다.',
 }
 
 @Injectable()
@@ -30,31 +30,35 @@ export class AuthService {
       create: input,
     });
 
-    return this._generateToken({ id: `${signedUser.id}` });
+    return this.#generateToken({ id: `${signedUser.id}` });
   }
 
+  /**
+   * 새로운 토큰을 발행합니다.
+   *
+   * @param token refresh token (valid, non-expired)
+   * @returns new access token and refresh token
+   *
+   * @throws {AuthServiceError.AuthTokenExpired} when the token is expired
+   * @throws {AuthServiceError.AuthTokenInvalid} when the token is invalid
+   * @throws {AuthServiceError.UserNotFound} when the user is not found
+   */
   async refresh(token: string): Promise<AuthTokenDTO> {
     // TODO: AuthToken 모듈로 분리
     try {
       const payload = this.jwt.verify(token);
       const node = await this.user.findOneById(payload.id);
-      if (!node) throw new Error('로그인을 실패했습니다.');
-      return this._generateToken({ id: `${node.id}` });
+      if (!node) throw AuthServiceError.UserNotFound;
+      return this.#generateToken({ id: `${node.id}` });
     } catch (error) {
-      if (error instanceof Error) {
-        switch (error.name) {
-          case 'TokenExpiredError':
-            throw AuthServiceError.AuthTokenExpired;
-          case 'JsonWebTokenError':
-            throw AuthServiceError.InvalidAuthToken;
-        }
-      }
-      throw AuthServiceError.UnexpectedError;
+      if (error instanceof TokenExpiredError) throw AuthServiceError.AuthTokenExpired;
+      if (error instanceof JsonWebTokenError) throw AuthServiceError.AuthTokenInvalid;
+      throw error;
     }
   }
 
   // TODO: AuthToken 모듈로 분리
-  async _generateToken(payload: object) {
+  async #generateToken(payload: object) {
     const accessToken = this.jwt.sign(payload, {
       expiresIn: this.config.get('jwt.expires.access'),
     });
