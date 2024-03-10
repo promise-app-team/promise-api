@@ -10,7 +10,7 @@ import type { Handler } from 'aws-lambda';
 
 import { AppModule } from '@/app/app.module';
 import { AllExceptionsFilter, HttpException, StringifyDateInterceptor, TimeoutInterceptor } from '@/common';
-import { TypedConfig } from '@/config/env';
+import { TypedConfigService } from '@/config/env';
 import { LoggerService } from '@/customs/logger';
 
 async function initializeApp<App extends NestExpressApplication>() {
@@ -19,7 +19,7 @@ async function initializeApp<App extends NestExpressApplication>() {
   });
 
   app.useLogger(app.get(LoggerService));
-  const config = app.get(TypedConfig);
+  const config = app.get(TypedConfigService);
   const { httpAdapter } = app.get(HttpAdapterHost);
 
   app
@@ -69,7 +69,7 @@ async function initializeApp<App extends NestExpressApplication>() {
 
 async function startLocalServer() {
   const app = await initializeApp();
-  const config = app.get(TypedConfig);
+  const config = app.get(TypedConfigService);
   await app.listen(`${config.get('port')}`, '0.0.0.0');
   Logger.log(`🌈 Server running on ${await app.getUrl()}`, 'Bootstrap');
 }

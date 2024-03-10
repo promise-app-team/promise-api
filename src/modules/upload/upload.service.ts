@@ -3,14 +3,14 @@ import { Injectable } from '@nestjs/common';
 import { format } from 'date-fns';
 import { v4 as uuid } from 'uuid';
 
-import { TypedConfig } from '@/config/env';
+import { TypedConfigService } from '@/config/env';
 import { S3ClientService } from '@/customs/s3-client';
 
 @Injectable()
 export class FileUploadService {
   constructor(
     private readonly client: S3ClientService,
-    private readonly config: TypedConfig
+    private readonly config: TypedConfigService
   ) {}
 
   async upload(file: Express.Multer.File): Promise<string> {

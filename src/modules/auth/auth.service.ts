@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
 
-import { TypedConfig } from '@/config/env';
+import { TypedConfigService } from '@/config/env';
 import { AuthTokenDTO } from '@/modules/auth/auth.dto';
 import { UserService } from '@/modules/user/user.service';
-import { PrismaService } from '@/prisma';
 
 export enum AuthServiceError {
   AuthTokenFailed = '토큰 생성에 실패했습니다.',
@@ -16,9 +15,8 @@ export enum AuthServiceError {
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly config: TypedConfigService,
     private readonly user: UserService,
-    private readonly config: TypedConfig,
     private readonly jwt: JwtService
   ) {}
 

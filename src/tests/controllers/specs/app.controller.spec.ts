@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 
 import { AppController } from '@/app/app.controller';
-import { TypedConfig } from '@/config/env';
+import { TypedConfigService } from '@/config/env';
 import { MockTypedConfigService } from '@/tests/services/mocks/typed-config.service.mock';
 
 describe('AppController', () => {
@@ -10,7 +10,7 @@ describe('AppController', () => {
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       controllers: [AppController],
-      providers: [{ provide: TypedConfig, useClass: MockTypedConfigService }],
+      providers: [{ provide: TypedConfigService, useClass: MockTypedConfigService }],
     }).compile();
 
     appController = module.get(AppController);

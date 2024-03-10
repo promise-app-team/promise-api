@@ -4,7 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 
 import { AppController } from '@/app/app.controller';
 import { CommonModule } from '@/common';
-import { TypedConfig, extraEnv } from '@/config/env';
+import { TypedConfigService, extraEnv } from '@/config/env';
 import { schema } from '@/config/validation';
 import { LoggerModule } from '@/customs/logger';
 import { TypedConfigModule } from '@/customs/typed-config';
@@ -24,12 +24,12 @@ import { PrismaModule } from '@/prisma';
       envFilePath: ['.env.local'],
       validationSchema: schema,
       expandVariables: true,
-      config: TypedConfig,
+      config: TypedConfigService,
     }),
     JwtModule.registerAsync({
       global: true,
-      inject: [TypedConfig],
-      useFactory(config: TypedConfig) {
+      inject: [TypedConfigService],
+      useFactory(config: TypedConfigService) {
         return {
           secret: config.get('jwt.secret'),
         };

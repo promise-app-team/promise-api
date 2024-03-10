@@ -1,12 +1,10 @@
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 
-import { TypedConfig } from '@/config/env';
+import { TypedConfigService } from '@/config/env';
 import { AuthService, AuthServiceError } from '@/modules/auth/auth.service';
 import { UserService } from '@/modules/user/user.service';
-import { PrismaService } from '@/prisma';
 import { MockJwtService, MockTokenStatus } from '@/tests/services/mocks/jwt.service.mock';
-import { MockPrismaService } from '@/tests/services/mocks/prisma.service.mock';
 import { MockTypedConfigService } from '@/tests/services/mocks/typed-config.service.mock';
 import { MockUserID, MockUserService } from '@/tests/services/mocks/user.service.mock';
 
@@ -17,9 +15,8 @@ describe(AuthService, () => {
     const module = await Test.createTestingModule({
       providers: [
         AuthService,
-        { provide: PrismaService, useClass: MockPrismaService },
         { provide: UserService, useClass: MockUserService },
-        { provide: TypedConfig, useClass: MockTypedConfigService },
+        { provide: TypedConfigService, useClass: MockTypedConfigService },
         { provide: JwtService, useClass: MockJwtService },
       ],
     }).compile();

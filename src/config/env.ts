@@ -35,4 +35,4 @@ export const extraEnv = () => {
   };
 };
 
-export class TypedConfig extends TypedConfigServiceBuilder<ReturnType<typeof extraEnv>> {}
+export class TypedConfigService extends TypedConfigServiceBuilder<ReturnType<typeof extraEnv>> {}

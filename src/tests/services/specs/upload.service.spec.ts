@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 
-import { TypedConfig } from '@/config/env';
+import { TypedConfigService } from '@/config/env';
 import { S3ClientService } from '@/customs/s3-client';
 import { FileUploadService } from '@/modules/upload/upload.service';
 import { MockTypedConfigService } from '@/tests/services/mocks/typed-config.service.mock';
@@ -13,7 +13,7 @@ describe(FileUploadService, () => {
       providers: [
         FileUploadService,
         { provide: S3ClientService, useValue: { send: () => {} } },
-        { provide: TypedConfig, useClass: MockTypedConfigService },
+        { provide: TypedConfigService, useClass: MockTypedConfigService },
       ],
     }).compile();
 
