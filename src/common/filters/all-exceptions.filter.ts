@@ -22,10 +22,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
       ? exception
       : new InternalServerErrorException(`알 수 없는 오류가 발생했습니다.`);
 
-    if (httpException instanceof InternalServerErrorException) {
-      console.error(exception);
+    if (httpException.name === InternalServerErrorException.name) {
+      console.error(httpException.cause || httpException);
     }
-
     this.httpAdapter.reply(ctx.getResponse(), httpException.getResponse(), httpStatus);
   }
 }

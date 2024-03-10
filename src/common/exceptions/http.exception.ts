@@ -58,7 +58,7 @@ export class HttpException extends NestHttpException {
   ) {
     const input = typeof args === 'string' ? { message: args, status, cause } : args;
     super(input.message, input.status ? HttpStatus[input.status] : HttpStatus.INTERNAL_SERVER_ERROR);
-    Object.assign(this, new exceptionMap[input.status ?? 'INTERNAL_SERVER_ERROR'](input.message));
+    Object.assign(this, new exceptionMap[input.status ?? 'INTERNAL_SERVER_ERROR'](input.message, { cause }));
   }
 
   static new(error: any): NestHttpException;
