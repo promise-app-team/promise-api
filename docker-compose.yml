@@ -29,6 +29,6 @@ services:
     image: promise-api:https
     container_name: promise-api.https
     ports:
-      - '80:80'
-      - '443:443'
+      - 80:80
+      - 443:443
     restart: always
