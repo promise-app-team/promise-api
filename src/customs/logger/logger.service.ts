@@ -1,17 +1,13 @@
-import { Inject, Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
+import { Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
 
 import { logger } from '@/customs/logger/logger';
-import { LOGGER_MODULE_OPTIONS } from '@/customs/logger/logger.constant';
 import { LoggerOptions, LoggingContext } from '@/customs/logger/logger.interface';
 
 @Injectable()
 export class LoggerService implements NestLoggerService {
   private readonly logger = logger;
 
-  constructor(
-    @Inject(LOGGER_MODULE_OPTIONS)
-    private readonly options?: LoggerOptions
-  ) {}
+  constructor(private readonly options?: LoggerOptions) {}
 
   // for custom logger
 
