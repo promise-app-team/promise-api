@@ -3,8 +3,11 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 
 import { AppController } from '@/app/app.controller';
-import { TypedConfigService, CommonModule } from '@/common';
+import { CommonModule } from '@/common';
+import { TypedConfig, extraEnv } from '@/config/env';
+import { schema } from '@/config/validation';
 import { LoggerModule } from '@/customs/logger';
+import { TypedConfigModule } from '@/customs/typed-config';
 import { AuthModule } from '@/modules/auth/auth.module';
 import { EventModule } from '@/modules/event/event.module';
 import { PromiseModule } from '@/modules/promise/promise.module';
@@ -15,10 +18,18 @@ import { PrismaModule } from '@/prisma';
 @Module({
   imports: [
     CacheModule.register({ isGlobal: true }),
+    TypedConfigModule.forRoot({
+      isGlobal: true,
+      load: [extraEnv],
+      envFilePath: ['.env.local'],
+      validationSchema: schema,
+      expandVariables: true,
+      config: TypedConfig,
+    }),
     JwtModule.registerAsync({
       global: true,
-      inject: [TypedConfigService],
-      useFactory(config: TypedConfigService) {
+      inject: [TypedConfig],
+      useFactory(config: TypedConfig) {
         return {
           secret: config.get('jwt.secret'),
         };

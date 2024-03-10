@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
 
-import { TypedConfigService } from '@/common';
+import { TypedConfig } from '@/config/env';
 import { AuthTokenDTO } from '@/modules/auth/auth.dto';
 import { UserService } from '@/modules/user/user.service';
 import { PrismaService } from '@/prisma';
@@ -18,7 +18,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly user: UserService,
-    private readonly config: TypedConfigService,
+    private readonly config: TypedConfig,
     private readonly jwt: JwtService
   ) {}
 

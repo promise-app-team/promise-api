@@ -3,12 +3,12 @@ import { Injectable } from '@nestjs/common';
 import { format } from 'date-fns';
 import { v4 as uuid } from 'uuid';
 
-import { TypedConfigService } from '@/common';
+import { TypedConfig } from '@/config/env';
 
 @Injectable()
 export class FileUploadService {
   private readonly client: S3Client;
-  constructor(private readonly config: TypedConfigService) {
+  constructor(private readonly config: TypedConfig) {
     this.client = new S3Client({
       region: this.config.get('aws.region'),
     });

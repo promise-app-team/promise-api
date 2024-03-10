@@ -2,13 +2,13 @@ import { Controller } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { EntryDTO } from '@/app/entry.dto';
-import { TypedConfigService } from '@/common';
+import { TypedConfig } from '@/config/env';
 import { Get } from '@/customs/nest';
 
 @ApiTags('App')
 @Controller()
 export class AppController {
-  constructor(private readonly config: TypedConfigService) {}
+  constructor(private readonly config: TypedConfig) {}
 
   @Get('', { description: '서버 상태를 확인합니다.' })
   ping(): EntryDTO {

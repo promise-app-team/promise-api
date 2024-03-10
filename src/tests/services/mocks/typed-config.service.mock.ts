@@ -1,9 +1,8 @@
-import { TypedConfigService } from '@/common';
-import { EnvSchema } from '@/common/config/env';
-import { FlattenObjectKeys, InferType, MethodTypes } from '@/types';
+import { TypedConfig } from '@/config/env';
+import { MethodTypes } from '@/types';
 
-export class MockTypedConfigService implements MethodTypes<TypedConfigService> {
-  get<K extends FlattenObjectKeys<EnvSchema>>(path: K): InferType<EnvSchema, K> {
+export class MockTypedConfigService implements MethodTypes<TypedConfig> {
+  get(path: any): any {
     return path as any;
   }
 }

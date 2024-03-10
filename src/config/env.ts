@@ -1,5 +1,7 @@
 import { formatISO } from 'date-fns';
 
+import { TypedConfigServiceBuilder } from '@/customs/typed-config';
+
 const BUILD = formatISO(new Date());
 
 export const extraEnv = () => {
@@ -33,4 +35,4 @@ export const extraEnv = () => {
   };
 };
 
-export type EnvSchema = ReturnType<typeof extraEnv>;
+export class TypedConfig extends TypedConfigServiceBuilder<ReturnType<typeof extraEnv>> {}
