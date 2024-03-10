@@ -12,11 +12,11 @@ import { AppModule } from '@/app/app.module';
 import {
   AllExceptionsFilter,
   HttpException,
-  LoggerService,
   StringifyDateInterceptor,
   TimeoutInterceptor,
   TypedConfigService,
 } from '@/common';
+import { LoggerService } from '@/customs/logger';
 
 async function initializeApp<App extends NestExpressApplication>() {
   const app = await NestFactory.create<App>(AppModule, {

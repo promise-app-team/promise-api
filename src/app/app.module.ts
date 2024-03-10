@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 
 import { AppController } from '@/app/app.controller';
 import { TypedConfigService, CommonModule } from '@/common';
+import { LoggerModule } from '@/customs/logger';
 import { AuthModule } from '@/modules/auth/auth.module';
 import { EventModule } from '@/modules/event/event.module';
 import { PromiseModule } from '@/modules/promise/promise.module';
@@ -22,6 +23,17 @@ import { PrismaModule } from '@/prisma';
           secret: config.get('jwt.secret'),
         };
       },
+    }),
+    LoggerModule.forRoot({
+      global: true,
+      blacklist: [
+        'NestFactory',
+        'InstanceLoader',
+        'RoutesResolver',
+        'RouterExplorer',
+        'WebSocketEventGateway',
+        'WebSocketsController',
+      ],
     }),
     AuthModule,
     UserModule,

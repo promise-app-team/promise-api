@@ -17,5 +17,4 @@ export * from './middlewares/trim.middleware';
 export * from './mixins/dto.mixin';
 
 export * from './services/hasher.service';
-export * from './services/logger.service';
 export * from './services/typed-config.service';

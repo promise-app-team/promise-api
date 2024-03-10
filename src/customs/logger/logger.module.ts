@@ -1,8 +1,8 @@
 import { DynamicModule, Module } from '@nestjs/common';
 
-import { LOGGER_MODULE_OPTIONS } from '@/common/constants/logger.constant';
-import { LoggerOptions } from '@/common/interfaces/logger.interface';
-import { LoggerService } from '@/common/services/logger.service';
+import { LOGGER_MODULE_OPTIONS } from '@/customs/logger/logger.constant';
+import { LoggerOptions } from '@/customs/logger/logger.interface';
+import { LoggerService } from '@/customs/logger/logger.service';
 
 @Module({
   providers: [LoggerService],

@@ -1,8 +1,8 @@
 import { Inject, Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
 
-import { LOGGER_MODULE_OPTIONS } from '@/common/constants/logger.constant';
-import { LoggerOptions, LoggingContext } from '@/common/interfaces/logger.interface';
-import { logger } from '@/common/utils/logger';
+import { logger } from '@/customs/logger/logger';
+import { LOGGER_MODULE_OPTIONS } from '@/customs/logger/logger.constant';
+import { LoggerOptions, LoggingContext } from '@/customs/logger/logger.interface';
 
 @Injectable()
 export class LoggerService implements NestLoggerService {
