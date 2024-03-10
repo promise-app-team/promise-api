@@ -15,8 +15,10 @@ export class JwtServiceMock implements DeepPartial<MethodTypes<JwtService>> {
         throw new TokenExpiredError('jwt expired', new Date());
       case 'invalid':
         throw new JsonWebTokenError('invalid token');
-      default:
+      case 'not-found':
         return { id: 'not-found' };
+      default:
+        throw new Error();
     }
   }
 }

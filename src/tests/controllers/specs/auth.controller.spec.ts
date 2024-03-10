@@ -56,10 +56,16 @@ describe(AuthController, () => {
       });
     });
 
-    test('should throw an error when called with an unknown token', async () => {
-      return expect(authController.refreshTokens({ refreshToken: 'unknown' })).rejects.toMatchObject({
+    test('should throw an error when called with an not-found error', async () => {
+      return expect(authController.refreshTokens({ refreshToken: 'not-found' })).rejects.toMatchObject({
         message: AuthServiceError.UserNotFound,
         status: HttpStatus.NOT_FOUND,
+      });
+    });
+
+    test('should throw an error when called with an unknown token', async () => {
+      return expect(authController.refreshTokens({ refreshToken: 'unknown' })).rejects.toMatchObject({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
       });
     });
   });

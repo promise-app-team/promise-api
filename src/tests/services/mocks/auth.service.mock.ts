@@ -24,8 +24,10 @@ export class AuthServiceMock implements MethodTypes<AuthService> {
         throw AuthServiceError.AuthTokenExpired;
       case 'invalid':
         throw AuthServiceError.AuthTokenInvalid;
-      default:
+      case 'not-found':
         throw AuthServiceError.UserNotFound;
+      default:
+        throw new Error();
     }
   }
 }
