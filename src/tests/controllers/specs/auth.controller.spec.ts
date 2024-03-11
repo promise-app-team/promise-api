@@ -1,95 +1,100 @@
 import { HttpStatus } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
-import { pick } from 'remeda';
 
+import { TypedConfigService } from '@/config/env';
 import { AuthController } from '@/modules/auth/auth.controller';
 import { AuthService, AuthServiceError } from '@/modules/auth/auth.service';
 import { UserService } from '@/modules/user/user.service';
-import { _fixture_validUser } from '@/tests/fixtures/users';
-import { MockAuthService } from '@/tests/services/mocks/auth.service.mock';
-import { MockTokenStatus } from '@/tests/services/mocks/jwt.service.mock';
-import { MockUserProviderID, MockUserService } from '@/tests/services/mocks/user.service.mock';
+import { PrismaService } from '@/prisma/prisma.service';
+import { userBuilder } from '@/tests/fixtures/users';
+import { JWT_INVALID_ID, JWT_VALID_ID, mockJwtService } from '@/tests/services/mocks/jwt.service.mock';
+
+const makeUser = userBuilder(10e4);
 
 describe(AuthController, () => {
   let authController: AuthController;
-  let mockAuthService: AuthService;
-  let mockUserService: UserService;
+  let prisma: PrismaService;
+
+  beforeAll(async () => {
+    prisma = new PrismaService();
+  });
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-        { provide: AuthService, useValue: MockAuthService },
-        { provide: UserService, useValue: MockUserService },
+        AuthService,
+        UserService,
+        { provide: TypedConfigService, useValue: { get() {} } },
+        { provide: JwtService, useValue: mockJwtService },
+        { provide: PrismaService, useValue: prisma },
       ],
     }).compile();
 
     authController = module.get(AuthController);
-    mockAuthService = module.get(AuthService);
-    mockUserService = module.get(UserService);
+  });
+
+  afterAll(async () => {
+    await prisma.user.deleteMany();
+    await prisma.$disconnect();
   });
 
   test('should be defined', () => {
     expect(authController).toBeDefined();
-    expect(mockAuthService).toBeDefined();
-    expect(mockUserService).toBeDefined();
   });
 
   describe(AuthController.prototype.login, () => {
-    const input = pick(_fixture_validUser, ['username', 'profileUrl', 'provider', 'providerId']);
-
     test('should return tokens when called with a valid user', async () => {
-      await expect(authController.login(input)).resolves.toEqual({
-        accessToken: 'accessToken',
-        refreshToken: 'refreshToken',
+      const user = makeUser();
+      await prisma.user.create({ data: user });
+      await expect(authController.login(user)).resolves.toEqual({
+        accessToken: 'token',
+        refreshToken: 'token',
       });
-
-      expect(mockUserService.upsert).toHaveBeenCalledTimes(1);
-      expect(mockAuthService.authenticate).toHaveBeenCalledTimes(1);
     });
 
-    test('should throw an error when failed to authenticate', async () => {
-      await expect(authController.login({ ...input, providerId: MockUserProviderID.Unknown })).rejects.toMatchObject({
+    test('should throw an error when unknown error occurs', async () => {
+      const unknownError = makeUser(JWT_INVALID_ID);
+      await expect(authController.login(unknownError)).rejects.toMatchObject({
         status: HttpStatus.INTERNAL_SERVER_ERROR,
       });
-
-      expect(mockAuthService.authenticate).toHaveBeenCalledTimes(1);
     });
   });
 
   describe(AuthController.prototype.refreshTokens, () => {
     test('should return tokens when called with a valid token', async () => {
-      await expect(authController.refreshTokens({ refreshToken: MockTokenStatus.Valid })).resolves.toEqual({
-        accessToken: 'accessToken',
-        refreshToken: 'refreshToken',
+      const user = makeUser(JWT_VALID_ID);
+      await prisma.user.create({ data: user });
+      await expect(authController.refreshTokens({ refreshToken: 'valid' })).resolves.toEqual({
+        accessToken: 'token',
+        refreshToken: 'token',
       });
-
-      expect(mockAuthService.refresh).toHaveBeenCalledTimes(1);
     });
 
     test('should throw an error when called with an expired token', async () => {
-      return expect(authController.refreshTokens({ refreshToken: MockTokenStatus.Expired })).rejects.toMatchObject({
+      await expect(authController.refreshTokens({ refreshToken: 'expired' })).rejects.toMatchObject({
         message: AuthServiceError.AuthTokenExpired,
         status: HttpStatus.BAD_REQUEST,
       });
     });
 
     test('should throw an error when called with an invalid token', async () => {
-      return expect(authController.refreshTokens({ refreshToken: MockTokenStatus.Invalid })).rejects.toMatchObject({
+      return expect(authController.refreshTokens({ refreshToken: 'invalid' })).rejects.toMatchObject({
         message: AuthServiceError.AuthTokenInvalid,
         status: HttpStatus.BAD_REQUEST,
       });
     });
 
     test('should throw an error when called with an not-found error', async () => {
-      return expect(authController.refreshTokens({ refreshToken: MockTokenStatus.NotFound })).rejects.toMatchObject({
+      return expect(authController.refreshTokens({ refreshToken: 'not-found' })).rejects.toMatchObject({
         message: AuthServiceError.UserNotFound,
         status: HttpStatus.NOT_FOUND,
       });
     });
 
     test('should throw an error when called with an unknown token', async () => {
-      return expect(authController.refreshTokens({ refreshToken: MockTokenStatus.Unknown })).rejects.toMatchObject({
+      return expect(authController.refreshTokens({ refreshToken: 'unknown' })).rejects.toMatchObject({
         status: HttpStatus.INTERNAL_SERVER_ERROR,
       });
     });

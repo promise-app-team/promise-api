@@ -1,26 +1,35 @@
 import { HttpStatus } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
+import { pick } from 'remeda';
 
 import { UserController } from '@/modules/user/user.controller';
 import { UserService, UserServiceError } from '@/modules/user/user.service';
-import { _fixture_invalidUser, _fixture_unknownUser, _fixture_validUser } from '@/tests/fixtures/users';
-import { MockJwtService } from '@/tests/services/mocks/jwt.service.mock';
-import { MockUserService } from '@/tests/services/mocks/user.service.mock';
+import { PrismaService } from '@/prisma/prisma.service';
+import { userBuilder } from '@/tests/fixtures/users';
 
 describe(UserController, () => {
   let authController: UserController;
+  let prisma: PrismaService;
+
+  const makeUser = userBuilder(10e3);
+
+  beforeAll(async () => {
+    prisma = new PrismaService();
+  });
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       controllers: [UserController],
-      providers: [
-        { provide: JwtService, useValue: MockJwtService },
-        { provide: UserService, useValue: MockUserService },
-      ],
+      providers: [UserService, { provide: JwtService, useValue: {} }, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     authController = module.get(UserController);
+  });
+
+  afterAll(async () => {
+    await prisma.user.deleteMany();
+    await prisma.$disconnect();
   });
 
   test('should be defined', () => {
@@ -29,7 +38,11 @@ describe(UserController, () => {
 
   describe(UserController.prototype.getMyProfile, () => {
     test('should return my profile', async () => {
-      return expect(authController.getMyProfile(_fixture_validUser)).resolves.toMatchObject({ id: 1 });
+      const user = makeUser();
+      await prisma.user.create({ data: user });
+      await expect(authController.getMyProfile(user)).resolves.toMatchObject(
+        pick(user, ['id', 'username', 'profileUrl'])
+      );
     });
   });
 
@@ -38,37 +51,35 @@ describe(UserController, () => {
     const profileUrl = 'http://new.profile.url';
 
     test('should update my profile', async () => {
-      return expect(
-        authController.updateMyProfile(_fixture_validUser, { username, profileUrl })
-      ).resolves.toMatchObject({
-        username,
-        profileUrl,
-      });
+      const user = makeUser();
+      const updatedUser = { ...user, username, profileUrl };
+      await prisma.user.create({ data: user });
+      await expect(authController.updateMyProfile(user, { username, profileUrl })).resolves.toMatchObject(
+        pick(updatedUser, ['id', 'username', 'profileUrl'])
+      );
     });
 
     test('should set a default profileUrl', async () => {
-      return expect(
-        authController.updateMyProfile(_fixture_validUser, { username, profileUrl: null })
-      ).resolves.toMatchObject({
-        id: 1,
-        username,
+      const user = makeUser();
+      const updatedUser = { ...user, username };
+      await prisma.user.create({ data: user });
+      await expect(authController.updateMyProfile(user, { username, profileUrl: null })).resolves.toMatchObject({
+        ...pick(updatedUser, ['id', 'username']),
         profileUrl: expect.any(String),
       });
     });
 
     test('should throw an error if a user is not found', async () => {
-      return expect(
-        authController.updateMyProfile(_fixture_unknownUser, { username: '0', profileUrl })
-      ).rejects.toMatchObject({
+      const notFoundUser = makeUser(0);
+      await expect(authController.updateMyProfile(notFoundUser, { username, profileUrl })).rejects.toMatchObject({
         message: UserServiceError.NotFoundUser,
         status: HttpStatus.NOT_FOUND,
       });
     });
 
     test('should throw an error when unknown errors occur', async () => {
-      return expect(
-        authController.updateMyProfile(_fixture_invalidUser, { username: '0', profileUrl })
-      ).rejects.toMatchObject({
+      const unknownUser = makeUser('unknown' as any);
+      return expect(authController.updateMyProfile(unknownUser, { username, profileUrl })).rejects.toMatchObject({
         status: HttpStatus.INTERNAL_SERVER_ERROR,
       });
     });
@@ -78,18 +89,22 @@ describe(UserController, () => {
     const reason = 'reason';
 
     test('should delete my profile', async () => {
-      return expect(authController.deleteMyProfile(_fixture_validUser, { reason })).resolves.toMatchObject({ id: 1 });
+      const user = makeUser();
+      await prisma.user.create({ data: user });
+      await expect(authController.deleteMyProfile(user, { reason })).resolves.toEqual({ id: user.id });
     });
 
     test('should throw an error if a user is not found', async () => {
-      return expect(authController.deleteMyProfile(_fixture_unknownUser, { reason })).rejects.toMatchObject({
+      const notFoundUser = makeUser(0);
+      await expect(authController.deleteMyProfile(notFoundUser, { reason })).rejects.toMatchObject({
         message: UserServiceError.NotFoundUser,
         status: HttpStatus.NOT_FOUND,
       });
     });
 
     test('should throw an error when unknown errors occur', async () => {
-      return expect(authController.deleteMyProfile(_fixture_invalidUser, { reason: 'unknown' })).rejects.toMatchObject({
+      const unknownUser = makeUser('unknown' as any);
+      return expect(authController.deleteMyProfile(unknownUser, { reason: 'unknown' })).rejects.toMatchObject({
         status: HttpStatus.INTERNAL_SERVER_ERROR,
       });
     });

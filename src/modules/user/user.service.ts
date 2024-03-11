@@ -1,8 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Provider, User } from '@prisma/client';
+import { User } from '@prisma/client';
 
 import { InputCreateUserDTO, InputUpdateUserDTO } from '@/modules/user/user.dto';
 import { PrismaClientError } from '@/prisma/error-handler';
+import { UserModel } from '@/prisma/prisma.entity';
 import { PrismaService } from '@/prisma/prisma.service';
 
 export enum UserServiceError {
@@ -25,22 +26,25 @@ export class UserService {
     return user;
   }
 
-  async findOneByProvider(provider: Provider, providerId: string): Promise<User> {
-    const user = await this.prisma.user.findUnique({
-      where: {
-        identifier: {
-          provider,
-          providerId,
+  async findOneByProvider<P extends Pick<UserModel, 'provider' | 'providerId'>>({
+    provider,
+    providerId,
+  }: P): Promise<User> {
+    return this.prisma.user
+      .findUniqueOrThrow({
+        where: {
+          identifier: { provider, providerId },
+          deletedAt: null,
         },
-        deletedAt: null,
-      },
-    });
-
-    if (!user) {
-      throw UserServiceError.NotFoundUser;
-    }
-
-    return user;
+      })
+      .catch((error) => {
+        switch (PrismaClientError.from(error)?.code) {
+          case 'P2025':
+            throw UserServiceError.NotFoundUser;
+          default:
+            throw error;
+        }
+      });
   }
 
   async upsert(input: InputCreateUserDTO) {

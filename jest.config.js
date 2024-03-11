@@ -1,16 +1,22 @@
-/** @type {import('jest').Config}  */
+/** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   clearMocks: true,
-  moduleFileExtensions: ['js', 'ts', 'json'],
-  rootDir: 'src',
+  maxWorkers: 1,
+  moduleFileExtensions: ['js', 'json', 'ts'],
   moduleNameMapper: {
-    '^@/(.*)$': '<rootDir>/$1',
+    '^@/(.*)$': '<rootDir>/src/$1',
   },
   testRegex: '.*\\.spec\\.ts$',
   transform: {
-    '^.+\\.(t|j)s$': 'ts-jest',
+    '^.+\\.(t|j)s$': [
+      'ts-jest',
+      {
+        tsconfig: 'tsconfig.test.json',
+      },
+    ],
   },
-  collectCoverageFrom: ['app/**/*.{!(module),}.(t|j)s', 'modules/**/*.{!(module|gateway),}.(t|j)s'],
-  coverageDirectory: '../coverage',
+  collectCoverageFrom: ['src/app/**/*.{!(module),}.(t|j)s', 'src/modules/**/*.{!(module|gateway),}.(t|j)s'],
+  coverageDirectory: 'coverage',
   testEnvironment: 'node',
+  preset: 'ts-jest',
 };

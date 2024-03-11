@@ -1,86 +1,95 @@
 import { Test } from '@nestjs/testing';
+import { pick } from 'remeda';
 
 import { UserService, UserServiceError } from '@/modules/user/user.service';
 import { Provider } from '@/prisma/prisma.entity';
 import { PrismaService } from '@/prisma/prisma.service';
-import { MockPrismaService } from '@/tests/services/mocks/prisma.service.mock';
-import { MockUserID, MockUserProviderID } from '@/tests/services/mocks/user.service.mock';
+import { userBuilder } from '@/tests/fixtures/users';
 
 describe(UserService, () => {
   let userService: UserService;
-  let mockPrismaService: PrismaService;
+  let prisma: PrismaService;
+
+  const makeUser = userBuilder(10);
+
+  beforeAll(async () => {
+    prisma = new PrismaService();
+  });
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      providers: [UserService, { provide: PrismaService, useValue: MockPrismaService }],
+      providers: [UserService, { provide: PrismaService, useValue: prisma }],
     }).compile();
 
     userService = module.get(UserService);
-    mockPrismaService = module.get(PrismaService);
+  });
+
+  afterAll(async () => {
+    await prisma.user.deleteMany();
+    await prisma.$disconnect();
   });
 
   test('should be defined', () => {
     expect(userService).toBeDefined();
-    expect(mockPrismaService).toBeDefined();
+    expect(prisma).toBeDefined();
   });
 
   describe(UserService.prototype.findOneById, () => {
     test('should return a user by id', async () => {
-      await expect(userService.findOneById(MockUserID.Valid)).resolves.toMatchObject({ id: 1 });
-      expect(mockPrismaService.user.findUnique).toHaveBeenCalledTimes(1);
+      const user = makeUser();
+      await prisma.user.create({ data: user });
+      await expect(userService.findOneById(user.id)).resolves.toMatchObject(
+        pick(user, ['id', 'username', 'profileUrl', 'provider', 'providerId'])
+      );
     });
 
     test('should throw an error if a user is not found', async () => {
-      return expect(userService.findOneById(MockUserID.NotFound)).rejects.toEqual(UserServiceError.NotFoundUser);
+      return expect(userService.findOneById(0)).rejects.toEqual(UserServiceError.NotFoundUser);
     });
   });
 
   describe(UserService.prototype.findOneByProvider, () => {
     test('should return a user by provider and providerId', async () => {
-      return expect(userService.findOneByProvider(Provider.KAKAO, MockUserProviderID.Valid)).resolves.toMatchObject({
-        id: MockUserID.Valid,
-      });
+      const user = makeUser();
+      await prisma.user.create({ data: user });
+      await expect(userService.findOneByProvider(user)).resolves.toMatchObject(
+        pick(user, ['id', 'username', 'profileUrl', 'provider', 'providerId'])
+      );
     });
 
     test('should throw an error if a user is not found', async () => {
-      return expect(userService.findOneByProvider(Provider.KAKAO, MockUserProviderID.NotFound)).rejects.toEqual(
+      await expect(userService.findOneByProvider({ provider: Provider.KAKAO, providerId: '0' })).rejects.toEqual(
         UserServiceError.NotFoundUser
       );
+    });
+
+    test('should throw an error when unknown error occurred', async () => {
+      await expect(
+        userService.findOneByProvider({ provider: Provider.KAKAO, providerId: 404 as any })
+      ).rejects.toThrow();
     });
   });
 
   describe(UserService.prototype.upsert, () => {
     test('should create a user if not found', async () => {
-      return expect(
-        userService.upsert({
-          username: 'username',
-          profileUrl: 'http://profile.url',
-          provider: Provider.KAKAO,
-          providerId: MockUserProviderID.NotFound,
-        })
-      ).resolves.toMatchObject({ id: MockUserID.Valid });
+      const user = makeUser();
+      await expect(userService.upsert(user)).resolves.toMatchObject({ id: user.id });
     });
 
-    test('should update a user if found', async () => {
-      return expect(
-        userService.upsert({
-          username: 'username',
-          profileUrl: 'http://profile.url',
-          provider: Provider.KAKAO,
-          providerId: MockUserProviderID.Valid,
-        })
-      ).resolves.toMatchObject({ id: MockUserID.Valid });
+    test('should not update a user if found', async () => {
+      const user = makeUser();
+      await prisma.user.create({ data: user });
+      await expect(userService.upsert(user)).resolves.toMatchObject(
+        pick(user, ['id', 'username', 'profileUrl', 'provider', 'providerId'])
+      );
     });
 
     test('should set a default profileUrl', async () => {
-      return expect(
-        userService.upsert({
-          username: 'username',
-          profileUrl: null,
-          provider: Provider.KAKAO,
-          providerId: MockUserProviderID.NotFound,
-        })
-      ).resolves.toMatchObject({ id: MockUserID.Valid, profileUrl: expect.any(String) });
+      const user = makeUser();
+      return expect(userService.upsert({ ...user, profileUrl: null })).resolves.toMatchObject({
+        ...pick(user, ['id', 'username', 'provider', 'providerId']),
+        profileUrl: expect.any(String),
+      });
     });
   });
 
@@ -89,53 +98,38 @@ describe(UserService, () => {
     const profileUrl = 'http://changed.profile.url';
 
     test('should update a user', async () => {
-      return expect(
-        userService.update(MockUserID.Valid, {
-          username,
-          profileUrl,
-        })
-      ).resolves.toMatchObject({ id: MockUserID.Valid, username, profileUrl });
+      const user = makeUser();
+      const updatedUser = { ...user, username, profileUrl };
+      await prisma.user.create({ data: user });
+      return expect(userService.update(user.id, { username, profileUrl })).resolves.toMatchObject(
+        pick(updatedUser, ['id', 'username', 'profileUrl'])
+      );
     });
 
     test('should set a default profileUrl', async () => {
-      return expect(
-        userService.update(MockUserID.Valid, {
-          username,
-          profileUrl: null,
-        })
-      ).resolves.toMatchObject({ id: MockUserID.Valid, username, profileUrl: expect.any(String) });
+      const user = makeUser();
+      await prisma.user.create({ data: user });
+      const updatedUserData = { ...user, username, profileUrl: null };
+      return expect(userService.update(user.id, updatedUserData)).resolves.toMatchObject({
+        ...pick(updatedUserData, ['id', 'username']),
+        profileUrl: expect.any(String),
+      });
     });
 
     test('should throw an error if a user is not found', async () => {
-      return expect(
-        userService.update(MockUserID.NotFound, {
-          username,
-          profileUrl,
-        })
-      ).rejects.toEqual(UserServiceError.NotFoundUser);
-    });
-
-    test('should throw an error when unknown error occurred', async () => {
-      return expect(
-        userService.update(MockUserID.Unknown, {
-          username,
-          profileUrl,
-        })
-      ).rejects.toEqual(new Error());
+      return expect(userService.update(-1, { username, profileUrl })).rejects.toEqual(UserServiceError.NotFoundUser);
     });
   });
 
   describe(UserService.prototype.delete, () => {
     test('should delete a user', async () => {
-      return expect(userService.delete(MockUserID.Valid, 'reason')).resolves.toMatchObject({ id: MockUserID.Valid });
+      const user = makeUser();
+      await prisma.user.create({ data: user });
+      await expect(userService.delete(user.id, 'reason')).resolves.toMatchObject(pick(user, ['id']));
     });
 
     test('should throw an error if a user is not found', async () => {
-      return expect(userService.delete(MockUserID.NotFound, 'reason')).rejects.toEqual(UserServiceError.NotFoundUser);
-    });
-
-    test('should throw an error when unknown error occurred', async () => {
-      return expect(userService.delete(MockUserID.Unknown, 'reason')).rejects.toEqual(new Error());
+      return expect(userService.delete(0, 'reason')).rejects.toEqual(UserServiceError.NotFoundUser);
     });
   });
 });

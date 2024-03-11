@@ -5,20 +5,32 @@ import { Test } from '@nestjs/testing';
 import { FileUploadController } from '@/modules/upload/upload.controller';
 import { FileUploadService } from '@/modules/upload/upload.service';
 import { UserService } from '@/modules/user/user.service';
-import { MockJwtService } from '@/tests/services/mocks/jwt.service.mock';
-import { MockFileUploadService, MockFilename } from '@/tests/services/mocks/upload.service.mock';
-import { MockUserService } from '@/tests/services/mocks/user.service.mock';
+import { sleep } from '@/tests/utils/async';
+import { mock } from '@/tests/utils/mock';
 
 describe(FileUploadController, () => {
   let uploadController: FileUploadController;
+
+  const mockFileUploadService = mock<FileUploadService>({
+    async upload(file: Express.Multer.File): Promise<string> {
+      await sleep(200);
+      switch (file.originalname) {
+        case 'valid.png':
+          return 'https://s3.ap-northeast-2.amazonaws.com/bucket/2021-01-01/uuid.txt';
+        case 'invalid.png':
+        default:
+          throw new Error();
+      }
+    },
+  });
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       controllers: [FileUploadController],
       providers: [
-        { provide: JwtService, useValue: MockJwtService },
-        { provide: UserService, useValue: MockUserService },
-        { provide: FileUploadService, useValue: MockFileUploadService },
+        { provide: JwtService, useValue: {} },
+        { provide: UserService, useValue: {} },
+        { provide: FileUploadService, useValue: mockFileUploadService },
       ],
     }).compile();
 
@@ -32,7 +44,7 @@ describe(FileUploadController, () => {
   describe(FileUploadController.prototype.uploadImageFile, () => {
     test('should upload a file', async () => {
       const file = {
-        originalname: MockFilename.Valid,
+        originalname: 'valid.png',
         buffer: Buffer.from('file'),
         mimetype: 'text/plain',
       } as Express.Multer.File;
@@ -43,7 +55,7 @@ describe(FileUploadController, () => {
 
     test('should throw an error when called with an invalid file', async () => {
       const file = {
-        originalname: MockFilename.Invalid,
+        originalname: 'invalid.png',
         buffer: Buffer.from('file'),
         mimetype: 'text/plain',
       } as Express.Multer.File;

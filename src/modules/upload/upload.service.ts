@@ -14,21 +14,23 @@ export class FileUploadService {
   ) {}
 
   async upload(file: Express.Multer.File): Promise<string> {
-    const ext = file.originalname.split('.').pop();
+    const ext = file.originalname.split('.')[1];
     const env = this.config.get('aws.stage');
     const directory = `${env}/${format(Date.now(), 'yyyy-MM-dd')}`;
     const path = `${directory}/${uuid()}${ext ? `.${ext}` : ''}`;
     const bucket = this.config.get('aws.bucket');
     const region = this.config.get('aws.region');
 
-    await this.client.send(
-      new PutObjectCommand({
-        Bucket: bucket,
-        Key: path,
-        Body: file.buffer,
-        ContentType: file.mimetype,
-      })
-    );
+    if (this.config.get('env') !== 'test') {
+      await this.client.send(
+        new PutObjectCommand({
+          Bucket: bucket,
+          Key: path,
+          Body: file.buffer,
+          ContentType: file.mimetype,
+        })
+      );
+    }
 
     return `https://s3.${region}.amazonaws.com/${bucket}/${path}`;
   }

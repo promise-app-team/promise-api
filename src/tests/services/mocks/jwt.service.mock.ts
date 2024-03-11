@@ -1,38 +1,29 @@
 import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
 
-import { MockUserID } from '@/tests/services/mocks/user.service.mock';
 import { partialMock } from '@/tests/utils/mock';
 
-export enum MockTokenStatus {
-  Valid = 'valid',
-  Invalid = 'invalid',
-  Expired = 'expired',
-  NotFound = 'not-found',
-  Unknown = 'unknown',
-}
+export const JWT_VALID_ID = 1;
+export const JWT_INVALID_ID = 404040;
 
-export const MockJwtService = partialMock<JwtService>({
+export const mockJwtService = partialMock<JwtService>({
   sign(payload: any): string {
     const id = +payload.id;
-
-    switch (id) {
-      case MockUserID.Valid:
-        return 'token';
-      default:
-        throw new Error();
+    if (id !== JWT_INVALID_ID) {
+      return 'token';
     }
+    throw new Error();
   },
 
-  verify(token: MockTokenStatus): any {
+  verify(token: string): any {
     switch (token) {
-      case MockTokenStatus.Valid:
-        return { id: `${MockUserID.Valid}` };
-      case MockTokenStatus.Invalid:
+      case 'valid':
+        return { id: JWT_VALID_ID };
+      case 'invalid':
         throw new JsonWebTokenError('invalid token');
-      case MockTokenStatus.Expired:
+      case 'expired':
         throw new TokenExpiredError('jwt expired', new Date());
-      case MockTokenStatus.NotFound:
-        return { id: `${MockUserID.NotFound}` };
+      case 'not-found':
+        return { id: 404 };
       default:
         throw new Error();
     }

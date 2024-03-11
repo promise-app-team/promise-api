@@ -3,7 +3,6 @@ import { Test } from '@nestjs/testing';
 import { TypedConfigService } from '@/config/env';
 import { S3ClientService } from '@/customs/s3-client';
 import { FileUploadService } from '@/modules/upload/upload.service';
-import { MockTypedConfigService } from '@/tests/services/mocks/typed-config.service.mock';
 
 describe(FileUploadService, () => {
   let uploadService: FileUploadService;
@@ -12,8 +11,8 @@ describe(FileUploadService, () => {
     const module = await Test.createTestingModule({
       providers: [
         FileUploadService,
-        { provide: S3ClientService, useValue: { send: () => {} } },
-        { provide: TypedConfigService, useValue: MockTypedConfigService },
+        { provide: S3ClientService, useValue: { send() {} } },
+        { provide: TypedConfigService, useValue: { get() {} } },
       ],
     }).compile();
 
@@ -26,12 +25,10 @@ describe(FileUploadService, () => {
 
   describe(FileUploadService.prototype.upload, () => {
     test('should upload a file', async () => {
-      const file = {
-        originalname: 'file.txt',
-        buffer: Buffer.from('file'),
-        mimetype: 'text/plain',
-      } as Express.Multer.File;
-      return expect(uploadService.upload(file)).resolves.toMatch(/^https:\/\/s3\..+\.amazonaws\.com\/.+/);
+      const file1 = { originalname: 'file' } as Express.Multer.File;
+      const file2 = { originalname: 'file.txt' } as Express.Multer.File;
+      await expect(uploadService.upload(file1)).resolves.toMatch(/^https:\/\/s3\..+\.amazonaws\.com\/.+/);
+      await expect(uploadService.upload(file2)).resolves.toMatch(/^https:\/\/s3\..+\.amazonaws\.com\/.+/);
     });
   });
 });

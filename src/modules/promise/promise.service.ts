@@ -16,16 +16,17 @@ export enum PromiseServiceError {
   HostDoNotCancel = '약속장은 약속을 취소할 수 없습니다.',
 }
 
-interface PromiseUniqueFilter {
+type PromiseOptionalFilter = {
   id?: number;
-}
-
-interface PromiseFilter {
   status?: PromiseStatus;
-  role?: PromiseUserRole;
-}
+};
 
-type PromiseFullFilter = PromiseUniqueFilter & PromiseFilter;
+type PromiseFilter =
+  | PromiseOptionalFilter
+  | (PromiseOptionalFilter & {
+      role: PromiseUserRole;
+      userId: number;
+    });
 
 const promiseInclude = {
   host: {
@@ -60,7 +61,7 @@ export class PromiseService {
 
   async findAllByUser(userId: number, condition?: PromiseFilter): Promise<PromiseResult[]> {
     return this.prisma.promise.findMany({
-      where: this.#makeFilter(condition ?? {}, userId),
+      where: this.#makeFilter(condition),
       include: promiseInclude,
     });
   }
@@ -316,27 +317,44 @@ export class PromiseService {
     return this.prisma.theme.findMany();
   }
 
-  #makeFilter(condition: PromiseFullFilter, userId?: number): Prisma.PromiseWhereUniqueInput;
-  #makeFilter(condition: PromiseFullFilter, userId?: number): Prisma.PromiseWhereInput;
-  #makeFilter(condition: PromiseFullFilter, userId?: number) {
-    const { id, status, role } = condition;
-
+  #makeFilter(condition?: PromiseFilter): Prisma.PromiseWhereUniqueInput;
+  #makeFilter(condition?: PromiseFilter): Prisma.PromiseWhereInput;
+  #makeFilter(condition?: PromiseFilter) {
+    if (!condition) return {};
+    const result = {} as Prisma.PromiseWhereInput | Prisma.PromiseWhereUniqueInput;
     const now = new Date();
-    return {
-      id,
 
-      ...(status &&
-        ifs([
-          [status === PromiseStatus.AVAILABLE, { promisedAt: { gte: now }, completedAt: null }],
-          [status === PromiseStatus.UNAVAILABLE, { OR: [{ promisedAt: { lt: now } }, { completedAt: { not: null } }] }],
-        ])),
+    if (condition.id) {
+      result.id = condition.id;
+    }
 
-      ...(role &&
-        ifs([
-          [role === PromiseUserRole.ALL, { users: { some: { userId } } }],
-          [role === PromiseUserRole.HOST, { hostId: userId }],
-          [role === PromiseUserRole.ATTENDEE, { hostId: { not: userId }, users: { some: { userId: userId } } }],
-        ])),
-    } as Prisma.PromiseWhereInput | Prisma.PromiseWhereUniqueInput;
+    if ('status' in condition) {
+      switch (condition.status) {
+        case PromiseStatus.AVAILABLE:
+          result.promisedAt = { gte: now };
+          result.completedAt = null;
+          break;
+        case PromiseStatus.UNAVAILABLE:
+          result.OR = [{ promisedAt: { lt: now } }, { completedAt: { not: null } }];
+          break;
+      }
+    }
+
+    if ('role' in condition) {
+      switch (condition.role) {
+        case PromiseUserRole.ALL:
+          result.users = { some: { userId: condition.userId } };
+          break;
+        case PromiseUserRole.HOST:
+          result.hostId = condition.userId;
+          break;
+        case PromiseUserRole.ATTENDEE:
+          result.hostId = { not: condition.userId };
+          result.users = { some: { userId: condition.userId } };
+          break;
+      }
+    }
+
+    return result;
   }
 }

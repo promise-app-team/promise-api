@@ -1,4 +1,6 @@
-include .env.local
+env ?= .env.local
+
+include $(env)
 export
 
 https := $(shell git rev-parse --show-toplevel)/https

@@ -3,11 +3,11 @@ version: '3'
 services:
   mysql:
     image: mysql:8.3
-    container_name: promise-api.mysql
+    container_name: ${STAGE}.promise-api.mysql
     ports:
       - ${DB_PORT}:3306
     volumes:
-      - ./dockerdata/mysql:/var/lib/mysql
+      - ./dockerdata/mysql.${STAGE}:/var/lib/mysql
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
