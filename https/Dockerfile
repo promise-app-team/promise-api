@@ -16,7 +16,7 @@ ARG HTTPS
 ENV HTTPS=$HTTPS
 
 RUN <<EOF
-for file in ./conf.d/promise.conf ./html/502.html; do
+for file in ./conf.d/api.promise.conf ./html/502.html; do
   envsubst '$PORT $HTTPS' <$file >$file.tmp
   mv $file.tmp $file
   rm -f $file.tmp
