@@ -1,51 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
 
-import { LoggerService } from '@/customs/logger';
-
 @Injectable()
-export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'query' | 'info' | 'warn' | 'error'> {
-  constructor(private readonly logger: LoggerService) {
-    super({
-      log: [
-        {
-          emit: 'event',
-          level: 'query',
-        },
-        {
-          emit: 'event',
-          level: 'info',
-        },
-        {
-          emit: 'event',
-          level: 'warn',
-        },
-        {
-          emit: 'event',
-          level: 'error',
-        },
-      ],
-    });
-
-    this.$on('query', ({ query, params, duration }) => {
-      const sanitizedQuery = query
-        .replace(/^SELECT\s+(.*?)\s+FROM/, 'SELECT * FROM')
-        .replace(/`promise[\-a-z]+?`\./g, '')
-        .replace(/\((?<table>`.+?`).(?<field>`.+?`)\)/g, '$<table>.$<field>');
-
-      const _params = JSON.parse(params);
-      const injectedQuery = sanitizedQuery.replace(/\?/g, () => {
-        const value = _params.shift();
-        if (typeof value === 'string') {
-          return `'${value}'`;
-        }
-        return value;
-      });
-
-      logger.log(`${injectedQuery}`, {
-        label: 'Query',
-        ms: duration,
-      });
-    });
+export class PrismaService extends PrismaClient {
+  constructor(private readonly options?: Prisma.PrismaClientOptions) {
+    super(options);
   }
 }

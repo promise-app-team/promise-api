@@ -6,7 +6,7 @@ import { AppController } from '@/app/app.controller';
 import { CommonModule } from '@/common';
 import { TypedConfigService, extraEnv } from '@/config/env';
 import { schema } from '@/config/validation';
-import { LoggerModule } from '@/customs/logger';
+import { LoggerModule, LoggerService } from '@/customs/logger';
 import { TypedConfigModule } from '@/customs/typed-config';
 import { AuthModule } from '@/modules/auth/auth.module';
 import { EventModule } from '@/modules/event/event.module';
@@ -46,13 +46,50 @@ import { PrismaModule } from '@/prisma/prisma.module';
         'WebSocketsController',
       ],
     }),
+    PrismaModule.forRootAsync({
+      isGlobal: true,
+      inject: [LoggerService, TypedConfigService],
+      useFactory(logger: LoggerService, config: TypedConfigService) {
+        return {
+          log: [
+            { level: 'info', emit: 'event' },
+            { level: 'query', emit: 'event' },
+            { level: 'warn', emit: 'event' },
+            { level: 'error', emit: 'event' },
+          ],
+          errorFormat: config.get('colorize.log') ? 'pretty' : 'colorless',
+          transform(prisma) {
+            prisma.$on('query', ({ query, params, duration }) => {
+              const sanitizedQuery = query
+                .replace(/^SELECT\s+(.*?)\s+FROM/, 'SELECT * FROM')
+                .replace(/`promise[\-a-z]+?`\./g, '')
+                .replace(/\((?<table>`.+?`).(?<field>`.+?`)\)/g, '$<table>.$<field>');
+
+              const _params = JSON.parse(params);
+              const injectedQuery = sanitizedQuery.replace(/\?/g, () => {
+                const value = _params.shift();
+                if (typeof value === 'string') {
+                  return `'${value}'`;
+                }
+                return value;
+              });
+
+              logger.log(`${injectedQuery}`, {
+                label: 'Query',
+                ms: duration,
+              });
+            });
+            return prisma;
+          },
+        };
+      },
+    }),
     AuthModule,
     UserModule,
     EventModule,
     PromiseModule,
     FileUploadModule,
     CommonModule,
-    PrismaModule,
   ],
   controllers: [AppController],
 })

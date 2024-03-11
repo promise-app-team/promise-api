@@ -14,6 +14,7 @@ export const extraEnv = () => {
     build: BUILD,
     deploy: formatISO(process.env.NOW || new Date()),
     version: '0.0.0', // TODO: versioning
+    'colorize.log': !process.env.NO_COLOR,
     jwt: {
       secret: process.env.JWT_SECRET_KEY,
       expires: {

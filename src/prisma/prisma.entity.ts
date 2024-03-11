@@ -85,7 +85,7 @@ export class UserEntity implements UserPayload {
   profileUrl!: string | null;
 
   provider!: Provider;
-  providerId!: string | null;
+  providerId!: string;
 
   lastSignedAt!: Date;
   deletedAt!: Date | null;
