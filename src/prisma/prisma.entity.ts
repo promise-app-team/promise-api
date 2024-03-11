@@ -31,31 +31,31 @@ export enum LocationShareType {
   TIME = 'TIME',
 }
 
-const promiseUserInclude: Prisma.PromiseUserInclude = {
+const promiseUserInclude = {
   user: true,
   promise: true,
   startLocation: true,
-};
+} satisfies Prisma.PromiseUserInclude;
 
-const promiseThemeInclude: Prisma.PromiseThemeInclude = {
+const promiseThemeInclude = {
   theme: true,
   promise: true,
-};
+} satisfies Prisma.PromiseThemeInclude;
 
-const userInclude: Prisma.UserInclude = {
+const userInclude = {
   myPromises: true,
   promises: {
     include: promiseUserInclude,
   },
-};
+} satisfies Prisma.UserInclude;
 
-const themeInclude: Prisma.ThemeInclude = {
+const themeInclude = {
   promises: {
     include: promiseThemeInclude,
   },
-};
+} satisfies Prisma.ThemeInclude;
 
-const promiseInclude: Prisma.PromiseInclude = {
+const promiseInclude = {
   host: true,
   users: {
     include: promiseUserInclude,
@@ -64,12 +64,12 @@ const promiseInclude: Prisma.PromiseInclude = {
     include: promiseThemeInclude,
   },
   destination: true,
-};
+} satisfies Prisma.PromiseInclude;
 
-const locationInclude: Prisma.LocationInclude = {
+const locationInclude = {
   promises: true,
   promiseUsers: true,
-};
+} satisfies Prisma.LocationInclude;
 
 type UserPayload = Prisma.UserGetPayload<{ include: typeof userInclude }>;
 type ThemePayload = Prisma.ThemeGetPayload<{ include: typeof themeInclude }>;
@@ -126,7 +126,7 @@ export class ThemeModel extends PickType(ThemeEntity, ['id', 'name']) {}
 
 export class PromiseEntity implements PromisePayload {
   id!: number;
-  pid!: string;
+  pid!: string; // only for type
 
   title!: string;
 
@@ -161,7 +161,7 @@ export class PromiseEntity implements PromisePayload {
 
 export class PromiseModel extends PickType(PromiseEntity, [
   'id',
-  'pid',
+  'pid', // only for type
   'title',
   'hostId',
   'destinationType',

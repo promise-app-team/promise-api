@@ -1,18 +1,11 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Prisma, PrismaClient } from '@prisma/client';
 
-import { HasherService } from '@/common';
 import { LoggerService } from '@/customs/logger';
 
 @Injectable()
-export class PrismaService
-  extends PrismaClient<Prisma.PrismaClientOptions, 'query' | 'info' | 'warn' | 'error'>
-  implements OnModuleInit
-{
-  constructor(
-    private readonly logger: LoggerService,
-    private readonly hasher: HasherService
-  ) {
+export class PrismaService extends PrismaClient<Prisma.PrismaClientOptions, 'query' | 'info' | 'warn' | 'error'> {
+  constructor(private readonly logger: LoggerService) {
     super({
       log: [
         {
@@ -54,21 +47,5 @@ export class PrismaService
         ms: duration,
       });
     });
-  }
-
-  onModuleInit() {
-    Object.assign(
-      this,
-      this.$extends({
-        result: {
-          promise: {
-            pid: {
-              needs: { id: true },
-              compute: (data) => this.hasher.encode(data.id),
-            },
-          },
-        },
-      })
-    );
   }
 }

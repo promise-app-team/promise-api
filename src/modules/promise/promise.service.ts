@@ -2,23 +2,22 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { difference, map, pick, pipe } from 'remeda';
 
-import { HasherService } from '@/common';
 import { InputCreatePromiseDTO, InputLocationDTO, PromiseUserRole, PromiseStatus } from '@/modules/promise/promise.dto';
 import { PrismaClientError } from '@/prisma/error-handler';
 import { LocationModel, ThemeModel } from '@/prisma/prisma.entity';
 import { PrismaService } from '@/prisma/prisma.service';
-import { ifs, guard } from '@/utils/guard';
+import { ifs } from '@/utils/guard';
 
 export enum PromiseServiceError {
   NotFoundPromise = '약속을 찾을 수 없습니다.',
   NotFoundStartLocation = '등록한 출발지가 없습니다.',
   AlreadyAttend = '이미 참여한 약속입니다.',
-  CannotCancel = '약속장은 약속을 취소할 수 없습니다.',
+  HostChangeOnly = '약속장만 약속을 수정할 수 있습니다.',
+  HostDoNotCancel = '약속장은 약속을 취소할 수 없습니다.',
 }
 
 interface PromiseUniqueFilter {
   id?: number;
-  pid?: string;
 }
 
 interface PromiseFilter {
@@ -28,7 +27,7 @@ interface PromiseFilter {
 
 type PromiseFullFilter = PromiseUniqueFilter & PromiseFilter;
 
-const promiseInclude: Prisma.PromiseInclude = {
+const promiseInclude = {
   host: {
     select: {
       id: true,
@@ -43,20 +42,17 @@ const promiseInclude: Prisma.PromiseInclude = {
     select: { theme: true },
   },
   destination: true,
-};
+} satisfies Prisma.PromiseInclude;
 
 export type PromiseResult = Prisma.PromiseGetPayload<{ include: typeof promiseInclude }>;
 
 @Injectable()
 export class PromiseService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly hasher: HasherService
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
-  async exists(pid: string): Promise<boolean> {
+  async exists(id: number, condition?: PromiseFilter): Promise<boolean> {
     const exists = await this.prisma.promise.findUnique({
-      where: { id: +this.hasher.decode(pid) },
+      where: this.#makeFilter({ id, ...condition }),
       select: { id: true },
     });
     return !!exists;
@@ -73,9 +69,9 @@ export class PromiseService {
    *
    * @throws {PromiseServiceError.NotFoundPromise}
    */
-  async findOneByPid(pid: string, condition?: PromiseFilter): Promise<PromiseResult> {
+  async findOneById(id: number, condition?: PromiseFilter): Promise<PromiseResult> {
     const user = await this.prisma.promise.findUnique({
-      where: this.#makeFilter({ pid, ...condition }),
+      where: this.#makeFilter({ id, ...condition }),
       include: promiseInclude,
     });
 
@@ -127,81 +123,66 @@ export class PromiseService {
    *
    * @throws {PromiseServiceError.NotFoundPromise}
    */
-  async update(pid: string, hostId: number, input: InputCreatePromiseDTO): Promise<PromiseResult> {
-    return this.prisma.$transaction(async (tx) => {
-      const id = +this.hasher.decode(pid);
+  async update(id: number, hostId: number, input: InputCreatePromiseDTO): Promise<PromiseResult> {
+    const promise = await this.prisma.promise.findUnique({
+      where: { id, hostId },
+      select: { id: true, destinationId: true },
+    });
 
-      const promise = await tx.promise.findUnique({
-        where: { id, hostId },
-        select: { id: true, destinationId: true },
-      });
+    if (!promise) {
+      throw PromiseServiceError.HostChangeOnly;
+    }
 
-      if (!promise) {
-        throw PromiseServiceError.NotFoundPromise;
-      }
+    const themes = await this.prisma.promiseTheme.findMany({
+      where: { promiseId: id },
+    });
 
-      const themes = await tx.promiseTheme.findMany({
-        where: { promiseId: id },
-      });
+    const destination = await this.prisma.location.findUnique({
+      where: { id: promise.destinationId ?? 0 },
+    });
 
-      return tx.promise.update({
-        where: { id, hostId },
-        data: {
-          ...pick(input, [
-            'title',
-            'destinationType',
-            'locationShareStartType',
-            'locationShareStartValue',
-            'locationShareEndType',
-            'locationShareEndValue',
-            'promisedAt',
-          ]),
-          themes: {
-            deleteMany: {
-              themeId: {
-                in: pipe(
-                  themes,
-                  map((theme) => theme.themeId),
-                  difference(input.themeIds)
-                ),
-              },
-            },
-            createMany: {
-              data: pipe(
-                input.themeIds,
-                difference(map(themes, (theme) => theme.themeId)),
-                map((themeId) => ({ themeId }))
+    return this.prisma.promise.update({
+      where: { id, hostId },
+      data: {
+        ...pick(input, [
+          'title',
+          'destinationType',
+          'locationShareStartType',
+          'locationShareStartValue',
+          'locationShareEndType',
+          'locationShareEndValue',
+          'promisedAt',
+        ]),
+        themes: {
+          deleteMany: {
+            themeId: {
+              in: pipe(
+                themes,
+                map((theme) => theme.themeId),
+                difference(input.themeIds)
               ),
             },
           },
-          destination: {
-            connect: input.destination
-              ? await tx.location.upsert({
-                  where: { id: promise.destinationId ?? 0 },
-                  create: input.destination,
-                  update: input.destination,
-                })
-              : await guard(
-                  async () =>
-                    (await tx.location.delete({
-                      where: { id: promise.destinationId ?? 0 },
-                    })) && undefined
-                ),
+          createMany: {
+            data: pipe(
+              input.themeIds,
+              difference(map(themes, (theme) => theme.themeId)),
+              map((themeId) => ({ themeId }))
+            ),
           },
-          // TODO: https://github.com/prisma/prisma/issues/4072#issue-731421569
-          // destination: input.destination
-          //   ? {
-          //       upsert: {
-          //         create: input.destination,
-          //         update: input.destination,
-          //       },
-          //     }
-          //   : {
-          //       delete: true,
-          //     },
         },
-        include: promiseInclude,
-      });
+        destination: input.destination
+          ? {
+              upsert: {
+                create: input.destination,
+                update: input.destination,
+              },
+            }
+          : {
+              delete: !!destination,
+            },
+      },
+      include: promiseInclude,
     });
   }
 
@@ -209,30 +190,51 @@ export class PromiseService {
    * @throws {PromiseServiceError.NotFoundPromise}
    * @throws {PromiseServiceError.NotFoundStartLocation}
    */
-  async getStartLocation(pid: string, userId: number): Promise<LocationModel> {
-    return this.prisma.$transaction(async (tx) => {
-      const promiseUser = await tx.promiseUser.findFirst({
-        where: { userId, promiseId: +this.hasher.decode(pid) },
-        select: { startLocationId: true },
-      });
+  async getStartLocation(id: number, userId: number): Promise<LocationModel> {
+    const promise = await this.findOneById(id, { role: PromiseUserRole.HOST, status: PromiseStatus.AVAILABLE });
 
-      if (!promiseUser) {
-        throw PromiseServiceError.NotFoundPromise;
-      }
+    const promiseUser = await this.prisma.promiseUser.findFirst({
+      where: { userId, promiseId: promise.id },
+      include: { startLocation: true },
+    });
 
-      if (!promiseUser.startLocationId) {
-        throw PromiseServiceError.NotFoundStartLocation;
-      }
+    if (!promiseUser) {
+      throw PromiseServiceError.NotFoundPromise;
+    }
 
-      const location = await tx.location.findUnique({
-        where: { id: promiseUser.startLocationId },
-      });
+    if (!promiseUser.startLocationId) {
+      throw PromiseServiceError.NotFoundStartLocation;
+    }
 
-      if (!location) {
-        throw PromiseServiceError.NotFoundStartLocation;
-      }
+    const location = await this.prisma.location.findUnique({
+      where: { id: promiseUser.startLocationId },
+    });
 
-      return location;
+    if (!location) {
+      throw PromiseServiceError.NotFoundStartLocation;
+    }
+
+    return location;
+  }
+
+  /**
+   * @throws {PromiseServiceError.NotFoundPromise}
+   */
+  async updateStartLocation(id: number, attendeeId: number, input: InputLocationDTO): Promise<LocationModel> {
+    const promise = await this.findOneById(id, { role: PromiseUserRole.HOST, status: PromiseStatus.AVAILABLE });
+
+    const promiseUser = await this.prisma.promiseUser.findFirst({
+      where: { userId: attendeeId, promiseId: promise.id },
+      select: { startLocationId: true },
+    });
+    if (!promiseUser) {
+      throw PromiseServiceError.NotFoundPromise;
+    }
+
+    return this.prisma.location.upsert({
+      where: { id: promiseUser.startLocationId ?? 0 },
+      create: input,
+      update: input,
     });
   }
 
@@ -240,39 +242,8 @@ export class PromiseService {
    * @throws {PromiseServiceError.NotFoundPromise}
    * @throws {PromiseServiceError.NotFoundStartLocation}
    */
-  async updateStartLocation(pid: string, attendeeId: number, input: InputLocationDTO): Promise<LocationModel> {
+  async deleteStartLocation(id: number, userId: number): Promise<void> {
     return this.prisma.$transaction(async (tx) => {
-      const id = +this.hasher.decode(pid);
-
-      const promiseUser = await tx.promiseUser.findFirst({
-        where: { userId: attendeeId, promiseId: id },
-        select: { startLocationId: true },
-      });
-
-      if (!promiseUser) {
-        throw PromiseServiceError.NotFoundPromise;
-      }
-
-      if (!promiseUser.startLocationId) {
-        throw PromiseServiceError.NotFoundStartLocation;
-      }
-
-      return tx.location.upsert({
-        where: { id: promiseUser.startLocationId },
-        create: input,
-        update: input,
-      });
-    });
-  }
-
-  /**
-   * @throws {PromiseServiceError.NotFoundPromise}
-   * @throws {PromiseServiceError.NotFoundStartLocation}
-   */
-  async deleteStartLocation(pid: string, userId: number): Promise<void> {
-    return this.prisma.$transaction(async (tx) => {
-      const id = +this.hasher.decode(pid);
-
       const promiseUser = await tx.promiseUser.findFirst({
         where: { userId, promiseId: id },
         select: { startLocationId: true },
@@ -288,7 +259,7 @@ export class PromiseService {
     });
   }
 
-  async attend(pid: string, userId: number): Promise<{ pid: string }> {
+  async attend(id: number, userId: number): Promise<{ id: number }> {
     return this.prisma.promiseUser
       .create({
         data: {
@@ -298,13 +269,12 @@ export class PromiseService {
             },
           },
           promise: {
-            connect: this.#makeFilter({ pid, status: PromiseStatus.AVAILABLE }),
+            connect: this.#makeFilter({ id, status: PromiseStatus.AVAILABLE }),
           },
         },
+        select: { promiseId: true },
       })
-      .then(({ promiseId }) => ({
-        pid: this.hasher.encode(promiseId),
-      }))
+      .then(({ promiseId }) => ({ id: promiseId }))
       .catch((error) => {
         switch (PrismaClientError.from(error)?.code) {
           case 'P2002':
@@ -319,12 +289,12 @@ export class PromiseService {
 
   /**
    * @throws {PromiseServiceError.NotFoundPromise}
-   * @throws {PromiseServiceError.CannotCancel}
+   * @throws {PromiseServiceError.HostDoNotCancel}
    */
-  async leave(pid: string, userId: number): Promise<void> {
+  async leave(id: number, userId: number): Promise<void> {
     return this.prisma.$transaction(async (tx) => {
       const promise = await tx.promise.findUnique({
-        where: this.#makeFilter({ pid, status: PromiseStatus.AVAILABLE }),
+        where: this.#makeFilter({ id, status: PromiseStatus.AVAILABLE }),
         select: { id: true, hostId: true, promisedAt: true, completedAt: true },
       });
 
@@ -333,7 +303,7 @@ export class PromiseService {
       }
 
       if (promise.hostId === userId) {
-        throw PromiseServiceError.CannotCancel;
+        throw PromiseServiceError.HostDoNotCancel;
       }
 
       await tx.promiseUser.delete({
@@ -349,8 +319,7 @@ export class PromiseService {
   #makeFilter(condition: PromiseFullFilter, userId?: number): Prisma.PromiseWhereUniqueInput;
   #makeFilter(condition: PromiseFullFilter, userId?: number): Prisma.PromiseWhereInput;
   #makeFilter(condition: PromiseFullFilter, userId?: number) {
-    const { pid, status, role } = condition;
-    const { id = pid ? +this.hasher.decode(pid) : undefined } = condition;
+    const { id, status, role } = condition;
 
     const now = new Date();
     return {

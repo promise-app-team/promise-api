@@ -1,3 +1,4 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -9,11 +10,12 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  Length,
   MaxLength,
   Min,
   ValidateNested,
 } from 'class-validator';
-import { addMinutes } from 'date-fns';
+import { addMinutes, addWeeks, formatISO } from 'date-fns';
 import { filter, map, pipe } from 'remeda';
 
 import { IsAfter, ApplyDTO } from '@/common';
@@ -68,68 +70,76 @@ export class PromiseDTO extends ApplyDTO(
 export class PublicPromiseDTO extends PromiseDTO {}
 
 export class InputLocationDTO {
-  @IsString()
-  @MaxLength(50)
-  @IsNotEmpty()
+  @IsString({ message: '시/도 이름을 입력해주세요.' })
+  @Length(2, 50, { message: '시/도 이름을 2자 이상 50자 이하로 입력해주세요.' })
+  @ApiProperty({ example: '서울' })
   city!: string;
 
-  @IsString()
-  @MaxLength(50)
-  @IsNotEmpty()
+  @IsString({ message: '구/군 이름을 입력해주세요.' })
+  @Length(2, 50, { message: '구/군 이름을 2자 이상 50자 이하로 입력해주세요.' })
+  @ApiProperty({ example: '강남구' })
   district!: string;
 
-  @IsString()
   @IsOptional()
-  @MaxLength(100)
+  @IsString({ message: '상세 주소를 입력해주세요.' })
+  @MaxLength(100, { message: '상세 주소는 최대 100자까지 입력 가능합니다.' })
+  @ApiPropertyOptional({ example: '강남대로 123' })
   address?: string;
 
-  @IsLatitude()
-  @IsNotEmpty()
+  @IsLatitude({ message: '위도 값을 입력해주세요.' })
+  @ApiProperty({ example: 37.123456 })
   latitude!: number;
 
-  @IsLongitude()
-  @IsNotEmpty()
+  @IsLongitude({ message: '경도 값을 입력해주세요.' })
+  @ApiProperty({ example: 127.123456 })
   longitude!: number;
 }
 
 export class InputCreatePromiseDTO {
-  @IsString()
-  @MaxLength(50)
+  @IsString({ message: '약속 제목을 입력해주세요.' })
+  @MaxLength(50, { message: '약속 제목은 최대 50자까지 입력 가능합니다.' })
   @IsNotEmpty({ message: '약속 제목을 입력해주세요.' })
+  @ApiProperty({ example: '새로운 약속' })
   title!: string;
 
   @IsArray({ message: '약속 테마를 선택해주세요.' })
-  @IsInt({ each: true })
+  @IsInt({ each: true, message: '약속 테마를 선택해주세요.' })
   @Min(1, { each: true })
+  @ApiProperty({ example: [1] })
   themeIds!: number[];
 
-  @IsISO8601({ strict: true })
-  @IsAfter(() => addMinutes(new Date(), 10))
+  @IsISO8601({ strict: true }, { message: '약속 시간을 입력해주세요.' })
+  @IsAfter(() => addMinutes(new Date(), 10), { message: '약속 시간은 현재 시간보다 10분 이후로 입력해주세요.' })
+  @ApiProperty({ example: formatISO(addWeeks(new Date(), 1)) })
   promisedAt!: string;
 
-  @IsEnum(DestinationType)
+  @IsEnum(DestinationType, { message: '약속 장소 타입을 선택해주세요.' })
+  @ApiProperty({ enum: DestinationType, example: DestinationType.STATIC })
   destinationType!: DestinationType;
 
   @ValidateNested()
   @IsOptional()
   @Type(() => InputLocationDTO)
+  @ApiProperty()
   destination!: InputLocationDTO | null;
 
-  @IsEnum(LocationShareType)
+  @IsEnum(LocationShareType, { message: '위치 공유 시작 조건을 선택해주세요.' })
+  @ApiProperty({ example: LocationShareType.TIME })
   locationShareStartType!: LocationShareType;
 
-  @IsInt()
-  @Min(0)
+  @IsInt({ message: '위치 공유 시작 조건 값을 입력해주세요.' })
+  @Min(0, { message: '최소 0 이상의 값을 입력해주세요.' })
+  @ApiProperty({ example: 5 })
   locationShareStartValue!: number;
 
-  @IsEnum(LocationShareType)
+  @IsEnum(LocationShareType, { message: '위치 공유 종료 조건을 선택해주세요.' })
+  @ApiProperty({ example: LocationShareType.DISTANCE })
   locationShareEndType!: LocationShareType;
 
-  @IsInt()
-  @Min(0)
+  @IsInt({ message: '위치 공유 종료 조건 값을 입력해주세요.' })
+  @Min(0, { message: '최소 0 이상의 값을 입력해주세요.' })
+  @ApiProperty({ example: 5 })
   locationShareEndValue!: number;
 }
 
 export class InputUpdatePromiseDTO extends InputCreatePromiseDTO {}
-
-export class PromisePidDTO extends ApplyDTO(PromiseEntity, ['pid']) {}
