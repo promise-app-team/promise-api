@@ -1,7 +1,7 @@
 import { Controller } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { EntryDTO } from '@/app/entry.dto';
+import { EntryDTO } from '@/app/app.dto';
 import { TypedConfigService } from '@/config/env';
 import { Get } from '@/customs/nest';
 

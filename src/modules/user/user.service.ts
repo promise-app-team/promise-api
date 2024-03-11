@@ -13,9 +13,9 @@ export enum UserServiceError {
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findOneById(userId: number): Promise<User> {
+  async findOneById(id: number): Promise<User> {
     const user = await this.prisma.user.findUnique({
-      where: { id: userId, deletedAt: null },
+      where: { id, deletedAt: null },
     });
 
     if (!user) {
