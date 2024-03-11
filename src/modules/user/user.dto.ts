@@ -1,7 +1,7 @@
 import { IsEnum, IsOptional, IsString, Length } from 'class-validator';
 
 import { IsProfileUrl, ApplyDTO } from '@/common';
-import { Provider, UserEntity } from '@/prisma';
+import { Provider, UserEntity } from '@/prisma/prisma.entity';
 
 export class UserDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl', 'provider', 'createdAt']) {}
 export class HostDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl']) {}

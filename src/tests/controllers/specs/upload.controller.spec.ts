@@ -16,8 +16,8 @@ describe(FileUploadController, () => {
     const module = await Test.createTestingModule({
       controllers: [FileUploadController],
       providers: [
-        { provide: JwtService, useValue: MockJwtService }, // ?
-        { provide: UserService, useValue: MockUserService }, // ?
+        { provide: JwtService, useValue: MockJwtService },
+        { provide: UserService, useValue: MockUserService },
         { provide: FileUploadService, useValue: MockFileUploadService },
       ],
     }).compile();

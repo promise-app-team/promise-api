@@ -13,7 +13,7 @@ import { EventModule } from '@/modules/event/event.module';
 import { PromiseModule } from '@/modules/promise/promise.module';
 import { FileUploadModule } from '@/modules/upload/upload.module';
 import { UserModule } from '@/modules/user/user.module';
-import { PrismaModule } from '@/prisma';
+import { PrismaModule } from '@/prisma/prisma.module';
 
 @Module({
   imports: [

@@ -1,3 +1,4 @@
+import { PickType } from '@nestjs/mapped-types';
 import {
   Prisma,
   Provider as ProviderEnum,
@@ -102,6 +103,17 @@ export class UserEntity implements UserPayload {
   };
 }
 
+export class UserModel extends PickType(UserEntity, [
+  'id',
+  'username',
+  'profileUrl',
+  'provider',
+  'providerId',
+  'lastSignedAt',
+  'createdAt',
+  'updatedAt',
+]) {}
+
 export class ThemeEntity implements ThemePayload {
   id!: number;
   name!: string;
@@ -109,6 +121,8 @@ export class ThemeEntity implements ThemePayload {
 
   _count: { promises: number };
 }
+
+export class ThemeModel extends PickType(ThemeEntity, ['id', 'name']) {}
 
 export class PromiseEntity implements PromisePayload {
   id!: number;
@@ -145,6 +159,23 @@ export class PromiseEntity implements PromisePayload {
   };
 }
 
+export class PromiseModel extends PickType(PromiseEntity, [
+  'id',
+  'pid',
+  'title',
+  'hostId',
+  'destinationType',
+  'destinationId',
+  'locationShareStartType',
+  'locationShareStartValue',
+  'locationShareEndType',
+  'locationShareEndValue',
+  'promisedAt',
+  'completedAt',
+  'createdAt',
+  'updatedAt',
+]) {}
+
 export class LocationEntity implements LocationPayload {
   id!: number;
   city: string | null;
@@ -165,6 +196,17 @@ export class LocationEntity implements LocationPayload {
   };
 }
 
+export class LocationModel extends PickType(LocationEntity, [
+  'id',
+  'city',
+  'district',
+  'address',
+  'latitude',
+  'longitude',
+  'createdAt',
+  'updatedAt',
+]) {}
+
 export class PromiseUserEntity implements PromiseUserPayload {
   userId!: number;
   user!: UserEntity;
@@ -179,6 +221,14 @@ export class PromiseUserEntity implements PromiseUserPayload {
   updatedAt!: Date;
 }
 
+export class PromiseUserModel extends PickType(PromiseUserEntity, [
+  'userId',
+  'promiseId',
+  'startLocationId',
+  'createdAt',
+  'updatedAt',
+]) {}
+
 export class PromiseThemeEntity implements PromiseThemePayload {
   themeId!: number;
   theme!: ThemeEntity;
@@ -189,3 +239,10 @@ export class PromiseThemeEntity implements PromiseThemePayload {
   createdAt!: Date;
   updatedAt!: Date;
 }
+
+export class PromiseThemeModel extends PickType(PromiseThemeEntity, [
+  'themeId',
+  'promiseId',
+  'createdAt',
+  'updatedAt',
+]) {}

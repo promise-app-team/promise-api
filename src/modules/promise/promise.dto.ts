@@ -19,7 +19,7 @@ import { filter, map, pipe } from 'remeda';
 import { IsAfter, ApplyDTO } from '@/common';
 import { LocationDTO } from '@/modules/promise/location.dto';
 import { AttendeeDTO, HostDTO } from '@/modules/user/user.dto';
-import { DestinationType, LocationShareType, PromiseEntity } from '@/prisma';
+import { DestinationType, LocationShareType, PromiseEntity } from '@/prisma/prisma.entity';
 
 export enum PromiseStatus {
   ALL = 'all',

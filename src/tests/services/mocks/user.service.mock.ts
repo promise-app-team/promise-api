@@ -2,7 +2,7 @@ import { User } from '@prisma/client';
 
 import { InputCreateUserDTO, InputUpdateUserDTO } from '@/modules/user/user.dto';
 import { UserService, UserServiceError } from '@/modules/user/user.service';
-import { Provider } from '@/prisma';
+import { Provider } from '@/prisma/prisma.entity';
 import { _fixture_validUser } from '@/tests/fixtures/users';
 import { after, sleep } from '@/tests/utils/async';
 import { mock } from '@/tests/utils/mock';

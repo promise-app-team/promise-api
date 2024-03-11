@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Provider, User } from '@prisma/client';
 
 import { InputCreateUserDTO, InputUpdateUserDTO } from '@/modules/user/user.dto';
-import { PrismaClientError, PrismaService } from '@/prisma';
+import { PrismaClientError } from '@/prisma/error-handler';
+import { PrismaService } from '@/prisma/prisma.service';
 
 export enum UserServiceError {
   NotFoundUser = '사용자를 찾을 수 없습니다.',

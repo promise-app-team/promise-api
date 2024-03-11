@@ -19,7 +19,7 @@ import {
 } from '@/modules/promise/promise.dto';
 import { PromiseService, PromiseServiceError } from '@/modules/promise/promise.service';
 import { ThemeDTO } from '@/modules/promise/theme.dto';
-import { UserEntity } from '@/prisma';
+import { UserModel } from '@/prisma/prisma.entity';
 
 @ApiTags('Promise')
 @ApiBearerAuth()
@@ -34,12 +34,12 @@ export class PromiseController {
   @ApiQuery({ name: 'status', enum: PromiseStatus, required: false })
   @ApiQuery({ name: 'role', enum: PromiseUserRole, required: false })
   async getMyPromises(
-    @AuthUser() user: UserEntity,
+    @AuthUser() user: UserModel,
     @Query('status') status: PromiseStatus = PromiseStatus.ALL,
     @Query('role') role: PromiseUserRole = PromiseUserRole.ALL
   ): Promise<PromiseDTO[]> {
     return this.promiseService
-      .findAllByUser(user, { status, role })
+      .findAllByUser(user.id, { status, role })
       .then((promises) => promises.map((promise) => PromiseDTO.from(promise)));
   }
 
@@ -59,27 +59,39 @@ export class PromiseController {
   }
 
   @Post('', { auth: true, description: '약속을 생성합니다.', exceptions: ['BAD_REQUEST'] })
-  async createPromise(@AuthUser() user: UserEntity, @Body() input: InputCreatePromiseDTO): Promise<PublicPromiseDTO> {
-    return this.promiseService.create(user, input).then((promise) => PublicPromiseDTO.from(promise));
+  async createPromise(@AuthUser() user: UserModel, @Body() input: InputCreatePromiseDTO): Promise<PublicPromiseDTO> {
+    return this.promiseService.create(user.id, input).then((promise) => PublicPromiseDTO.from(promise));
   }
 
   @Put(':pid', { auth: true, description: '약속을 수정합니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
   async updatePromise(
-    @AuthUser() user: UserEntity,
+    @AuthUser() user: UserModel,
     @Param('pid') pid: string,
     @Body() input: InputUpdatePromiseDTO
   ): Promise<PublicPromiseDTO> {
-    return this.promiseService.update(pid, user, input).then((promise) => PublicPromiseDTO.from(promise));
+    return this.promiseService.update(pid, user.id, input).then((promise) => PublicPromiseDTO.from(promise));
   }
 
   @Post(':pid/attendees', { auth: true, description: '약속에 참여합니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
-  async attendPromise(@AuthUser() user: UserEntity, @Param('pid') pid: string): Promise<PromisePidDTO> {
-    return this.promiseService.attend(pid, user).then((promise) => PromisePidDTO.from(promise));
+  async attendPromise(@AuthUser() user: UserModel, @Param('pid') pid: string): Promise<PromisePidDTO> {
+    return this.promiseService
+      .attend(pid, user.id)
+      .then((promise) => PromisePidDTO.from(promise))
+      .catch((error) => {
+        switch (error) {
+          case PromiseServiceError.AlreadyAttend:
+            throw HttpException.new(error, 'BAD_REQUEST');
+          case PromiseServiceError.NotFoundPromise:
+            throw HttpException.new(error, 'NOT_FOUND');
+          default:
+            throw HttpException.new(error);
+        }
+      });
   }
 
   @Delete(':pid/attendees', { auth: true, description: '약속을 떠납니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
-  async leavePromise(@AuthUser() user: UserEntity, @Param('pid') pid: string) {
-    await this.promiseService.leave(pid, user);
+  async leavePromise(@AuthUser() user: UserModel, @Param('pid') pid: string) {
+    await this.promiseService.leave(pid, user.id);
   }
 
   @Get(':pid/start-location', {
@@ -87,9 +99,9 @@ export class PromiseController {
     description: '약속 출발지를 불러옵니다.',
     exceptions: ['BAD_REQUEST', 'NOT_FOUND'],
   })
-  async getStartLocation(@AuthUser() user: UserEntity, @Param('pid') pid: string): Promise<LocationDTO> {
+  async getStartLocation(@AuthUser() user: UserModel, @Param('pid') pid: string): Promise<LocationDTO> {
     return this.promiseService
-      .getStartLocation(pid, user)
+      .getStartLocation(pid, user.id)
       .then((location) => LocationDTO.from(location))
       .catch((error) => {
         switch (error) {
@@ -107,9 +119,9 @@ export class PromiseController {
     description: '약속 출발지를 설정합니다.',
     exceptions: ['BAD_REQUEST', 'NOT_FOUND'],
   })
-  async setStartLocation(@AuthUser() user: UserEntity, @Param('pid') pid: string, @Body() input: InputLocationDTO) {
+  async updateStartLocation(@AuthUser() user: UserModel, @Param('pid') pid: string, @Body() input: InputLocationDTO) {
     return this.promiseService
-      .updateStartLocation(pid, user, input)
+      .updateStartLocation(pid, user.id, input)
       .then((location) => LocationDTO.from(location))
       .catch((error) => {
         switch (error) {
@@ -127,8 +139,8 @@ export class PromiseController {
     description: '약속 출발지를 삭제합니다.',
     exceptions: ['BAD_REQUEST', 'NOT_FOUND'],
   })
-  async deleteStartLocation(@AuthUser() user: UserEntity, @Param('pid') pid: string): Promise<void> {
-    await this.promiseService.deleteStartLocation(pid, user);
+  async deleteStartLocation(@AuthUser() user: UserModel, @Param('pid') pid: string): Promise<void> {
+    await this.promiseService.deleteStartLocation(pid, user.id);
   }
 
   @Get('themes', { auth: true, description: '약속 테마 목록을 불러옵니다.' })

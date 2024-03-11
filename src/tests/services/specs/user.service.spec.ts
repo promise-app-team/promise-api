@@ -1,7 +1,8 @@
 import { Test } from '@nestjs/testing';
 
 import { UserService, UserServiceError } from '@/modules/user/user.service';
-import { PrismaService, Provider } from '@/prisma';
+import { Provider } from '@/prisma/prisma.entity';
+import { PrismaService } from '@/prisma/prisma.service';
 import { MockPrismaService } from '@/tests/services/mocks/prisma.service.mock';
 import { MockUserID, MockUserProviderID } from '@/tests/services/mocks/user.service.mock';
 

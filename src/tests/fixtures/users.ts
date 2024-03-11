@@ -1,4 +1,4 @@
-import { Provider } from '@/prisma';
+import { Provider } from '@/prisma/prisma.entity';
 
 export const _fixture_validUser = Object.freeze({
   id: 1,
