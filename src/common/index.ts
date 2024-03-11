@@ -15,5 +15,3 @@ export * from './middlewares/logger.middleware';
 export * from './middlewares/trim.middleware';
 
 export * from './mixins/dto.mixin';
-
-export * from './services/hasher.service';

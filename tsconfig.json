@@ -11,7 +11,7 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "outDir": "dist",
     "types": ["jest", "@types/multer"],
     "strictPropertyInitialization": false,
