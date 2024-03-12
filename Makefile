@@ -16,7 +16,7 @@ restart_mysql:
 	@docker compose restart mysql
 
 stop_mysql:
-	@docker compose down mysql
+	@docker compose down --volumes mysql
 
 start_https:
 	@. ./https/scripts/install.sh
