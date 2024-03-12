@@ -1,8 +1,8 @@
 import { Provider, DestinationType, LocationShareType, PrismaClient } from '@prisma/client';
 import { addHours, subHours } from 'date-fns';
-import { times } from 'remeda';
+import { sample, times } from 'remeda';
 
-import { random, randomArray, randomDate, randomPick } from '../../src/utils/random';
+import { random, randomDate, randomPick } from '../../src/utils/random';
 
 const environment = process.env.NODE_ENV || 'local';
 
@@ -69,7 +69,7 @@ async function mock(prisma: PrismaClient) {
   const users = await prisma.user.findMany();
   const themes = await prisma.theme.findMany();
 
-  const randomAttendeeMap = times(MAX_PROMISES, () => randomArray(users, random(0, 5)));
+  const randomAttendeeMap = times(MAX_PROMISES, () => sample(users, random(0, 5)));
   const randomDestinationTypeMap = times(MAX_PROMISES, () => randomPick(constant.destinationTypes));
   const randomStartLocationsMap = await Promise.all(
     randomAttendeeMap.map((attendees) =>
@@ -116,7 +116,7 @@ async function mock(prisma: PrismaClient) {
           hostId: randomPick(users).id,
           themes: {
             createMany: {
-              data: randomArray(themes, random(1, 5)).map((theme) => ({ themeId: theme.id })),
+              data: sample(themes, random(1, 5)).map((theme) => ({ themeId: theme.id })),
             },
           },
           users: {
