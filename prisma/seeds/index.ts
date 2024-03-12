@@ -1,30 +1,25 @@
 import { Provider, DestinationType, LocationShareType, PrismaClient } from '@prisma/client';
 import { addHours, subHours } from 'date-fns';
-import { shuffle, times } from 'remeda';
+import { sample, times } from 'remeda';
 
-function random(): boolean;
-function random(min: number, max: number): number;
-function random(min?: number, max?: number): number | boolean {
-  if (typeof min === 'undefined' || typeof max === 'undefined') {
-    return Math.random() < 0.5;
+import { random, randomDate, randomPick } from '../../src/utils/random';
+
+const environment = process.env.NODE_ENV || 'local';
+
+await new PrismaClient().$transaction(async (prisma: any) => {
+  await clean(prisma);
+  await prepare(prisma);
+
+  if (['local', 'development'].includes(environment)) {
+    await mock(prisma);
   }
+});
 
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
+///////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////// Helpers ///////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
-function randomArray<T>(array: T[], length?: number): T[] {
-  return shuffle(array).slice(0, length ?? array.length);
-}
-
-function randomPick<T>(array: T[]): T {
-  return array[random(0, array.length - 1)];
-}
-
-function randomDate(start: Date, end: Date): Date {
-  return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-}
-
-async function main(prisma: PrismaClient) {
+async function clean(prisma: PrismaClient) {
   await Promise.all([
     prisma.promiseTheme.deleteMany(),
     prisma.promiseUser.deleteMany(),
@@ -32,7 +27,9 @@ async function main(prisma: PrismaClient) {
     prisma.promise.deleteMany(),
     prisma.theme.deleteMany(),
     prisma.user.deleteMany(),
+  ]);
 
+  await Promise.all([
     prisma.$queryRaw`ALTER TABLE pm_promise_themes AUTO_INCREMENT = 1;`,
     prisma.$queryRaw`ALTER TABLE pm_promise_users AUTO_INCREMENT = 1`,
     prisma.$queryRaw`ALTER TABLE pm_locations AUTO_INCREMENT = 1`,
@@ -40,18 +37,18 @@ async function main(prisma: PrismaClient) {
     prisma.$queryRaw`ALTER TABLE pm_themes AUTO_INCREMENT = 1`,
     prisma.$queryRaw`ALTER TABLE pm_users AUTO_INCREMENT = 1`,
   ]);
+}
 
+async function prepare(prisma: PrismaClient) {
   await prisma.theme.createMany({
     data: ['연인', '친구', '동료', '가족', '지인', '스터디', '썸', '동아리', '동호회', '모임', '모르는 사람'].map(
       (name) => ({ name })
     ),
   });
+}
 
-  if (process.env.NODE_ENV === 'production') {
-    return;
-  }
-
-  const MAX_USERS = 10;
+async function mock(prisma: PrismaClient) {
+  const MAX_USERS = 50;
   const MAX_PROMISES = 100;
 
   const constant = {
@@ -72,7 +69,7 @@ async function main(prisma: PrismaClient) {
   const users = await prisma.user.findMany();
   const themes = await prisma.theme.findMany();
 
-  const randomAttendeeMap = times(MAX_PROMISES, () => randomArray(users, random(0, MAX_USERS)));
+  const randomAttendeeMap = times(MAX_PROMISES, () => sample(users, random(0, 5)));
   const randomDestinationTypeMap = times(MAX_PROMISES, () => randomPick(constant.destinationTypes));
   const randomStartLocationsMap = await Promise.all(
     randomAttendeeMap.map((attendees) =>
@@ -119,7 +116,7 @@ async function main(prisma: PrismaClient) {
           hostId: randomPick(users).id,
           themes: {
             createMany: {
-              data: randomArray(themes, random(1, 5)).map((theme) => ({ themeId: theme.id })),
+              data: sample(themes, random(1, 5)).map((theme) => ({ themeId: theme.id })),
             },
           },
           users: {
@@ -142,6 +139,3 @@ async function main(prisma: PrismaClient) {
     })
   );
 }
-
-const prisma = new PrismaClient();
-await prisma.$transaction(async (tx) => main(tx as any));

@@ -11,14 +11,14 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "sourceMap": true,
+    "sourceMap": false,
     "outDir": "dist",
-    "types": ["jest", "bun-types", "@types/multer"],
+    "types": ["jest", "@types/multer"],
     "strictPropertyInitialization": false,
     "incremental": true,
     "skipLibCheck": true,
     "strict": true
   },
   "exclude": ["node_modules", "dist"],
-  "include": ["./src/**/*", ".eslintrc.cjs"]
+  "include": ["./src/**/*.ts", ".eslintrc.cjs"]
 }

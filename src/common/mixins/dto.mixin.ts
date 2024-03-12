@@ -2,13 +2,13 @@ import { Type } from '@nestjs/common';
 import { PickType } from '@nestjs/swagger';
 import { pick } from 'remeda';
 
+type From<T, K extends keyof T, A extends Record<string, any>> = (obj: Record<string, any>) => Pick<T, K> & A;
+
 export function ApplyDTO<T, K extends keyof T, A extends Record<string, any>>(
   classRef: Type<T>,
-  keys: readonly K[],
+  keys: readonly K[] | K[],
   extend?: (obj: T) => A
-): Type<Pick<T, (typeof keys)[number]>> & {
-  from(obj: Record<string, any>): Pick<T, (typeof keys)[number]> & A;
-} {
+): Type<Pick<T, (typeof keys)[number]>> & { from: From<T, K, A> } {
   return class DTO extends (PickType(classRef, keys) as Type) {
     static from(obj: any) {
       if (!obj) throw new Error('obj is missing');

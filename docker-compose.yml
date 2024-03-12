@@ -6,17 +6,21 @@ services:
     container_name: promise-api.mysql
     ports:
       - ${DB_PORT}:3306
+    networks:
+      - promise-api_mysql
     volumes:
-      - ./dockerdata/mysql:/var/lib/mysql
+      - ./dockerdata/mysql.${STAGE}:/var/lib/mysql
+      - ./mysql:/docker-entrypoint-initdb.d:ro
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
       - --performance-schema=OFF
     environment:
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      USER: ${DB_USERNAME}
+      PASSWORD: ${DB_PASSWORD}
+      STAGE: ${STAGE}
+      DATABASE: ${DB_NAME}
       TZ: ${DB_TIMEZONE}
     restart: always
 
@@ -28,6 +32,13 @@ services:
         - HTTPS=${HTTPS}
     image: promise-api:https
     container_name: promise-api.https
+    networks:
+      - promise-api_https
     ports:
-      - '80:80'
-      - '443:443'
+      - 80:80
+      - 443:443
+    restart: always
+
+networks:
+  promise-api_mysql:
+  promise-api_https:

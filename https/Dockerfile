@@ -3,8 +3,11 @@ WORKDIR /etc/nginx
 
 RUN rm -rf ./conf.d
 
-COPY conf.d ./conf.d
 COPY ssl ./ssl
+COPY conf.d ./conf.d
+
+COPY html ./html
+COPY assets ./assets
 
 ARG PORT
 ENV PORT=$PORT
@@ -12,5 +15,10 @@ ENV PORT=$PORT
 ARG HTTPS
 ENV HTTPS=$HTTPS
 
-RUN envsubst '$PORT $HTTPS' <./conf.d/promise.conf >./conf.d/promise.conf.tmp
-RUN mv ./conf.d/promise.conf.tmp ./conf.d/promise.conf && rm -f ./conf.d/promise.conf.tmp
+RUN <<EOF
+for file in ./conf.d/api.promise.conf ./html/502.html; do
+  envsubst '$PORT $HTTPS' <$file >$file.tmp
+  mv $file.tmp $file
+  rm -f $file.tmp
+done
+EOF

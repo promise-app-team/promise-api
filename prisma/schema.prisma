@@ -67,7 +67,7 @@ model User {
   /// 내가 참여한 약속 목록
   promises PromiseUser[] @relation(name: "PromiseUser.user")
 
-  @@unique(name: "identifier", fields: [provider, providerId])
+  @@unique(name: "identifier", fields: [provider, providerId], map: "ix_provider")
   @@map("pm_users")
 }
 
@@ -122,6 +122,8 @@ model Promise {
   /// 테마 목록
   themes PromiseTheme[] @relation(name: "PromiseTheme.promise")
 
+  @@unique(fields: [destinationId], map: "ix_destination_id")
+  @@index(fields: [hostId], map: "ix_host_id")
   @@map("pm_promises")
 }
 
@@ -139,7 +141,7 @@ model PromiseUser {
   promise Promise @relation(name: "PromiseUser.promise", fields: [promiseId], references: [id], onDelete: Cascade)
 
   /// 약속 참여자 출발지 ID
-  startLocationId Int? @unique @map("start_location_id") @db.UnsignedInt
+  startLocationId Int? @map("start_location_id") @db.UnsignedInt
 
   /// 약속 참여자 출발지
   startLocation Location? @relation(name: "PromiseUser.startLocation", fields: [startLocationId], references: [id], onDelete: SetNull)
@@ -151,6 +153,9 @@ model PromiseUser {
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
 
   @@id(name: "identifier", fields: [promiseId, userId])
+  @@unique(fields: [startLocationId], map: "ix_start_location_id")
+  @@index(fields: [userId], map: "ix_user_id")
+  @@index(fields: [promiseId], map: "ix_promise_id")
   @@map("pm_promise_users")
 }
 
@@ -180,6 +185,8 @@ model PromiseTheme {
   theme Theme @relation(name: "PromiseTheme.theme", fields: [themeId], references: [id], onDelete: Cascade)
 
   @@id(name: "identifier", fields: [promiseId, themeId])
+  @@index(fields: [themeId], map: "ix_theme_id")
+  @@index(fields: [promiseId], map: "ix_promise_id")
   @@map("pm_promise_themes")
 }
 

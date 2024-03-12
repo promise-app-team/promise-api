@@ -1,11 +1,27 @@
 import { Module } from '@nestjs/common';
 
-import { FileUploadController } from '@/modules/upload/upload.controller';
-import { FileUploadService } from '@/modules/upload/upload.service';
-import { UserModule } from '@/modules/user/user.module';
+import { UserModule } from '../user/user.module';
+
+import { FileUploadController } from './upload.controller';
+import { FileUploadService } from './upload.service';
+
+import { TypedConfigService } from '@/config/env';
+import { S3ClientModule } from '@/customs/s3-client/s3-client.module';
 
 @Module({
-  imports: [UserModule],
+  imports: [
+    UserModule,
+    S3ClientModule.forRootAsync({
+      inject: [TypedConfigService],
+      useFactory(config: TypedConfigService) {
+        return {
+          s3options: {
+            region: config.get('aws.region'),
+          },
+        };
+      },
+    }),
+  ],
   controllers: [FileUploadController],
   providers: [FileUploadService],
 })

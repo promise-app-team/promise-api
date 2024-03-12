@@ -40,13 +40,13 @@ export function isExceptionStatus(status: string): status is ExceptionStatus {
 }
 
 export class HttpException extends NestHttpException {
-  @ApiProperty({ example: 'error message' })
+  @ApiProperty({ example: 'Error message' })
   message!: string;
 
-  @ApiProperty({ example: 'status' })
+  @ApiProperty({ example: 'HTTP status message' })
   error!: string;
 
-  @ApiProperty({ example: 'status code' })
+  @ApiProperty({ example: 'HTTP status code' })
   statusCode!: number;
 
   constructor(message: string, status: ExceptionStatus, cause?: unknown);
@@ -58,7 +58,9 @@ export class HttpException extends NestHttpException {
   ) {
     const input = typeof args === 'string' ? { message: args, status, cause } : args;
     super(input.message, input.status ? HttpStatus[input.status] : HttpStatus.INTERNAL_SERVER_ERROR);
-    Object.assign(this, new exceptionMap[input.status ?? 'INTERNAL_SERVER_ERROR'](input.message));
+    const exception = new exceptionMap[input.status ?? 'INTERNAL_SERVER_ERROR'](input.message);
+    exception.cause = input.cause;
+    Object.assign(this, exception);
   }
 
   static new(error: any): NestHttpException;
@@ -70,10 +72,10 @@ export class HttpException extends NestHttpException {
       return error;
     }
     if (error instanceof Error) {
-      return new HttpException(error.message, 'INTERNAL_SERVER_ERROR', error);
+      return new HttpException(error.message, status, error);
     }
     const input = typeof error === 'string' ? { message: error, status, cause } : error;
-    return new HttpException(input.message, input.status ?? 'INTERNAL_SERVER_ERROR', input.cause);
+    return new HttpException(input.message, input.status, input.cause);
   }
 
   static throw(error: any): never;

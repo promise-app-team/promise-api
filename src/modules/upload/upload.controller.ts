@@ -2,10 +2,11 @@ import { Controller, ParseFilePipeBuilder, UploadedFile, UseInterceptors } from 
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 
-import { HttpException } from '@/common';
-import { Post } from '@/customs/nest';
-import { OutputUploadFileDTO } from '@/modules/upload/upload.dto';
-import { FileUploadService } from '@/modules/upload/upload.service';
+import { OutputUploadFileDTO } from './upload.dto';
+import { FileUploadService } from './upload.service';
+
+import { HttpException } from '@/common/exceptions/http.exception';
+import { Post } from '@/customs/nest/decorators/http-api.decorator';
 
 @ApiTags('FileUpload')
 @ApiBearerAuth()

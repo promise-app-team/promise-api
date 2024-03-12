@@ -1,12 +1,6 @@
-import {
-  Catch,
-  ArgumentsHost,
-  HttpException,
-  HttpStatus,
-  ExceptionFilter,
-  HttpServer,
-  InternalServerErrorException,
-} from '@nestjs/common';
+import { ArgumentsHost, Catch, ExceptionFilter, HttpServer, InternalServerErrorException } from '@nestjs/common';
+
+import { HttpException } from '../exceptions/http.exception';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -15,17 +9,18 @@ export class AllExceptionsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
 
-    const isHttpException = exception instanceof HttpException;
+    const httpException =
+      exception instanceof HttpException
+        ? exception
+        : HttpException.new('알 수 없는 오류가 발생했습니다.', 'INTERNAL_SERVER_ERROR', exception);
 
-    const httpStatus = isHttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
-    const httpException = isHttpException
-      ? exception
-      : new InternalServerErrorException(`알 수 없는 오류가 발생했습니다.`);
-
-    if (httpException instanceof InternalServerErrorException) {
-      console.error(exception);
+    if (typeof exception === 'string') {
+      console.error('UnhandledException:', exception);
+      console.trace();
+    } else if (httpException.name === InternalServerErrorException.name) {
+      console.error(httpException.cause || httpException);
     }
 
-    this.httpAdapter.reply(ctx.getResponse(), httpException.getResponse(), httpStatus);
+    this.httpAdapter.reply(ctx.getResponse(), httpException.getResponse(), httpException.getStatus());
   }
 }

@@ -11,7 +11,7 @@ CREATE TABLE `pm_users` (
     `created_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     `updated_at` TIMESTAMP(0) NOT NULL,
 
-    UNIQUE INDEX `pm_users_provider_provider_id_key`(`provider`, `provider_id`),
+    UNIQUE INDEX `ix_provider`(`provider`, `provider_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -31,6 +31,8 @@ CREATE TABLE `pm_promises` (
     `created_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     `updated_at` TIMESTAMP(0) NOT NULL,
 
+    INDEX `ix_host_id`(`host_id`),
+    UNIQUE INDEX `ix_destination_id`(`destination_id`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -42,7 +44,9 @@ CREATE TABLE `pm_promise_users` (
     `created_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
     `updated_at` TIMESTAMP(0) NOT NULL,
 
-    UNIQUE INDEX `pm_promise_users_start_location_id_key`(`start_location_id`),
+    INDEX `ix_user_id`(`user_id`),
+    INDEX `ix_promise_id`(`promise_id`),
+    UNIQUE INDEX `ix_start_location_id`(`start_location_id`),
     PRIMARY KEY (`promise_id`, `user_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -59,6 +63,8 @@ CREATE TABLE `pm_promise_themes` (
     `promise_id` INTEGER UNSIGNED NOT NULL,
     `theme_id` INTEGER UNSIGNED NOT NULL,
 
+    INDEX `ix_theme_id`(`theme_id`),
+    INDEX `ix_promise_id`(`promise_id`),
     PRIMARY KEY (`promise_id`, `theme_id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

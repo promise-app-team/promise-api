@@ -7,10 +7,12 @@
     "cmdrc",
     "codegenie",
     "customfav",
+    "datamodel",
     "datasource",
     "dockerdata",
     "dtos",
     "fastify",
+    "filelink",
     "hasher",
     "inno",
     "inthash",
@@ -18,6 +20,7 @@
     "mikro",
     "nestjs",
     "predeploy",
+    "probee",
     "remeda",
     "uncolorize",
     "websockets"
@@ -30,9 +33,10 @@
 
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": {
+    "package.json": "package-lock.json, yarn.lock, bun.lockb",
     ".env.example": ".env, .env.*",
     ".env-cmdrc.example.js": ".env-cmdrc, .env-cmdrc.*",
-    "package.json": "package-lock.json, yarn.lock, bun.lockb"
+    "*.ts": "${capture}.js, ${capture}.d.ts, ${capture}.mock.ts, ${capture}.spec.ts"
   },
 
   "material-icon-theme.activeIconPack": "nest",
@@ -45,7 +49,8 @@
     "*.interceptor.ts": "nest-gateway",
     "*.strategy.ts": "nest-decorator",
     "*.type.ts": "nest-filter",
-    "*.schema.ts": "nest-pipe"
+    "*.schema.ts": "nest-pipe",
+    "*.mock.ts": "test-ts"
   },
 
   "[json]": {
@@ -58,7 +63,6 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
 
-  "typescript.preferences.importModuleSpecifier": "non-relative",
   "typescript.inlayHints.enumMemberValues.enabled": false,
   "typescript.inlayHints.functionLikeReturnTypes.enabled": false,
   "typescript.inlayHints.parameterNames.enabled": "all",

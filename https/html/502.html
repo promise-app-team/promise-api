@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Server not found</title>
+
+    <style>
+      body {
+        font-family: monospace;
+      }
+
+      header {
+        margin: 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      p {
+        margin: 10px 0;
+      }
+
+      main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      footer {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        text-align: center;
+        padding: 10px 0;
+        background-color: #f4f4f4;
+      }
+
+      code {
+        background-color: #f4f4f4;
+        padding: 2px 4px;
+        border-radius: 4px;
+      }
+
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <img src="/assets/promise-logo.png" alt="Promise Logo" width="100px" />
+      <h1>Server is not running</h1>
+    </header>
+    
+    <main>
+      <p>Check if <a href="http://localhost:$PORT">http://localhost:$PORT</a> is running or not.</p>
+      <p>If not, then you need to start the local server.</p>
+      <p>Please run command to start the local server in your terminal.</p>
+      <p><code>$ bun run start:dev</code></p>
+      <p>And then refresh the page. Enjoy!</p>
+      <p></p>
+      <p><small>If you are still facing the issue, <a href="https://github.com/promise-app-team/promise-api/issues/new">please contact the developer.</a></small></p>
+    </main>
+
+    <footer>
+      <small>
+        For more information, visit our
+        <a href="https://github.com/promise-app-team/promise-api" target="_blank">Project.</a>
+      </small>
+    </footer>
+  </body>
+</html>

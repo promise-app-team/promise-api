@@ -1,10 +1,42 @@
-import { Global, Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
 
-import { PrismaService } from '@/prisma/prisma.service';
+import { PrismaModuleAsyncOptions, PrismaModuleOptions } from './prisma.interface';
+import { PrismaService } from './prisma.service';
 
-@Global()
-@Module({
-  providers: [PrismaService],
-  exports: [PrismaService],
-})
-export class PrismaModule {}
+@Module({})
+export class PrismaModule {
+  static forRoot(options: PrismaModuleOptions): DynamicModule {
+    return {
+      module: PrismaModule,
+      global: options.isGlobal,
+      providers: [
+        {
+          provide: PrismaService,
+          useFactory() {
+            return new PrismaService(options.prismaOptions ?? {});
+          },
+        },
+      ],
+      exports: [PrismaService],
+    };
+  }
+
+  static forRootAsync(options: PrismaModuleAsyncOptions): DynamicModule {
+    return {
+      module: PrismaModule,
+      global: options.isGlobal,
+      providers: [
+        {
+          provide: PrismaService,
+          async useFactory(...args: any[]) {
+            const { transform, ...prismaOptions } = await options.useFactory(...args);
+            const prisma = new PrismaService(prismaOptions);
+            return Object.assign(prisma, transform?.(prisma));
+          },
+          inject: options.inject,
+        },
+      ],
+      exports: [PrismaService],
+    };
+  }
+}

@@ -7,9 +7,11 @@ import {
 } from '@nestjs/common';
 import { ApiInternalServerErrorResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
 
-import { HttpException } from '@/common';
-import { Path, HttpApiOptions } from '@/customs/nest/types';
-import { ApiOperation, ApiResponse } from '@/customs/swagger';
+import { Path, HttpApiOptions } from '../types';
+
+import { HttpException } from '@/common/exceptions/http.exception';
+import { ApiOperation } from '@/customs/swagger/decorators/api-operation.decorator';
+import { ApiResponse } from '@/customs/swagger/decorators/api-response.decorator';
 import { AuthGuard } from '@/modules/auth/auth.guard';
 
 function Template(

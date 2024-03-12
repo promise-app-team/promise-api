@@ -1,4 +1,4 @@
-import { ExceptionStatus } from '@/common';
+import { ExceptionStatus } from '@/common/exceptions/http.exception';
 
 export type Path = string | string[];
 

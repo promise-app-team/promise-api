@@ -1,6 +1,6 @@
 import { ApiInternalServerErrorResponse, ApiOperation } from '@nestjs/swagger';
 
-import { HttpException } from '@/common';
+import { HttpException } from '@/common/exceptions/http.exception';
 
 export function ApiController(): ClassDecorator {
   return (constructor) => {
