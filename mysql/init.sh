@@ -20,6 +20,7 @@ init() (
   CREATE DATABASE IF NOT EXISTS \`${DATABASE}_${STAGE}\`;
   CREATE DATABASE IF NOT EXISTS \`${DATABASE}_${STAGE}_shadow\`;
   CREATE DATABASE IF NOT EXISTS \`${DATABASE}_test\`;
+  CREATE DATABASE IF NOT EXISTS \`${DATABASE}_test_shadow\`;
 SQL
 
   echo "[$1] MySQL initialization script finished!"
