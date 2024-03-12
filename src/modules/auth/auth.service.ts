@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
 
+import { UserService } from '../user/user.service';
+
+import { AuthTokenDTO } from './auth.dto';
+
 import { TypedConfigService } from '@/config/env';
-import { AuthTokenDTO } from '@/modules/auth/auth.dto';
-import { UserService } from '@/modules/user/user.service';
 
 export enum AuthServiceError {
   AuthTokenFailed = '토큰 생성에 실패했습니다.',

@@ -1,7 +1,7 @@
 import { DynamicModule, Module } from '@nestjs/common';
 
-import { S3ClientModuleAsyncOptions, S3ClientModuleOptions } from '@/customs/s3-client/s3-client.interface';
-import { S3ClientService } from '@/customs/s3-client/s3-client.service';
+import { S3ClientModuleAsyncOptions, S3ClientModuleOptions } from './s3-client.interface';
+import { S3ClientService } from './s3-client.service';
 
 @Module({})
 export class S3ClientModule {

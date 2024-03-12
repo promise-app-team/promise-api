@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { difference, map, pick, pipe } from 'remeda';
 
-import { InputCreatePromiseDTO, InputLocationDTO, PromiseUserRole, PromiseStatus } from '@/modules/promise/promise.dto';
+import { InputCreatePromiseDTO, InputLocationDTO, PromiseStatus, PromiseUserRole } from './promise.dto';
+
 import { PrismaClientError } from '@/prisma/error-handler';
 import { LocationModel, ThemeModel } from '@/prisma/prisma.entity';
 import { PrismaService } from '@/prisma/prisma.service';
-import { ifs } from '@/utils/guard';
 
 export enum PromiseServiceError {
   NotFoundPromise = '약속을 찾을 수 없습니다.',
@@ -28,7 +28,7 @@ type PromiseFilter =
       userId: number;
     });
 
-const promiseInclude = {
+const promiseInclude: Prisma.PromiseInclude = {
   host: {
     select: {
       id: true,
@@ -43,7 +43,7 @@ const promiseInclude = {
     select: { theme: true },
   },
   destination: true,
-} satisfies Prisma.PromiseInclude;
+};
 
 export type PromiseResult = Prisma.PromiseGetPayload<{ include: typeof promiseInclude }>;
 

@@ -1,17 +1,20 @@
 import { join } from 'node:path';
 
 import serverlessExpress from '@codegenie/serverless-express';
-import { Logger, ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
+import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';
 import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import type { Handler } from 'aws-lambda';
+import { Handler } from 'aws-lambda';
 
-import { AppModule } from '@/app/app.module';
-import { AllExceptionsFilter, HttpException, StringifyDateInterceptor, TimeoutInterceptor } from '@/common';
-import { TypedConfigService } from '@/config/env';
-import { LoggerService } from '@/customs/logger';
+import { AppModule } from './app/app.module';
+import { HttpException } from './common/exceptions/http.exception';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { StringifyDateInterceptor } from './common/interceptors/stringify-date.interceptor';
+import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
+import { TypedConfigService } from './config/env';
+import { LoggerService } from './customs/logger/logger.service';
 
 async function initializeApp<App extends NestExpressApplication>() {
   const app = await NestFactory.create<App>(AppModule, {

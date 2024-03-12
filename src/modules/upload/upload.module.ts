@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 
+import { UserModule } from '../user/user.module';
+
+import { FileUploadController } from './upload.controller';
+import { FileUploadService } from './upload.service';
+
 import { TypedConfigService } from '@/config/env';
-import { S3ClientModule } from '@/customs/s3-client';
-import { FileUploadController } from '@/modules/upload/upload.controller';
-import { FileUploadService } from '@/modules/upload/upload.service';
-import { UserModule } from '@/modules/user/user.module';
+import { S3ClientModule } from '@/customs/s3-client/s3-client.module';
 
 @Module({
   imports: [

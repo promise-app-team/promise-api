@@ -1,8 +1,8 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { Hasher } from 'inthash';
 
-import { IntHashModuleAsyncOptions, IntHashModuleOptions } from '@/customs/inthash/inthash.interface';
-import { InthashService } from '@/customs/inthash/inthash.service';
+import { IntHashModuleAsyncOptions, IntHashModuleOptions } from './inthash.interface';
+import { InthashService } from './inthash.service';
 
 @Module({})
 export class IntHashModule {

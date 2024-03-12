@@ -1,4 +1,4 @@
-import { ApplyDTO } from '@/common';
+import { ApplyDTO } from '@/common/mixins/dto.mixin';
 import { LocationEntity } from '@/prisma/prisma.entity';
 
 export class LocationDTO extends ApplyDTO(LocationEntity, ['id', 'city', 'district', 'address'], (obj) => ({

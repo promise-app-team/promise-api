@@ -63,7 +63,6 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
 
-  "typescript.preferences.importModuleSpecifier": "non-relative",
   "typescript.inlayHints.enumMemberValues.enabled": false,
   "typescript.inlayHints.functionLikeReturnTypes.enabled": false,
   "typescript.inlayHints.parameterNames.enabled": "all",

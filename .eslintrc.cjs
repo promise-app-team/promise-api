@@ -52,6 +52,7 @@ module.exports = {
       },
     ],
     'import/no-relative-packages': 'warn',
+    'import/newline-after-import': 'warn',
   },
 
   settings: {

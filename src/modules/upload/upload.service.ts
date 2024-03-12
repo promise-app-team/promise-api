@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { v4 as uuid } from 'uuid';
 
 import { TypedConfigService } from '@/config/env';
-import { S3ClientService } from '@/customs/s3-client';
+import { S3ClientService } from '@/customs/s3-client/s3-client.service';
 
 @Injectable()
 export class FileUploadService {

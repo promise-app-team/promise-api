@@ -18,7 +18,8 @@ import {
 import { addMinutes, addWeeks, formatISO } from 'date-fns';
 import { filter, map, pipe } from 'remeda';
 
-import { IsAfter, ApplyDTO } from '@/common';
+import { IsAfter } from '@/common/decorators/is-after.decorator';
+import { ApplyDTO } from '@/common/mixins/dto.mixin';
 import { LocationDTO } from '@/modules/promise/location.dto';
 import { AttendeeDTO, HostDTO } from '@/modules/user/user.dto';
 import { DestinationType, LocationShareType, PromiseEntity } from '@/prisma/prisma.entity';

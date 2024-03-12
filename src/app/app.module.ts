@@ -3,11 +3,12 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 
 import { AppController } from '@/app/app.controller';
-import { CommonModule } from '@/common';
+import { CommonModule } from '@/common/modules/common.module';
 import { TypedConfigService, extraEnv } from '@/config/env';
 import { schema } from '@/config/validation';
-import { LoggerModule, LoggerService } from '@/customs/logger';
-import { TypedConfigModule } from '@/customs/typed-config';
+import { LoggerModule } from '@/customs/logger/logger.module';
+import { LoggerService } from '@/customs/logger/logger.service';
+import { TypedConfigModule } from '@/customs/typed-config/typed-config.module';
 import { AuthModule } from '@/modules/auth/auth.module';
 import { EventModule } from '@/modules/event/event.module';
 import { PromiseModule } from '@/modules/promise/promise.module';

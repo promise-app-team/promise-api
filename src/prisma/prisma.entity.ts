@@ -31,31 +31,31 @@ export enum LocationShareType {
   TIME = 'TIME',
 }
 
-const promiseUserInclude = {
+const promiseUserInclude: Prisma.PromiseUserInclude = {
   user: true,
   promise: true,
   startLocation: true,
-} satisfies Prisma.PromiseUserInclude;
+};
 
-const promiseThemeInclude = {
+const promiseThemeInclude: Prisma.PromiseThemeInclude = {
   theme: true,
   promise: true,
-} satisfies Prisma.PromiseThemeInclude;
+};
 
-const userInclude = {
+const userInclude: Prisma.UserInclude = {
   myPromises: true,
   promises: {
     include: promiseUserInclude,
   },
-} satisfies Prisma.UserInclude;
+};
 
-const themeInclude = {
+const themeInclude: Prisma.ThemeInclude = {
   promises: {
     include: promiseThemeInclude,
   },
-} satisfies Prisma.ThemeInclude;
+};
 
-const promiseInclude = {
+const promiseInclude: Prisma.PromiseInclude = {
   host: true,
   users: {
     include: promiseUserInclude,
@@ -64,12 +64,12 @@ const promiseInclude = {
     include: promiseThemeInclude,
   },
   destination: true,
-} satisfies Prisma.PromiseInclude;
+};
 
-const locationInclude = {
+const locationInclude: Prisma.LocationInclude = {
   promises: true,
   promiseUsers: true,
-} satisfies Prisma.LocationInclude;
+};
 
 type UserPayload = Prisma.UserGetPayload<{ include: typeof userInclude }>;
 type ThemePayload = Prisma.ThemeGetPayload<{ include: typeof themeInclude }>;

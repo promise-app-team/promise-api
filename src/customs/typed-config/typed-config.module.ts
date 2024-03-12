@@ -1,7 +1,7 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 
-import { TypedConfigModuleOptions } from '@/customs/typed-config/typed-config.interface';
+import { TypedConfigModuleOptions } from './typed-config.interface';
 
 @Module({})
 export class TypedConfigModule {

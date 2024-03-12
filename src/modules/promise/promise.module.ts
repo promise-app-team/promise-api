@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
 
+import { UserService } from '../user/user.service';
+
+import { PromiseController } from './promise.controller';
+import { PromiseService } from './promise.service';
+
 import { TypedConfigService } from '@/config/env';
 import { IntHashModule } from '@/customs/inthash/inthash.module';
-import { PromiseController } from '@/modules/promise/promise.controller';
-import { PromiseService } from '@/modules/promise/promise.service';
-import { UserService } from '@/modules/user/user.service';
 
 @Module({
   imports: [

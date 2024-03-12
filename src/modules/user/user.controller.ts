@@ -1,11 +1,13 @@
 import { Body, Controller } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-import { HttpException } from '@/common';
-import { Delete, Get, Put } from '@/customs/nest';
-import { AuthUser } from '@/modules/auth/auth.decorator';
-import { InputDeleteUserDTO, InputUpdateUserDTO, OutputDeleteUserDTO, UserDTO } from '@/modules/user/user.dto';
-import { UserService, UserServiceError } from '@/modules/user/user.service';
+import { AuthUser } from '../auth/auth.decorator';
+
+import { InputDeleteUserDTO, InputUpdateUserDTO, OutputDeleteUserDTO, UserDTO } from './user.dto';
+import { UserService, UserServiceError } from './user.service';
+
+import { HttpException } from '@/common/exceptions/http.exception';
+import { Delete, Get, Put } from '@/customs/nest/decorators/http-api.decorator';
 import { UserModel } from '@/prisma/prisma.entity';
 
 @ApiTags('User')
