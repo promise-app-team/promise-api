@@ -15,8 +15,8 @@ export class FileUploadService {
 
   async upload(file: Express.Multer.File): Promise<string> {
     const ext = file.originalname.split('.')[1];
-    const env = this.config.get('aws.stage');
-    const directory = `${env}/${format(Date.now(), 'yyyy-MM-dd')}`;
+    const stage = this.config.get('stage');
+    const directory = `${stage}/${format(Date.now(), 'yyyy-MM-dd')}`;
     const path = `${directory}/${uuid()}${ext ? `.${ext}` : ''}`;
     const bucket = this.config.get('aws.bucket');
     const region = this.config.get('aws.region');

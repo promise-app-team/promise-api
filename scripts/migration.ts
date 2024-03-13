@@ -16,7 +16,7 @@ const envs = {
   },
   database: {
     name: `${process.env.DB_NAME}_${process.env.STAGE}`,
-    username: process.env.DB_USERNAME,
+    user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     url: process.env.DB_URL,
     shadowUrl: process.env.DB_SHADOW_URL,

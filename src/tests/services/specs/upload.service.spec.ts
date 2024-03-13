@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 
 import { TypedConfigService } from '@/config/env';
-import { S3ClientService } from '@/customs/s3-client';
+import { S3ClientService } from '@/customs/s3-client/s3-client.service';
 import { FileUploadService } from '@/modules/upload/upload.service';
 
 describe(FileUploadService, () => {

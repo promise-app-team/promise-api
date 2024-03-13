@@ -9,6 +9,7 @@ export const extraEnv = () => {
 
   return {
     tz: process.env.TZ || 'UTC',
+    stage: process.env.STAGE || 'local',
     env: process.env.NODE_ENV || 'local',
     port: +(process.env.PORT || 8080),
     build: BUILD,
@@ -24,7 +25,6 @@ export const extraEnv = () => {
     },
     aws: {
       region: process.env.AWS_DEFAULT_REGION,
-      stage: process.env.STAGE,
       bucket: process.env.AWS_S3_BUCKET_NAME,
     },
     inthash: {
