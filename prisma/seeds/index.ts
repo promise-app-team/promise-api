@@ -1,4 +1,4 @@
-import { Provider, DestinationType, LocationShareType, PrismaClient } from '@prisma/client';
+import { Provider, DestinationType, LocationShareType, PrismaClient, Prisma } from '@prisma/client';
 import { addHours, subHours } from 'date-fns';
 import { sample, times } from 'remeda';
 
@@ -6,7 +6,13 @@ import { random, randomDate, randomPick } from '../../src/utils/random';
 
 const environment = process.env.NODE_ENV || 'local';
 
-await new PrismaClient().$transaction(async (prisma: any) => {
+await new PrismaClient({
+  transactionOptions: {
+    isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+    maxWait: 5000,
+    timeout: 10000,
+  },
+}).$transaction(async (prisma: any) => {
   await clean(prisma);
   await prepare(prisma);
 
