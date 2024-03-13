@@ -15,8 +15,10 @@ const envs = {
     env: process.env.NODE_ENV || 'unknown',
   },
   database: {
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
     name: `${process.env.DB_NAME}_${process.env.STAGE}`,
-    username: process.env.DB_USERNAME,
+    user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     url: process.env.DB_URL,
     shadowUrl: process.env.DB_SHADOW_URL,
@@ -289,12 +291,11 @@ const command = {
   async prisma(args: string): Promise<string> {
     return this.exec(`bunx prisma ${args}`);
   },
-  async docker(command: string): Promise<string> {
-    return this.exec(`docker ${command}`);
-  },
   async mysql(...queries: string[]): Promise<string> {
-    const { name, password } = envs.database;
-    return this.docker(`exec promise-api.mysql mysql -u root -p${password} ${name} -e '${queries.join(';')}'`);
+    const { host, port, name, user, password } = envs.database;
+    return this.exec(
+      `docker run --rm --network=host mysql:8.3 mysql -h${host} -P${port} -u${user} -p${password} ${name} -e '${queries.join(';')}'`
+    );
   },
 };
 

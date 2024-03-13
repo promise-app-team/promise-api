@@ -17,11 +17,11 @@ services:
       - --performance-schema=OFF
     environment:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      USER: ${DB_USERNAME}
+      USER: ${DB_USER}
       PASSWORD: ${DB_PASSWORD}
-      STAGE: ${STAGE}
       DATABASE: ${DB_NAME}
-      TZ: ${DB_TIMEZONE}
+      STAGE: ${STAGE}
+      TZ: ${TZ}
     restart: always
 
   https:

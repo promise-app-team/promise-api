@@ -13,7 +13,13 @@ ssh \
   -o ConnectTimeout=10 \
   -o StrictHostKeyChecking=no \
   -o UserKnownHostsFile=/dev/null \
-  -i $SSH_KEY -NL $tunnel
+  -i $SSH_KEY -L $tunnel
 
-echo "$(_error "Failed to establish SSH tunnel")"
+exit_code=$?
+
+if (($exit_code == 0 || $exit_code == 130)); then
+  exit 0
+fi
+
+echo "$(_error "Failed to establish SSH tunnel. (exit code: $exit_code)")"
 exit 1

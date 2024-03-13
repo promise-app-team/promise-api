@@ -1,25 +1,15 @@
 import Joi from 'joi';
 
 export const schema = Joi.object({
-  TZ: Joi.string().default('UTC'),
-  PORT: Joi.number().default(8080),
-  STAGE: Joi.string().valid('local', 'development', 'production').default('local'),
-  NODE_ENV: Joi.string().valid('local', 'development', 'production').default('local'),
+  TZ: Joi.string().required(),
+  STAGE: Joi.string().valid('local', 'dev', 'prod').required(),
+  NODE_ENV: Joi.string().valid('local', 'development', 'production').required(),
 
-  JWT_SECRET_KEY: Joi.string().allow(''),
+  JWT_SECRET_KEY: Joi.string().required(),
   INTHASH_KEY: Joi.string().required(),
 
   JWT_ACCESS_EXPIRES_IN: Joi.string().required(),
   JWT_REFRESH_EXPIRES_IN: Joi.string().required(),
-
-  DB_HOST: Joi.string().required(),
-  DB_PORT: Joi.number().required(),
-  DB_NAME: Joi.string().required(),
-  DB_USERNAME: Joi.string().required(),
-  DB_PASSWORD: Joi.string().required().allow(''),
-
-  DB_URL: Joi.string().required(),
-  DB_SHADOW_URL: Joi.string().required(),
 
   AWS_DEFAULT_REGION: Joi.string().required(),
   AWS_ACCESS_KEY_ID: Joi.string().required(),
