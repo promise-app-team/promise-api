@@ -144,17 +144,16 @@ $ git pull origin develop
 
 ```bash
 $ cp .env-cmdrc.example.js .env-cmdrc.js # 복사한 파일을 열어 환경 변수를 입력합니다.
-$ cp .env.example .env.development       # 복사한 파일을 열어 환경 변수를 입력합니다.
+$ cp .env.example .env.dev               # 복사한 파일을 열어 환경 변수를 입력합니다.
 ```
 
-SSH 터널을 열어 개발 운영 환경에 접속할 수 있도록 다음 명령어를 실행합니다.
+새로운 터미널을 열고, 개발 운영 환경에 접속할 수 있도록 다음 명령어를 실행합니다.
 
 ```bash
-# 새로운 터미널을 열어 실행합니다.
-$ bun run ssh-tunnel
+$ bun run ssh-tunnel # 원격 터미널에 접속한 상태로 유지합니다.
 ```
 
-데이터베이스 마이그레이션을 실행하기 위해 다음 명령어를 실행합니다.
+원래 터미널로 돌아와 데이터베이스 마이그레이션을 실행하기 위해 다음 명령어를 실행합니다.
 
 ```bash
 $ bun run migration:dev list # 상태 확인

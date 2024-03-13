@@ -16,7 +16,7 @@
     "start:dev": "nest start --exec \"bun run\" --watch",
     "migration": "dotenv -oe .env.local -- bun run ./scripts/migration.ts",
     "migration:test": "dotenv -oe .env.test -- bun run ./scripts/migration.ts",
-    "migration:dev": "dotenv -oe .env.development -- bun run ./scripts/migration.ts",
+    "migration:dev": "dotenv -oe .env.dev -- bun run ./scripts/migration.ts",
     "ssh-tunnel": "env-cmd -e dev --use-shell ./scripts/ssh-tunnel.sh",
     "format": "prettier --write **/* --ext .ts",
     "lint": "DEBUG=eslint:cli-engine eslint \"src/**/*.ts\"",
