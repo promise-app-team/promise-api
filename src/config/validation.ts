@@ -2,7 +2,6 @@ import Joi from 'joi';
 
 export const schema = Joi.object({
   TZ: Joi.string().required(),
-  PORT: Joi.number().required(),
   STAGE: Joi.string().valid('local', 'dev', 'prod').required(),
   NODE_ENV: Joi.string().valid('local', 'development', 'production').required(),
 
