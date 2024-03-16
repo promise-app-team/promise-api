@@ -1,6 +1,6 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Body, Param, Query, Inject, Controller, UseInterceptors } from '@nestjs/common';
-import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Cache } from 'cache-manager';
 
 import { HttpException } from '@/common/exceptions/http.exception';
@@ -34,6 +34,7 @@ export class PromiseController {
   ) {}
 
   @Get('', { auth: true, description: '내가 참여한 약속 목록을 불러옵니다.', exceptions: ['BAD_REQUEST'] })
+  @ApiOkResponse({ type: PromiseDTO, isArray: true })
   @ApiQuery({ name: 'status', enum: PromiseStatus, required: false })
   @ApiQuery({ name: 'role', enum: PromiseUserRole, required: false })
   @UseInterceptors(EncodePromiseID)
@@ -52,6 +53,7 @@ export class PromiseController {
     description: '약속 상세 정보를 불러옵니다.',
     exceptions: ['BAD_REQUEST', 'NOT_FOUND'],
   })
+  @ApiOkResponse({ type: PublicPromiseDTO })
   @UseInterceptors(EncodePromiseID)
   async getPromise(@Param('pid', DecodePromisePID) id: number): Promise<PublicPromiseDTO> {
     return this.promiseService
@@ -68,12 +70,14 @@ export class PromiseController {
   }
 
   @Post('', { auth: true, description: '약속을 생성합니다.', exceptions: ['BAD_REQUEST'] })
+  @ApiCreatedResponse({ type: PublicPromiseDTO })
   @UseInterceptors(EncodePromiseID)
   async createPromise(@AuthUser() user: UserModel, @Body() input: InputCreatePromiseDTO): Promise<PublicPromiseDTO> {
     return this.promiseService.create(user.id, input).then((promise) => PublicPromiseDTO.from(promise));
   }
 
   @Put(':pid(\\d+)', { auth: true, description: '약속을 수정합니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
+  @ApiOkResponse({ type: PublicPromiseDTO })
   @UseInterceptors(EncodePromiseID)
   async updatePromise(
     @AuthUser() user: UserModel,
