@@ -25,7 +25,7 @@ const envs = {
   },
 } as const;
 
-const COMMAND = `bun run migration:${envs.node.env}`;
+const COMMAND = `npm run migration:${envs.node.env}`;
 const SCHEMA_DIR = path.resolve(process.cwd(), path.resolve(__dirname, '../prisma/schema.prisma'));
 const MIGRATION_DIR = path.resolve(process.cwd(), path.resolve(__dirname, '../prisma/migrations'));
 
@@ -289,7 +289,7 @@ const command = {
     );
   },
   async prisma(args: string): Promise<string> {
-    return this.exec(`bunx prisma ${args}`);
+    return this.exec(`npm run prisma ${args}`);
   },
   async mysql(...queries: string[]): Promise<string> {
     const { host, port, name, user, password } = envs.database;

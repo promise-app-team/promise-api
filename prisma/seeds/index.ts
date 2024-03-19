@@ -1,3 +1,5 @@
+import { parseArgs } from 'node:util';
+
 import { Provider, DestinationType, LocationShareType, PrismaClient, Prisma } from '@prisma/client';
 import { addHours, subHours } from 'date-fns';
 import { sample, times } from 'remeda';
@@ -6,19 +8,39 @@ import { random, randomDate, randomPick } from '../../src/utils/random';
 
 const environment = process.env.NODE_ENV || 'local';
 
-await new PrismaClient({
-  transactionOptions: {
-    isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-    maxWait: 5000,
-    timeout: 10000,
-  },
-}).$transaction(async (prisma: any) => {
-  await clean(prisma);
-  await prepare(prisma);
+async function main() {
+  const args = parseArgs({
+    options: {
+      'env-file': {
+        type: 'string',
+        default: '.env.local',
+      },
+    },
+  });
 
-  if (['local', 'development'].includes(environment)) {
-    await mock(prisma);
-  }
+  const dotenv = await import('dotenv');
+  const { expand } = await import('dotenv-expand');
+  expand(dotenv.config({ path: args.values['env-file'] }));
+
+  await new PrismaClient({
+    transactionOptions: {
+      isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      maxWait: 5000,
+      timeout: 10000,
+    },
+  }).$transaction(async (prisma: any) => {
+    await clean(prisma);
+    await prepare(prisma);
+
+    if (['local', 'development'].includes(environment)) {
+      await mock(prisma);
+    }
+  });
+}
+
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
 });
 
 ///////////////////////////////////////////////////////////////////////////////

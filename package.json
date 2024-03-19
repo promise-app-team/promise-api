@@ -13,10 +13,10 @@
     "nest": "nest",
     "prisma": "prisma",
     "build": "nest build",
-    "start:dev": "nest start --exec \"bun run\" --watch",
-    "migration": "dotenv -oe .env.local -- bun run ./scripts/migration.ts",
-    "migration:test": "dotenv -oe .env.test -- bun run ./scripts/migration.ts",
-    "migration:dev": "dotenv -oe .env.dev -- bun run ./scripts/migration.ts",
+    "start:dev": "nest start --watch",
+    "migration": "dotenv -oe .env.local -- tsx ./scripts/migration.ts",
+    "migration:test": "dotenv -oe .env.test -- tsx ./scripts/migration.ts",
+    "migration:dev": "dotenv -oe .env.dev -- tsx ./scripts/migration.ts",
     "ssh-tunnel": "env-cmd -e dev --use-shell ./scripts/ssh-tunnel.sh",
     "format": "prettier --write **/* --ext .ts",
     "lint": "DEBUG=eslint:cli-engine eslint \"src/**/*.ts\"",
@@ -24,8 +24,8 @@
     "lint:tsc": "tsc --noEmit",
     "test": "dotenv -oe .env.test -- jest",
     "coverage": "dotenv -oe .env.test -- jest --coverage",
-    "update": "bunx npm-check-updates -ui",
-    "inthash": "bun run ./scripts/inthash.ts"
+    "update": "npx npm-check-updates -ui",
+    "inthash": "dotenv -oe .env.local -- tsx ./scripts/inthash.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.529.1",
@@ -73,6 +73,7 @@
     "chalk": "^5.3.0",
     "dotenv": "^16.4.5",
     "dotenv-cli": "^7.4.1",
+    "dotenv-expand": "^11.0.6",
     "env-cmd": "^10.1.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
@@ -90,9 +91,10 @@
     "ts-jest": "^29.1.2",
     "ts-loader": "^9.5.1",
     "tsconfig-paths": "4.2.0",
+    "tsx": "^4.7.1",
     "typescript": "5.4"
   },
   "prisma": {
-    "seed": "bun run ./prisma/seeds"
+    "seed": "tsx ./prisma/seeds"
   }
 }

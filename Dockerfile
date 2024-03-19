@@ -7,8 +7,8 @@ RUN mkdir -p dev prod
 COPY package* prisma dev/
 COPY package* prisma prod/
 
-RUN cd dev && npm ci && npx prisma generate
-RUN cd prod && npm ci --omit=dev && npx prisma generate
+RUN cd dev && npm ci && npm run prisma generate
+RUN cd prod && npm ci --omit=dev && npm run prisma generate
 
 FROM base AS build
 WORKDIR /app
