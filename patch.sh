@@ -10,3 +10,5 @@ elif [[ $_os == "Linux" ]]; then
   sed -i "s/'Promise'/'Promise<'/" $_file
   sed -i "s/'Observable'/'Observable<'/" $_file
 fi
+
+cat $_file | grep -A 2 "isPromiseOrObservable(type)"

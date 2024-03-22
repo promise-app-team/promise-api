@@ -23,16 +23,18 @@ Promise 앱의 API 서버 저장소입니다.
 
 ### 준비물
 
-- [bun.js](https://bun.sh)
+- [node.js](https://nodejs.org/)
 - [docker-compose](https://www.docker.com/)
 - [mkcert](https://github.com/FiloSottile/mkcert) ([HTTPS](#run-local-server-with-https)를 구성하려면 설치합니다.)
 
 ### 의존성 설치
 
-이 프로젝트의 환경은 [bun.js](https://bun.sh) 런타임을 주로 사용합니다. 런타임 설치 후 다음 명령어를 실행하여 의존성을 설치합니다.
+이 프로젝트의 환경은 [node.js](https://nodejs.org) 런타임을 사용합니다. 사용하는 런타임 버전은 [`.node-version`](./.node-version) 파일에 명시되어 있습니다.
+
+런타임 설치 후 다음 명령어를 실행하여 의존성을 설치합니다.
 
 ```bash
-$ bun install
+$ npm install
 ```
 
 ### 환경 변수 설정
@@ -84,7 +86,7 @@ $ rm -rf dockerdata
 자체적인 Prisma CLI Wrapper 명령어를 제공하며, 자세한 사용법을 확인하려면 다음 명령어를 실행합니다.
 
 ```bash
-$ bun run migration help
+$ npm run migration help
 ```
 
 #### 로컬 개발 환경
@@ -92,15 +94,15 @@ $ bun run migration help
 데이터베이스 구성을 완료하고, 마이그레이션을 실행하여 데이터베이스를 초기화합니다.
 
 ```bash
-$ bun run migration up
+$ npm run migration up
 ```
 
 마이그레이션 상태를 확인하거나, 더미 데이터를 추가하기 위해 다음 명령어를 실행합니다.
 
 ```bash
-$ bun run migration list
+$ npm run migration list
 
-$ bun run migration seed
+$ npm run migration seed
 ```
 
 데이터베이스 스키마를 변경하려면 [schema.prisma](./prisma/schema.prisma) 파일을 수정합니다.
@@ -108,25 +110,25 @@ $ bun run migration seed
 그 후, 변경사항을 반영한 새로운 마이그레이션을 생성하기 위해 다음 명령어를 실행합니다.
 
 ```bash
-$ bun run migration new
+$ npm run migration new
 ```
 
 생성된 마이그레이션을 먼저 검토합니다. 그리고 데이터베이스에 적용하기 위해 다음 명령어를 실행합니다.
 
 ```bash
-$ bun run migration up
+$ npm run migration up
 ```
 
 마이그레이션을 롤백할 필요가 있다면 다음 명령어를 실행합니다.
 
 ```bash
-$ bun run migration down <number> # 기본값은 1입니다.
+$ npm run migration down <number> # 기본값은 1입니다.
 ```
 
 잘 적용되었는지 확인하기 위해 다음 명령어를 실행합니다.
 
 ```bash
-$ bun run migration list
+$ npm run migration list
 ```
 
 #### 개발 운영 환경
@@ -150,17 +152,17 @@ $ cp .env.example .env.dev               # 복사한 파일을 열어 환경 변
 새로운 터미널을 열고, 개발 운영 환경에 접속할 수 있도록 다음 명령어를 실행합니다.
 
 ```bash
-$ bun run ssh-tunnel # 원격 터미널에 접속한 상태로 유지합니다.
+$ npm run ssh-tunnel # 원격 터미널에 접속한 상태로 유지합니다.
 ```
 
 원래 터미널로 돌아와 데이터베이스 마이그레이션을 실행하기 위해 다음 명령어를 실행합니다.
 
 ```bash
-$ bun run migration:dev list # 상태 확인
+$ npm run migration:dev list # 상태 확인
 
-$ bun run migration:dev up
+$ npm run migration:dev up
 
-$ bun run migration:dev list # 검토
+$ npm run migration:dev list # 검토
 ```
 
 터미널을 닫아 SSH 터널을 종료합니다.
@@ -170,7 +172,7 @@ $ bun run migration:dev list # 검토
 로컬 개발 서버를 실행하기 위해 다음 명령어를 실행합니다. `http://localhost:$PORT` 주소로 접속할 수 있습니다.
 
 ```bash
-$ bun run start:dev
+$ npm run start:dev
 ```
 
 ### HTTPS로 로컬 서버 실행
@@ -198,24 +200,24 @@ $ cp .env.example .env.test # 복사한 파일을 열어 환경 변수를 입력
 테스트용 데이터베이스를 구성하기 위해 다음 명령어를 실행합니다.
 
 ```bash
-$ bun run migration:test up
+$ npm run migration:test up
 ```
 
 테스트를 실행하기 위해 다음 명령어를 실행합니다.
 
 ```bash
-$ bun run test
+$ npm run test
 ```
 
 특정 키워드로 필터링하여 테스트를 실행할 수 있습니다.
 
 ```bash
-$ bun run test auth.controller # auth.controller.spec.ts 파일을 테스트합니다.
-$ bun run test service # 모든 *.service.spec.ts 파일을 테스트합니다.
+$ npm run test auth.controller # auth.controller.spec.ts 파일을 테스트합니다.
+$ npm run test service # 모든 *.service.spec.ts 파일을 테스트합니다.
 ```
 
 커버리지를 확인하기 위해 다음 명령어를 실행합니다.
 
 ```bash
-$ bun run coverage
+$ npm run coverage
 ```

@@ -7,6 +7,8 @@ import chalk from 'chalk';
 import { formatISO, parse } from 'date-fns';
 import * as R from 'remeda';
 
+import { link, logger } from './utils';
+
 ///////////////////////////////////////////////////////////////////////////////
 // Environment
 
@@ -25,7 +27,7 @@ const envs = {
   },
 } as const;
 
-const COMMAND = `bun run migration:${envs.node.env}`;
+const COMMAND = `npm run migration:${envs.node.env}`;
 const SCHEMA_DIR = path.resolve(process.cwd(), path.resolve(__dirname, '../prisma/schema.prisma'));
 const MIGRATION_DIR = path.resolve(process.cwd(), path.resolve(__dirname, '../prisma/migrations'));
 
@@ -260,20 +262,6 @@ async function requestContinue(message = `Continue? ${chalk.dim('(y|n)')}`): Pro
   }
 }
 
-const logger = {
-  log: (...msg: string[]) => console.log(...msg),
-  dim: (...msg: string[]) => console.log(chalk.dim(...msg)),
-  info: (...msg: string[]) => console.log(chalk.blue.bold('>>>'), ...msg),
-  warn: (...msg: string[]) => console.log(chalk.yellow.bold('>>>'), ...msg),
-  error: (...msg: string[]) => console.log(chalk.red.bold('>>>'), ...msg),
-  success: (...msg: string[]) => console.log(chalk.green.bold('>>>'), ...msg),
-  removeLine: () => process.stdout.write('\x1b[1A\x1b[2K'),
-};
-
-function link(text: string, url: string) {
-  return `\u001B]8;;${url}\u001B\\${text}\u001B]8;;\u001B\\`;
-}
-
 const whitelist = [/password.+?insecure/];
 const command = {
   async exec(command: string) {
@@ -289,7 +277,7 @@ const command = {
     );
   },
   async prisma(args: string): Promise<string> {
-    return this.exec(`bunx prisma ${args}`);
+    return this.exec(`npm run prisma ${args}`);
   },
   async mysql(...queries: string[]): Promise<string> {
     const { host, port, name, user, password } = envs.database;

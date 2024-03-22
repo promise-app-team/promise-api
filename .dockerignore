@@ -1,4 +1,5 @@
 .*
+_*
 *.config.*
 Makefile
 Dockerfile
