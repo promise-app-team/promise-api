@@ -1,26 +1,33 @@
 import { parseArgs } from 'node:util';
 
 import { Provider, DestinationType, LocationShareType, PrismaClient, Prisma } from '@prisma/client';
+import chalk from 'chalk';
 import { addHours, subHours } from 'date-fns';
 import { sample, times } from 'remeda';
 
+import { logger } from '../../scripts/utils';
 import { random, randomDate, randomPick } from '../../src/utils/random';
 
 const environment = process.env.NODE_ENV || 'local';
 
 async function main() {
-  const args = parseArgs({
+  const { values } = parseArgs({
     options: {
-      'env-file': {
-        type: 'string',
-        default: '.env.local',
-      },
+      stage: { type: 'string', default: 'local' },
     },
   });
 
+  const availableStages = ['local', 'dev', 'test', 'prod'];
+  if (!availableStages.includes(values.stage ?? '')) {
+    logger.error(`Invalid stage: ${values.stage}. (Available stages: ${availableStages.join(', ')})`);
+    process.exit(1);
+  }
+
   const dotenv = await import('dotenv');
   const { expand } = await import('dotenv-expand');
-  expand(dotenv.config({ path: args.values['env-file'] }));
+  expand(dotenv.config({ path: `.env.${values.stage}` }));
+
+  logger.info(`Seeding database for ${chalk.underline.bold(process.env.DB_URL)}`);
 
   await new PrismaClient({
     transactionOptions: {

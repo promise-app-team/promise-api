@@ -18,6 +18,7 @@
     "migration:test": "dotenv -oe .env.test -- tsx ./scripts/migration.ts",
     "migration:dev": "dotenv -oe .env.dev -- tsx ./scripts/migration.ts",
     "ssh-tunnel": "env-cmd -e dev --use-shell ./scripts/ssh-tunnel.sh",
+    "db:seed": "tsx ./prisma/seeds",
     "format": "prettier --write **/* --ext .ts",
     "lint": "DEBUG=eslint:cli-engine eslint \"src/**/*.ts\"",
     "lint:fix": "DEBUG=eslint:cli-engine eslint --fix \"src/**/*.ts\"",
