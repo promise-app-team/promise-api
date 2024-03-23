@@ -2,6 +2,7 @@
 module.exports = {
   clearMocks: true,
   maxWorkers: 1,
+  globalSetup: '<rootDir>/src/tests/setup.ts',
   moduleFileExtensions: ['js', 'json', 'ts'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',

@@ -78,7 +78,7 @@ model Promise {
   hostId Int @map("host_id") @db.UnsignedInt
 
   /// 약속장
-  host User @relation(name: "Promise.host", fields: [hostId], references: [id], onDelete: Restrict)
+  host User @relation(name: "Promise.host", fields: [hostId], references: [id], onDelete: Cascade)
 
   /// 약속 제목
   title String @map("title") @db.VarChar(50)

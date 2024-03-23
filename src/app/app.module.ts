@@ -22,7 +22,7 @@ import { PrismaModule } from '@/prisma/prisma.module';
     TypedConfigModule.register({
       isGlobal: true,
       load: [extraEnv],
-      envFilePath: ['.env.local'],
+      envFilePath: ['.env'],
       validationSchema: schema,
       expandVariables: true,
       config: TypedConfigService,
@@ -56,7 +56,7 @@ import { PrismaModule } from '@/prisma/prisma.module';
             prisma.$on('query', ({ query, params, duration }) => {
               const sanitizedQuery = query
                 .replace(/^SELECT\s+(.*?)\s+FROM/, 'SELECT * FROM')
-                .replace(/`promise[\-a-z]+?`\./g, '')
+                .replace(/`promise[_a-z]+?`\./g, '')
                 .replace(/\((?<table>`.+?`).(?<field>`.+?`)\)/g, '$<table>.$<field>');
 
               const _params = JSON.parse(params);

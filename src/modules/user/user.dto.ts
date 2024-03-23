@@ -6,8 +6,6 @@ import { ApplyDTO } from '@/common/mixins/dto.mixin';
 import { Provider, UserEntity } from '@/prisma/prisma.entity';
 
 export class UserDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl', 'provider', 'createdAt']) {}
-export class HostDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl']) {}
-export class AttendeeDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl']) {}
 
 export class InputCreateUserDTO {
   @IsOptional()

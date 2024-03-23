@@ -2,12 +2,14 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Body, Param, Query, Inject, Controller, UseInterceptors } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Cache } from 'cache-manager';
+import * as R from 'remeda';
 
 import { HttpException } from '@/common/exceptions/http.exception';
+import { ToArrayOfPipe } from '@/common/pipes/to-array-of.pipe';
 import { TypedConfigService } from '@/config/env';
 import { Delete, Get, Post, Put } from '@/customs/nest/decorators/http-api.decorator';
 import { AuthUser } from '@/modules/auth/auth.decorator';
-import { LocationDTO } from '@/modules/promise/location.dto';
+import { LocationDTO, PointDTO } from '@/modules/promise/location.dto';
 import {
   InputCreatePromiseDTO,
   InputLocationDTO,
@@ -22,6 +24,7 @@ import { DecodePromisePID } from '@/modules/promise/promise.pipe';
 import { PromiseService, PromiseServiceError } from '@/modules/promise/promise.service';
 import { ThemeDTO } from '@/modules/promise/theme.dto';
 import { UserModel } from '@/prisma/prisma.entity';
+import { Point, findGeometricMedian } from '@/utils/geometric';
 
 @ApiTags('Promise')
 @ApiBearerAuth()
@@ -56,7 +59,7 @@ export class PromiseController {
   async getPromise(@Param('pid', DecodePromisePID) id: number): Promise<PublicPromiseDTO> {
     return this.promiseService
       .findOneById(id)
-      .then((promise) => PromiseDTO.from(promise))
+      .then((promise) => PublicPromiseDTO.from(promise))
       .catch((error) => {
         switch (error) {
           case PromiseServiceError.NotFoundPromise:
@@ -191,6 +194,41 @@ export class PromiseController {
   })
   async deleteStartLocation(@AuthUser() user: UserModel, @Param('pid', DecodePromisePID) id: number): Promise<void> {
     await this.promiseService.deleteStartLocation(id, user.id);
+  }
+
+  @Get(':pid(\\d+)/middle-location', {
+    auth: true,
+    description: '약속 중간지점을 불러옵니다.',
+    exceptions: ['BAD_REQUEST', 'NOT_FOUND'],
+  })
+  @ApiQuery({ name: 'attendeeIds', type: 'number', isArray: true, required: false })
+  async getMiddleLocation(
+    @AuthUser() user: UserModel,
+    @Param('pid', DecodePromisePID) id: number,
+    @Query('attendeeIds', new ToArrayOfPipe(Number, { unique: true })) attendeeIds?: number[]
+  ): Promise<PointDTO> {
+    const exists = await this.promiseService.exists(id, { status: PromiseStatus.AVAILABLE });
+    if (!exists) {
+      throw HttpException.new('약속을 찾을 수 없습니다.', 'NOT_FOUND');
+    }
+
+    const promiseUsers = await this.promiseService.getAttendees(id, attendeeIds);
+
+    const startLocations: Point[] = R.pipe(
+      promiseUsers,
+      R.map(({ startLocation }) => startLocation),
+      R.filter(R.isTruthy),
+      R.map((location) => ({
+        latitude: parseFloat(`${location.latitude}`),
+        longitude: parseFloat(`${location.longitude}`),
+      }))
+    );
+
+    if (startLocations.length < 2) {
+      throw HttpException.new('등록된 출발지가 2개 이상 필요합니다.', 'BAD_REQUEST');
+    }
+
+    return findGeometricMedian(startLocations);
   }
 
   @Get('themes', { auth: true, description: '약속 테마 목록을 불러옵니다.' })

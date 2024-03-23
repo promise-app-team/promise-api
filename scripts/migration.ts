@@ -212,11 +212,11 @@ async function executeSeed() {
 
 const operation = {
   help: executeHelp,
-  seed: executeSeed,
-  new: executeNew,
   up: executeUp,
   down: executeDown,
   list: executeList,
+  new: executeNew,
+  seed: executeSeed,
 };
 
 async function main() {

@@ -31,7 +31,7 @@ async function initializeApp<App extends NestExpressApplication>() {
       new ValidationPipe({
         transform: true,
         whitelist: true,
-        stopAtFirstError: false,
+        stopAtFirstError: true,
         exceptionFactory(errors) {
           const error = Object.values(errors[0].constraints ?? {}).pop();
           return HttpException.new(error ?? 'Unexpected Error', 'BAD_REQUEST');
