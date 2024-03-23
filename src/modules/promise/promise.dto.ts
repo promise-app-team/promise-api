@@ -70,7 +70,7 @@ export class PromiseDTO extends ApplyDTO(
         id: user.id,
         username: user.username,
         profileUrl: user.profileUrl,
-        hasStartLocation: !!startLocationId,
+        hasStartLocation: typeof startLocationId === 'number',
       }))
     ),
   })
