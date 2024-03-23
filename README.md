@@ -5,7 +5,6 @@ Promise 앱의 API 서버 저장소입니다.
 **목차**
 
 - [개발 환경 설정](#개발-환경-설정)
-  - [준비물](#준비물)
   - [의존성 설치](#의존성-설치)
   - [환경 변수 설정](#환경-변수-설정)
   - [데이터베이스 설정](#데이터베이스-설정)
@@ -13,19 +12,13 @@ Promise 앱의 API 서버 저장소입니다.
     - [로컬 개발 환경](#로컬-개발-환경)
     - [개발 운영 환경](#개발-운영-환경)
   - [로컬 서버 실행](#로컬-서버-실행)
-  - [HTTPS로 로컬 서버 실행](#https로-로컬-서버-실행)
+  - [HTTPS로 로컬 서버 실행 (선택)](#https로-로컬-서버-실행-선택)
 - [유닛/통합 테스트](#유닛통합-테스트)
 
 ## 개발 환경 설정
 
 >개발 환경 설정을 위한 가이드입니다.  \
 >처음 이후의 과정은 이전 설정이 완료된 상태에서 진행해야 합니다.
-
-### 준비물
-
-- [node.js](https://nodejs.org/)
-- [docker-compose](https://www.docker.com/)
-- [mkcert](https://github.com/FiloSottile/mkcert) ([HTTPS](#run-local-server-with-https)를 구성하려면 설치합니다.)
 
 ### 의존성 설치
 
@@ -52,7 +45,7 @@ $ cp .env.example .env.local # 복사한 파일을 열어 환경 변수를 입�
 
 해당 API 서버는 MySQL 데이터베이스를 사용합니다. 개발 환경에서는 [Docker](https://www.docker.com/) 컨테이너를 사용하여 데이터베이스를 구성합니다.
 
-`docker`의 설치를 완료하고, [`docker-compose`](./docker-compose.yml) 명령어를 사용할 수 있는 환경에서 다음 명령어를 실행합니다.
+[`docker`](https://www.docker.com/)의 설치를 완료하고, [`docker-compose`](./docker-compose.yml) 명령어를 사용할 수 있는 환경에서 다음 명령어를 실행합니다.
 
 >데이터베이스의 데이터는 프로젝트 루트 디렉토리의 `dockerdata` 디렉토리가 생성되어 저장됩니다.
 
@@ -169,15 +162,26 @@ $ npm run migration:dev list # 검토
 
 ### 로컬 서버 실행
 
-로컬 개발 서버를 실행하기 위해 다음 명령어를 실행합니다. `http://localhost:$PORT` 주소로 접속할 수 있습니다.
+로컬 개발 서버를 실행하기 위해 다음 명령어를 실행합니다.
+
+>HTTP API 서버는 `http://localhost:$PORT` 주소로 접속할 수 있고,  
+>WebSocket API 서버는 `ws://localhost:$PORT` 주소로 접속할 수 있습니다.
 
 ```bash
 $ npm run start:dev
 ```
 
-### HTTPS로 로컬 서버 실행
+### HTTPS로 로컬 서버 실행 (선택)
 
-HTTPS로 로컬 서버를 실행하기 위해 다음 명령어를 실행합니다. `https://api.local.promise-app.com` 주소로 접속할 수 있습니다.
+우선 HTTPS 인증서를 생성하기 위해 [mkcert](https://github.com/FiloSottile/mkcert)를 설치합니다.
+
+```bash
+$ brew install mkcert
+```
+
+HTTPS로 로컬 서버를 실행하기 위해 다음 명령어를 실행합니다.
+
+>`https://api.local.promise-app.com` 주소로 접속할 수 있습니다.
 
 ```bash
 $ make start_https # 비밀번호를 입력하라는 메시지가 표시됩니다.

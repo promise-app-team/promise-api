@@ -19,7 +19,7 @@ import { PrismaModule } from '@/prisma/prisma.module';
 @Module({
   imports: [
     CacheModule.register({ isGlobal: true }),
-    TypedConfigModule.forRoot({
+    TypedConfigModule.register({
       isGlobal: true,
       load: [extraEnv],
       envFilePath: ['.env.local'],
@@ -36,18 +36,11 @@ import { PrismaModule } from '@/prisma/prisma.module';
         };
       },
     }),
-    LoggerModule.forRoot({
+    LoggerModule.register({
       global: true,
-      blacklist: [
-        'NestFactory',
-        'InstanceLoader',
-        'RoutesResolver',
-        'RouterExplorer',
-        'WebSocketEventGateway',
-        'WebSocketsController',
-      ],
+      blacklist: ['NestFactory', 'InstanceLoader', 'RoutesResolver', 'RouterExplorer', 'WebSocketsController'],
     }),
-    PrismaModule.forRootAsync({
+    PrismaModule.registerAsync({
       isGlobal: true,
       inject: [LoggerService, TypedConfigService],
       useFactory(logger: LoggerService, config: TypedConfigService) {

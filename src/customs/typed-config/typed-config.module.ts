@@ -5,7 +5,7 @@ import { TypedConfigModuleOptions } from './typed-config.interface';
 
 @Module({})
 export class TypedConfigModule {
-  static forRoot(options: TypedConfigModuleOptions): DynamicModule {
+  static register(options: TypedConfigModuleOptions): DynamicModule {
     return {
       module: TypedConfigModule,
       global: options?.isGlobal,

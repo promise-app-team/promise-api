@@ -5,7 +5,7 @@ import { PrismaService } from './prisma.service';
 
 @Module({})
 export class PrismaModule {
-  static forRoot(options: PrismaModuleOptions): DynamicModule {
+  static register(options: PrismaModuleOptions): DynamicModule {
     return {
       module: PrismaModule,
       global: options.isGlobal,
@@ -21,7 +21,7 @@ export class PrismaModule {
     };
   }
 
-  static forRootAsync(options: PrismaModuleAsyncOptions): DynamicModule {
+  static registerAsync(options: PrismaModuleAsyncOptions): DynamicModule {
     return {
       module: PrismaModule,
       global: options.isGlobal,

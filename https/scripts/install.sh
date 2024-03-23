@@ -4,8 +4,8 @@
 mkcert -install
 mkcert -cert-file $https/ssl/promise.crt -key-file $https/ssl/promise.key ${HTTPS}
 
-sudo sed -i '' '/# <promise.local>/,/# <\/promise.local>/d' /etc/hosts
-sudo sed -i '' -e :a -e '/^\n*$/{$d;N;};/\n$/ba' /etc/hosts
+sudo perl -i -0pe 's/# <promise.local>.*# <\/promise.local>\n//s' /etc/hosts
+sudo perl -i -0pe 'BEGIN{undef $/;} s/\n{2,}$/\n/g' /etc/hosts
 
 cat <<EOF | sudo tee -a /etc/hosts >/dev/null
 

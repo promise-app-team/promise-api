@@ -4,8 +4,13 @@ frameworkVersion: '3'
 
 plugins:
   - serverless-domain-manager
+  - serverless-prune-plugin
 
 custom:
+  prune:
+    automatic: true
+    includeLayers: true
+    number: 3
   domain:
     prod: api.promise-app.com
     dev: api.dev.promise-app.com

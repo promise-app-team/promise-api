@@ -4,5 +4,5 @@ mkcert -uninstall
 rm -rf "$(mkcert -CAROOT)"
 rm -f $https/ssl/*
 
-sudo sed -i '' '/# <promise.local>/,/# <\/promise.local>/d' /etc/hosts
-sudo sed -i '' -e :a -e '/^\n*$/{$d;N;};/\n$/ba' /etc/hosts
+sudo perl -i -0pe 's/# <promise.local>.*# <\/promise.local>\n//s' /etc/hosts
+sudo perl -i -0pe 'BEGIN{undef $/;} s/\n{2,}$/\n/g' /etc/hosts
