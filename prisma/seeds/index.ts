@@ -37,7 +37,6 @@ async function main() {
     },
   }).$transaction(async (prisma: any) => {
     await clean(prisma);
-    await prepare(prisma);
 
     if (['local', 'development'].includes(environment)) {
       await mock(prisma);
@@ -60,26 +59,16 @@ async function clean(prisma: PrismaClient) {
     prisma.promiseUser.deleteMany(),
     prisma.location.deleteMany(),
     prisma.promise.deleteMany(),
-    prisma.theme.deleteMany(),
+    // prisma.theme.deleteMany(),
     prisma.user.deleteMany(),
   ]);
 
   await Promise.all([
-    prisma.$queryRaw`ALTER TABLE pm_promise_themes AUTO_INCREMENT = 1;`,
-    prisma.$queryRaw`ALTER TABLE pm_promise_users AUTO_INCREMENT = 1`,
     prisma.$queryRaw`ALTER TABLE pm_locations AUTO_INCREMENT = 1`,
     prisma.$queryRaw`ALTER TABLE pm_promises AUTO_INCREMENT = 1`,
-    prisma.$queryRaw`ALTER TABLE pm_themes AUTO_INCREMENT = 1`,
+    // prisma.$queryRaw`ALTER TABLE pm_themes AUTO_INCREMENT = 1`,
     prisma.$queryRaw`ALTER TABLE pm_users AUTO_INCREMENT = 1`,
   ]);
-}
-
-async function prepare(prisma: PrismaClient) {
-  await prisma.theme.createMany({
-    data: ['연인', '친구', '동료', '가족', '지인', '스터디', '썸', '동아리', '동호회', '모임', '모르는 사람'].map(
-      (name) => ({ name })
-    ),
-  });
 }
 
 async function mock(prisma: PrismaClient) {

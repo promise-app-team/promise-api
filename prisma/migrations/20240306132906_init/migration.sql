@@ -83,7 +83,7 @@ CREATE TABLE `pm_locations` (
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- AddForeignKey
-ALTER TABLE `pm_promises` ADD CONSTRAINT `pm_promises_host_id_fkey` FOREIGN KEY (`host_id`) REFERENCES `pm_users`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE `pm_promises` ADD CONSTRAINT `pm_promises_host_id_fkey` FOREIGN KEY (`host_id`) REFERENCES `pm_users`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `pm_promises` ADD CONSTRAINT `pm_promises_destination_id_fkey` FOREIGN KEY (`destination_id`) REFERENCES `pm_locations`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
@@ -102,3 +102,6 @@ ALTER TABLE `pm_promise_themes` ADD CONSTRAINT `pm_promise_themes_promise_id_fke
 
 -- AddForeignKey
 ALTER TABLE `pm_promise_themes` ADD CONSTRAINT `pm_promise_themes_theme_id_fkey` FOREIGN KEY (`theme_id`) REFERENCES `pm_themes`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- Seeding
+INSERT INTO `pm_themes` (`name`) VALUES ('연인'), ('친구'), ('동료'), ('가족'), ('지인'), ('스터디'), ('썸'), ('동아리'), ('동호회'), ('모임'), ('모르는 사람');
