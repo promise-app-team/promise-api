@@ -22,7 +22,7 @@ import { PrismaModule } from '@/prisma/prisma.module';
     TypedConfigModule.register({
       isGlobal: true,
       load: [extraEnv],
-      envFilePath: ['.env.local'],
+      envFilePath: ['.env'],
       validationSchema: schema,
       expandVariables: true,
       config: TypedConfigService,

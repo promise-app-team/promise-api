@@ -23,10 +23,6 @@ async function main() {
     process.exit(1);
   }
 
-  const dotenv = await import('dotenv');
-  const { expand } = await import('dotenv-expand');
-  expand(dotenv.config({ path: `.env.${values.stage}` }));
-
   logger.info(`Seeding database for ${chalk.underline.bold(process.env.DB_URL)}`);
 
   await new PrismaClient({
