@@ -1,14 +1,17 @@
 #!/bin/bash
 
-_file="$(dirname $0)/node_modules/@nestjs/swagger/dist/plugin/utils/plugin-utils.js"
-_os=$(uname -s)
+file="$(find . -name "plugin-utils.js")"
+os=$(uname -s)
 
-if [[ $_os == "Darwin" ]]; then
-  sed -i '' "s/'Promise'/'Promise<'/" $_file
-  sed -i '' "s/'Observable'/'Observable<'/" $_file
-elif [[ $_os == "Linux" ]]; then
-  sed -i "s/'Promise'/'Promise<'/" $_file
-  sed -i "s/'Observable'/'Observable<'/" $_file
+echo "Patching $file (OS: $os)"
+
+if [[ $os == "Darwin" ]]; then
+  sed -i '' "s/'Promise'/'Promise<'/" $file
+  sed -i '' "s/'Observable'/'Observable<'/" $file
+elif [[ $os == "Linux" ]]; then
+  sed -i "s/'Promise'/'Promise<'/" $file
+  sed -i "s/'Observable'/'Observable<'/" $file
 fi
 
-cat $_file | grep -A 2 "isPromiseOrObservable(type)"
+echo "Result:"
+cat $file | grep -A 2 "isPromiseOrObservable(type)"

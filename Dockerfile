@@ -15,14 +15,12 @@ WORKDIR /app
 
 COPY --from=install /deps/dev/node_modules node_modules
 COPY . .
+RUN . ./patch.sh
 RUN npm run build
 
 FROM public.ecr.aws/lambda/nodejs:18 as deploy
 COPY --from=install /deps/prod/node_modules node_modules
 COPY --from=build /app/dist dist
-
-COPY patch.sh ./
-RUN ./patch.sh
 
 ARG NOW
 ENV NOW=$NOW
