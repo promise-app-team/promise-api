@@ -38,7 +38,7 @@ describe(AuthService, () => {
   });
 
   test('should be defined', () => {
-    expect(authService).toBeDefined();
+    expect(authService).toBeInstanceOf(AuthService);
   });
 
   describe(AuthService.prototype.authenticate, () => {

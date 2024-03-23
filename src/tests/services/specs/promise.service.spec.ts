@@ -9,7 +9,9 @@ describe(PromiseService, () => {
 
   beforeAll(async () => {
     prisma = new PrismaService();
+  });
 
+  beforeEach(async () => {
     const module = await Test.createTestingModule({
       providers: [PromiseService, { provide: PrismaService, useValue: prisma }],
     }).compile();
@@ -17,23 +19,22 @@ describe(PromiseService, () => {
     promiseService = module.get(PromiseService);
   });
 
-  beforeAll(async () => {
-    await prisma.user.deleteMany();
-    await prisma.promise.deleteMany();
-    await prisma.location.deleteMany();
-    await prisma.promiseTheme.deleteMany();
-    await prisma.promiseUser.deleteMany();
-    await prisma.$queryRaw`ALTER TABLE pm_users AUTO_INCREMENT = 1;`;
-    await prisma.$queryRaw`ALTER TABLE pm_promises AUTO_INCREMENT = 1;`;
-    await prisma.$queryRaw`ALTER TABLE pm_locations AUTO_INCREMENT = 1;`;
-  });
-
   afterAll(async () => {
+    await prisma.$transaction(async (prisma) => {
+      await prisma.promiseTheme.deleteMany();
+      await prisma.promiseUser.deleteMany();
+      await prisma.user.deleteMany();
+      await prisma.promise.deleteMany();
+      await prisma.location.deleteMany();
+      await prisma.$queryRaw`ALTER TABLE pm_users AUTO_INCREMENT = 1;`;
+      await prisma.$queryRaw`ALTER TABLE pm_promises AUTO_INCREMENT = 1;`;
+      await prisma.$queryRaw`ALTER TABLE pm_locations AUTO_INCREMENT = 1;`;
+    });
     await prisma.$disconnect();
   });
 
   test('should be defined', () => {
-    expect(promiseService).toBeDefined();
+    expect(promiseService).toBeInstanceOf(PromiseService);
   });
 
   describe(PromiseService.prototype.exists, () => {

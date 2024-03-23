@@ -30,8 +30,7 @@ describe(UserService, () => {
   });
 
   test('should be defined', () => {
-    expect(userService).toBeDefined();
-    expect(prisma).toBeDefined();
+    expect(userService).toBeInstanceOf(UserService);
   });
 
   describe(UserService.prototype.findOneById, () => {

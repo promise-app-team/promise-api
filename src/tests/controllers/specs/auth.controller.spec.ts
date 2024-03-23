@@ -41,7 +41,7 @@ describe(AuthController, () => {
   });
 
   test('should be defined', () => {
-    expect(authController).toBeDefined();
+    expect(authController).toBeInstanceOf(AuthController);
   });
 
   describe(AuthController.prototype.login, () => {
