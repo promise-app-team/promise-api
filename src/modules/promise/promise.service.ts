@@ -37,7 +37,7 @@ const promiseInclude: Prisma.PromiseInclude = {
     },
   },
   users: {
-    select: { user: true },
+    select: { user: true, startLocationId: true },
   },
   themes: {
     select: { theme: true },
@@ -286,6 +286,16 @@ export class PromiseService {
             throw error;
         }
       });
+  }
+
+  async getAttendees(id: number, attendeeIds?: number[]) {
+    return this.prisma.promiseUser.findMany({
+      where: {
+        promiseId: id,
+        ...(attendeeIds?.length && { userId: { in: attendeeIds } }),
+      },
+      include: { startLocation: true },
+    });
   }
 
   /**
