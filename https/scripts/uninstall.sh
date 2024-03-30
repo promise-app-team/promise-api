@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 mkcert -uninstall
 rm -rf "$(mkcert -CAROOT)"

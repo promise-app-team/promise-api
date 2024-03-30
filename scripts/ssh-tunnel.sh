@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 _notice() { printf "\e[34m>>>\e[0m $*"; }
 _error() { printf "\e[31m>>>\e[0m $*"; }

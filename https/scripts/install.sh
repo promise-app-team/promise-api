@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # https://github.com/FiloSottile/mkcert#readme
 mkcert -install
