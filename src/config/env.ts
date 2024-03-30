@@ -15,7 +15,14 @@ export const extraEnv = () => {
     build: BUILD,
     deploy: formatISO(process.env.NOW || new Date()),
     version: '0.0.0', // TODO: versioning
-    'colorize.log': !process.env.NO_COLOR,
+    colorize: !process.env.NO_COLOR,
+    db: {
+      host: process.env.DB_HOST,
+      port: +(process.env.DB_PORT || 3306),
+      name: process.env.DB_NAME,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+    },
     jwt: {
       secret: process.env.JWT_SECRET_KEY,
       expires: {

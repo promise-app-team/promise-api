@@ -1,4 +1,4 @@
-env ?= .env
+env ?= .env.local
 
 include $(env)
 export
@@ -19,12 +19,12 @@ stop_mysql:
 	@docker compose down --volumes mysql
 
 start_https:
-	@. ./https/scripts/install.sh
+	@./https/scripts/install.sh
 	@docker compose up -d https
 
 restart_https:
 	@docker compose restart https
 
 stop_https:
-	@. ./https/scripts/uninstall.sh
+	@./https/scripts/uninstall.sh
 	@docker compose down https --rmi=all
