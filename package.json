@@ -14,7 +14,8 @@
     "prisma": "prisma",
     "build": "nest build",
     "start:dev": "nest start --watch",
-    "migration": "dotenv -oe .env -- tsx ./scripts/migration.ts",
+    "migration": "npm run migration:local",
+    "migration:local": "dotenv -oe .env.local -- tsx ./scripts/migration.ts",
     "migration:test": "dotenv -oe .env.test -- tsx ./scripts/migration.ts",
     "migration:dev": "dotenv -oe .env.dev -- tsx ./scripts/migration.ts",
     "ssh-tunnel": "env-cmd -e dev --use-shell ./scripts/ssh-tunnel.sh",
@@ -25,7 +26,8 @@
     "test": "dotenv -oe .env.test -- jest",
     "coverage": "dotenv -oe .env.test -- jest --coverage",
     "update": "npx npm-check-updates -ui",
-    "inthash": "dotenv -oe .env -- tsx ./scripts/inthash.ts"
+    "inthash": "dotenv -oe .env.local -- tsx ./scripts/inthash.ts",
+    "postinstall": "./scripts/postinstall.sh"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.529.1",
