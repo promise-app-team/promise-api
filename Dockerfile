@@ -15,7 +15,7 @@ WORKDIR /app
 
 COPY --from=install /deps/dev/node_modules node_modules
 COPY . .
-RUN ./patch.sh
+RUN . ./patch.sh
 RUN npm run build
 
 FROM public.ecr.aws/lambda/nodejs:18 as deploy
