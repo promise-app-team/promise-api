@@ -28,4 +28,5 @@ done
 
 if [ ! -f .env-cmdrc.js ]; then
   cp .env-cmdrc.example.js .env-cmdrc.js
+  echo ".env-cmdrc.js created"
 fi
