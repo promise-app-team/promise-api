@@ -1,6 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 init() {
+  set -e
+
   echo -e "\n[$1] Checking if MySQL is up..."
 
   until mysqladmin ping -h"127.0.0.1" -P3306 --silent; do
@@ -19,6 +21,9 @@ init() {
   create_database_sql="
     CREATE DATABASE IF NOT EXISTS \`${DATABASE}_${STAGE}\`;
     CREATE DATABASE IF NOT EXISTS \`${DATABASE}_${STAGE}_shadow\`;
+  "
+
+  create_test_database_sql="
     CREATE DATABASE IF NOT EXISTS \`${DATABASE}_test\`;
     CREATE DATABASE IF NOT EXISTS \`${DATABASE}_test_shadow\`;
   "
@@ -29,11 +34,18 @@ init() {
 
   if [[ "$USER" == "root" ]]; then
     echo "[$1] Running as root user..."
-    _mysql "$create_database_sql"
   else
     echo "[$1] Running as non-root user..."
     _mysql "$create_user_sql"
-    _mysql "$create_database_sql"
+    echo "[$1] User created!"
+  fi
+
+  _mysql "$create_database_sql"
+  echo "[$1] Databases created!"
+
+  if [[ "$STAGE" == "local" ]]; then
+    _mysql "$create_test_database_sql"
+    echo "[$1] Test databases created!"
   fi
 
   echo "[$1] MySQL initialization script finished!"
