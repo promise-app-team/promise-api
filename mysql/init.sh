@@ -24,7 +24,7 @@ init() {
   "
 
   _mysql() {
-    echo "$1" | mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" -h127.0.0.1 -P3306 2>/dev/null | grep -vE "password.+?insecure"
+    echo "$1" | mysql -uroot -p"${MYSQL_ROOT_PASSWORD}" -h127.0.0.1 -P3306 2> >(grep -vE "password.+?insecure")
   }
 
   if [[ "$USER" == "root" ]]; then
