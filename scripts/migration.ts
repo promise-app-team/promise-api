@@ -1,13 +1,11 @@
-import { exec } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import readline from 'node:readline';
 
 import chalk from 'chalk';
 import { formatISO, parse } from 'date-fns';
 import * as R from 'remeda';
 
-import { link, logger } from './utils';
+import { execute, link, logger, prompt } from './utils';
 
 ///////////////////////////////////////////////////////////////////////////////
 // Environment
@@ -41,7 +39,7 @@ async function executeHelp() {
   logger.info(chalk.bold('Description:'));
   logger.log('    This command is a wrapper around Prisma Migrate CLI.');
   logger.info(chalk.bold('Usage:'));
-  logger.log(`    ${chalk.bold.gray('$')} ${chalk.bold.blue(`${COMMAND} <command>`)}`);
+  logger.log(`    ${chalk.bold.dim('$')} ${COMMAND} <command>`);
   logger.info(chalk.bold('Available Commands:'));
   logger.log(chalk.gray(`    - ${chalk.yellow('up')}                          apply pending migrations (for prod)`));
   logger.log(chalk.gray(`    - ${chalk.yellow('down')} <n>                    revert last n migrations (default: 1)`));
@@ -238,21 +236,6 @@ async function main() {
 ///////////////////////////////////////////////////////////////////////////////
 // Helpers
 
-async function prompt(message: string): Promise<string> {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-
-  const question = `${chalk.bold.blue('???')} ${chalk.bold.gray(message)} `;
-  return new Promise((res) => {
-    rl.question(question, (answer) => {
-      rl.close();
-      res(answer.trim());
-    });
-  });
-}
-
 async function requestContinue(message = `Continue? ${chalk.dim('(y|n)')}`): Promise<boolean> {
   while (true) {
     const response = await prompt(message);
@@ -262,19 +245,9 @@ async function requestContinue(message = `Continue? ${chalk.dim('(y|n)')}`): Pro
   }
 }
 
-const whitelist = [/password.+?insecure/];
 const command = {
   async exec(command: string) {
-    // logger.dim(`$ ${command}`);
-    return new Promise<string>((res, rej) =>
-      exec(command, (error, stdout, stderr) => {
-        if (error && !whitelist.some((regex) => regex.test(stderr))) {
-          rej(new Error(stderr));
-        } else {
-          res(stdout);
-        }
-      })
-    );
+    return execute(command, { whitelists: [/password.+?insecure/], echo: false });
   },
   async prisma(args: string): Promise<string> {
     return this.exec(`npm run prisma ${args}`);
