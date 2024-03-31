@@ -31,18 +31,6 @@ enum LocationShareType {
   TIME
 }
 
-model Test {
-  id Int @id @default(autoincrement()) @db.UnsignedInt
-
-  @@map("pm_tests")
-}
-
-model Test2 {
-  id Int @id @default(autoincrement()) @db.UnsignedInt
-
-  @@map("pm_test2s")
-}
-
 model User {
   id Int @id @default(autoincrement()) @db.UnsignedInt
 
@@ -206,10 +194,10 @@ model Location {
   id Int @id @default(autoincrement()) @db.UnsignedInt
 
   /// 시/도
-  city String @map("city") @db.VarChar(50)
+  city String? @map("city") @db.VarChar(50)
 
   /// 구/군
-  district String @map("district") @db.VarChar(50)
+  district String? @map("district") @db.VarChar(50)
 
   /// 동/읍/면 (상세주소)
   address String? @map("address") @db.VarChar(100)

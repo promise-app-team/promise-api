@@ -178,8 +178,8 @@ export class PromiseModel extends PickType(PromiseEntity, [
 
 export class LocationEntity implements LocationPayload {
   id!: number;
-  city: string | null;
-  district: string | null;
+  city: string;
+  district: string;
   address: string | null;
   latitude: Prisma.Decimal;
   longitude: Prisma.Decimal;

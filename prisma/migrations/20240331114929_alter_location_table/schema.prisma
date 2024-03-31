@@ -31,18 +31,6 @@ enum LocationShareType {
   TIME
 }
 
-model Test {
-  id Int @id @default(autoincrement()) @db.UnsignedInt
-
-  @@map("pm_tests")
-}
-
-model Test2 {
-  id Int @id @default(autoincrement()) @db.UnsignedInt
-
-  @@map("pm_test2s")
-}
-
 model User {
   id Int @id @default(autoincrement()) @db.UnsignedInt
 
