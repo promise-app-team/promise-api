@@ -11,7 +11,6 @@
   "license": "UNLICENSED",
   "scripts": {
     "nest": "nest",
-    "prisma": "prisma",
     "build": "nest build",
     "start:dev": "nest start --watch",
     "migration": "npm run migration:local",
@@ -54,7 +53,7 @@
     "ioredis": "^5.3.2",
     "joi": "^17.12.2",
     "mysql2": "^3.9.2",
-    "remeda": "^1.48.0",
+    "remeda": "^1.56.0",
     "rxjs": "^7.8.1",
     "uuid": "^9.0.1",
     "winston": "^3.12.0",
