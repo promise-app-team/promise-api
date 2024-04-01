@@ -46,7 +46,7 @@ export class PromiseController {
     @Query('role') role: PromiseUserRole = PromiseUserRole.ALL
   ): Promise<PromiseDTO[]> {
     return this.promiseService
-      .findAllByUser(user.id, { status, role })
+      .findAll({ status, role, userId: user.id })
       .then((promises) => promises.map((promise) => PromiseDTO.from(promise)));
   }
 
@@ -58,7 +58,7 @@ export class PromiseController {
   @UseInterceptors(EncodePromiseID)
   async getPromise(@Param('pid', DecodePromisePID) id: number): Promise<PublicPromiseDTO> {
     return this.promiseService
-      .findOneById(id)
+      .findOne({ id })
       .then((promise) => PublicPromiseDTO.from(promise))
       .catch((error) => {
         switch (error) {
@@ -90,7 +90,7 @@ export class PromiseController {
         switch (error) {
           case PromiseServiceError.NotFoundPromise:
             throw HttpException.new(error, 'NOT_FOUND');
-          case PromiseServiceError.HostChangeOnly:
+          case PromiseServiceError.OnlyHostUpdatable:
             throw HttpException.new(error, 'BAD_REQUEST');
           default:
             throw HttpException.new(error);
@@ -115,7 +115,7 @@ export class PromiseController {
         switch (error) {
           case PromiseServiceError.NotFoundPromise:
             throw HttpException.new(error, 'NOT_FOUND');
-          case PromiseServiceError.AlreadyAttend:
+          case PromiseServiceError.AlreadyAttended:
             throw HttpException.new(error, 'BAD_REQUEST');
           default:
             throw HttpException.new(error);
@@ -133,7 +133,7 @@ export class PromiseController {
       switch (error) {
         case PromiseServiceError.NotFoundPromise:
           throw HttpException.new(error, 'NOT_FOUND');
-        case PromiseServiceError.HostDoNotCancel:
+        case PromiseServiceError.HostCannotLeave:
           throw HttpException.new(error, 'BAD_REQUEST');
         default:
           throw HttpException.new(error);
@@ -207,7 +207,7 @@ export class PromiseController {
     @Param('pid', DecodePromisePID) id: number,
     @Query('attendeeIds', new ToArrayOfPipe(Number, { unique: true })) attendeeIds?: number[]
   ): Promise<PointDTO> {
-    const exists = await this.promiseService.exists(id, { status: PromiseStatus.AVAILABLE });
+    const exists = await this.promiseService.exists({ id, status: PromiseStatus.AVAILABLE });
     if (!exists) {
       throw HttpException.new('약속을 찾을 수 없습니다.', 'NOT_FOUND');
     }
@@ -260,7 +260,7 @@ export class PromiseController {
 
   @Post('queue', { description: '약속 대기열에 추가합니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
   async enqueuePromise(@Query('pid', DecodePromisePID) id: number, @Query('deviceId') deviceId: string) {
-    const exists = await this.promiseService.exists(id, { status: PromiseStatus.AVAILABLE });
+    const exists = await this.promiseService.exists({ id, status: PromiseStatus.AVAILABLE });
     if (!exists) {
       throw HttpException.new('약속을 찾을 수 없습니다.', 'NOT_FOUND');
     }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { difference, map, pick, pipe } from 'remeda';
+import * as R from 'remeda';
 
 import { InputCreatePromiseDTO, InputLocationDTO, PromiseStatus, PromiseUserRole } from './promise.dto';
 
@@ -11,9 +11,9 @@ import { PrismaService } from '@/prisma/prisma.service';
 export enum PromiseServiceError {
   NotFoundPromise = '약속을 찾을 수 없습니다.',
   NotFoundStartLocation = '등록한 출발지가 없습니다.',
-  AlreadyAttend = '이미 참여한 약속입니다.',
-  HostChangeOnly = '약속장만 약속을 수정할 수 있습니다.',
-  HostDoNotCancel = '약속장은 약속을 취소할 수 없습니다.',
+  AlreadyAttended = '이미 참여한 약속입니다.',
+  OnlyHostUpdatable = '약속장만 약속을 수정할 수 있습니다.',
+  HostCannotLeave = '약속장은 약속을 취소할 수 없습니다.',
 }
 
 type PromiseOptionalFilter = {
@@ -51,15 +51,15 @@ export type PromiseResult = Prisma.PromiseGetPayload<{ include: typeof promiseIn
 export class PromiseService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async exists(id: number, condition?: PromiseFilter): Promise<boolean> {
+  async exists(condition?: PromiseFilter): Promise<boolean> {
     const exists = await this.prisma.promise.findUnique({
-      where: this.#makeFilter({ id, ...condition }),
+      where: this.#makeFilter(condition),
       select: { id: true },
     });
     return !!exists;
   }
 
-  async findAllByUser(userId: number, condition?: PromiseFilter): Promise<PromiseResult[]> {
+  async findAll(condition?: PromiseFilter): Promise<PromiseResult[]> {
     return this.prisma.promise.findMany({
       where: this.#makeFilter(condition),
       include: promiseInclude,
@@ -70,9 +70,9 @@ export class PromiseService {
    *
    * @throws {PromiseServiceError.NotFoundPromise}
    */
-  async findOneById(id: number, condition?: PromiseFilter): Promise<PromiseResult> {
+  async findOne(condition?: PromiseFilter): Promise<PromiseResult> {
     const user = await this.prisma.promise.findUnique({
-      where: this.#makeFilter({ id, ...condition }),
+      where: this.#makeFilter(condition),
       include: promiseInclude,
     });
 
@@ -86,7 +86,7 @@ export class PromiseService {
   async create(userId: number, input: InputCreatePromiseDTO): Promise<PromiseResult> {
     return this.prisma.promise.create({
       data: {
-        ...pick(input, [
+        ...R.pick(input, [
           'title',
           'destinationType',
           'locationShareStartType',
@@ -126,12 +126,16 @@ export class PromiseService {
    */
   async update(id: number, hostId: number, input: InputCreatePromiseDTO): Promise<PromiseResult> {
     const promise = await this.prisma.promise.findUnique({
-      where: { id, hostId },
-      select: { id: true, destinationId: true },
+      where: { id },
+      select: { id: true, hostId: true, destinationId: true },
     });
 
     if (!promise) {
-      throw PromiseServiceError.HostChangeOnly;
+      throw PromiseServiceError.NotFoundPromise;
+    }
+
+    if (promise.hostId !== hostId) {
+      throw PromiseServiceError.OnlyHostUpdatable;
     }
 
     const themes = await this.prisma.promiseTheme.findMany({
@@ -145,7 +149,7 @@ export class PromiseService {
     return this.prisma.promise.update({
       where: { id, hostId },
       data: {
-        ...pick(input, [
+        ...R.pick(input, [
           'title',
           'destinationType',
           'locationShareStartType',
@@ -157,18 +161,18 @@ export class PromiseService {
         themes: {
           deleteMany: {
             themeId: {
-              in: pipe(
+              in: R.pipe(
                 themes,
-                map((theme) => theme.themeId),
-                difference(input.themeIds)
+                R.map((theme) => theme.themeId),
+                R.filter(R.isNot(R.isIncludedIn(input.themeIds)))
               ),
             },
           },
           createMany: {
-            data: pipe(
+            data: R.pipe(
               input.themeIds,
-              difference(map(themes, (theme) => theme.themeId)),
-              map((themeId) => ({ themeId }))
+              R.filter(R.isNot(R.isIncludedIn(themes.map((theme) => theme.themeId)))),
+              R.map((themeId) => ({ themeId }))
             ),
           },
         },
@@ -192,7 +196,7 @@ export class PromiseService {
    * @throws {PromiseServiceError.NotFoundStartLocation}
    */
   async getStartLocation(id: number, userId: number): Promise<LocationModel> {
-    const promise = await this.findOneById(id, { role: PromiseUserRole.HOST, status: PromiseStatus.AVAILABLE });
+    const promise = await this.findOne({ id, status: PromiseStatus.AVAILABLE });
 
     const promiseUser = await this.prisma.promiseUser.findFirst({
       where: { userId, promiseId: promise.id },
@@ -203,31 +207,24 @@ export class PromiseService {
       throw PromiseServiceError.NotFoundPromise;
     }
 
-    if (!promiseUser.startLocationId) {
+    if (!promiseUser.startLocation) {
       throw PromiseServiceError.NotFoundStartLocation;
     }
 
-    const location = await this.prisma.location.findUnique({
-      where: { id: promiseUser.startLocationId },
-    });
-
-    if (!location) {
-      throw PromiseServiceError.NotFoundStartLocation;
-    }
-
-    return location;
+    return promiseUser.startLocation;
   }
 
   /**
    * @throws {PromiseServiceError.NotFoundPromise}
    */
   async updateStartLocation(id: number, attendeeId: number, input: InputLocationDTO): Promise<LocationModel> {
-    const promise = await this.findOneById(id, { role: PromiseUserRole.HOST, status: PromiseStatus.AVAILABLE });
+    const promise = await this.findOne({ id, role: PromiseUserRole.HOST, status: PromiseStatus.AVAILABLE });
 
     const promiseUser = await this.prisma.promiseUser.findFirst({
       where: { userId: attendeeId, promiseId: promise.id },
       select: { startLocationId: true },
     });
+
     if (!promiseUser) {
       throw PromiseServiceError.NotFoundPromise;
     }
@@ -244,22 +241,24 @@ export class PromiseService {
    * @throws {PromiseServiceError.NotFoundStartLocation}
    */
   async deleteStartLocation(id: number, userId: number): Promise<void> {
-    return this.prisma.$transaction(async (tx) => {
-      const promiseUser = await tx.promiseUser.findFirst({
-        where: { userId, promiseId: id },
-        select: { startLocationId: true },
-      });
+    const promiseUser = await this.prisma.promiseUser.findFirst({
+      where: { userId, promiseId: id },
+      select: { startLocationId: true },
+    });
 
-      if (!promiseUser) {
-        throw PromiseServiceError.NotFoundPromise;
-      }
+    if (!promiseUser) {
+      throw PromiseServiceError.NotFoundPromise;
+    }
 
-      await tx.location.delete({
-        where: { id: promiseUser?.startLocationId ?? 0 },
-      });
+    await this.prisma.location.delete({
+      where: { id: promiseUser?.startLocationId ?? 0 },
     });
   }
 
+  /**
+   * @throws {PromiseServiceError.NotFoundPromise}
+   * @throws {PromiseServiceError.AlreadyAttended}
+   */
   async attend(id: number, userId: number): Promise<{ id: number }> {
     return this.prisma.promiseUser
       .create({
@@ -279,7 +278,7 @@ export class PromiseService {
       .catch((error) => {
         switch (PrismaClientError.from(error)?.code) {
           case 'P2002':
-            throw PromiseServiceError.AlreadyAttend;
+            throw PromiseServiceError.AlreadyAttended;
           case 'P2025':
             throw PromiseServiceError.NotFoundPromise;
           default:
@@ -300,27 +299,34 @@ export class PromiseService {
 
   /**
    * @throws {PromiseServiceError.NotFoundPromise}
-   * @throws {PromiseServiceError.HostDoNotCancel}
+   * @throws {PromiseServiceError.HostCannotLeave}
    */
   async leave(id: number, userId: number): Promise<void> {
-    return this.prisma.$transaction(async (tx) => {
-      const promise = await tx.promise.findUnique({
-        where: this.#makeFilter({ id, status: PromiseStatus.AVAILABLE }),
-        select: { id: true, hostId: true, promisedAt: true, completedAt: true },
-      });
-
-      if (!promise) {
-        throw PromiseServiceError.NotFoundPromise;
-      }
-
-      if (promise.hostId === userId) {
-        throw PromiseServiceError.HostDoNotCancel;
-      }
-
-      await tx.promiseUser.delete({
-        where: { identifier: { userId, promiseId: promise.id } },
-      });
+    const promise = await this.prisma.promise.findUnique({
+      where: this.#makeFilter({ id, status: PromiseStatus.AVAILABLE }),
+      select: { id: true, hostId: true, promisedAt: true, completedAt: true },
     });
+
+    if (!promise) {
+      throw PromiseServiceError.NotFoundPromise;
+    }
+
+    if (promise.hostId === userId) {
+      throw PromiseServiceError.HostCannotLeave;
+    }
+
+    await this.prisma.promiseUser
+      .delete({
+        where: { identifier: { userId, promiseId: promise.id } },
+      })
+      .catch((error) => {
+        switch (PrismaClientError.from(error)?.code) {
+          case 'P2025':
+            throw PromiseServiceError.NotFoundPromise;
+          default:
+            throw error;
+        }
+      });
   }
 
   async getThemes(): Promise<ThemeModel[]> {
@@ -334,7 +340,7 @@ export class PromiseService {
     const result = {} as Prisma.PromiseWhereInput | Prisma.PromiseWhereUniqueInput;
     const now = new Date();
 
-    if (condition.id) {
+    if (typeof condition.id === 'number') {
       result.id = condition.id;
     }
 
@@ -345,7 +351,7 @@ export class PromiseService {
           result.completedAt = null;
           break;
         case PromiseStatus.UNAVAILABLE:
-          result.OR = [{ promisedAt: { lt: now } }, { completedAt: { not: null } }];
+          (result.OR ??= []).push({ promisedAt: { lt: now } }, { completedAt: { not: null } });
           break;
       }
     }
@@ -353,7 +359,7 @@ export class PromiseService {
     if ('role' in condition) {
       switch (condition.role) {
         case PromiseUserRole.ALL:
-          result.users = { some: { userId: condition.userId } };
+          (result.OR ??= []).push({ hostId: condition.userId }, { users: { some: { userId: condition.userId } } });
           break;
         case PromiseUserRole.HOST:
           result.hostId = condition.userId;

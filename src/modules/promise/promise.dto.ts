@@ -98,7 +98,7 @@ export class InputLocationDTO {
   @IsString({ message: '상세 주소를 입력해주세요.' })
   @MaxLength(100, { message: '상세 주소는 최대 100자까지 입력 가능합니다.' })
   @ApiPropertyOptional({ example: '강남대로 123' })
-  address?: string;
+  address!: string | null;
 
   @IsLatitude({ message: '위도 값을 입력해주세요.' })
   @ApiProperty({ example: 37.123456 })
