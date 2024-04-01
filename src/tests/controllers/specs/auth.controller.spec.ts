@@ -7,18 +7,17 @@ import { AuthController } from '@/modules/auth/auth.controller';
 import { AuthService, AuthServiceError } from '@/modules/auth/auth.service';
 import { UserService } from '@/modules/user/user.service';
 import { PrismaService } from '@/prisma/prisma.service';
-import { userBuilder } from '@/tests/fixtures/users';
-import { JWT_INVALID_ID, JWT_VALID_ID, mockJwtService } from '@/tests/services/mocks/jwt.service.mock';
+import { createUserBuilder } from '@/tests/fixtures/builder';
+import { createPrismaClient } from '@/tests/prisma';
+import { mockJwtService } from '@/tests/services/mocks/jwt.service.mock';
 
-const makeUser = userBuilder(10e4);
+const createUser = createUserBuilder(1e6);
+const validId = 1e6 - 1;
+const invalidId = 1e6 - 2;
 
 describe(AuthController, () => {
   let authController: AuthController;
-  let prisma: PrismaService;
-
-  beforeAll(async () => {
-    prisma = new PrismaService();
-  });
+  const prisma = createPrismaClient({ logging: false });
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -27,17 +26,12 @@ describe(AuthController, () => {
         AuthService,
         UserService,
         { provide: TypedConfigService, useValue: { get() {} } },
-        { provide: JwtService, useValue: mockJwtService },
+        { provide: JwtService, useValue: mockJwtService({ validId, invalidId }) },
         { provide: PrismaService, useValue: prisma },
       ],
     }).compile();
 
     authController = module.get(AuthController);
-  });
-
-  afterAll(async () => {
-    await prisma.user.deleteMany();
-    await prisma.$disconnect();
   });
 
   test('should be defined', () => {
@@ -46,7 +40,7 @@ describe(AuthController, () => {
 
   describe(AuthController.prototype.login, () => {
     test('should return tokens when called with a valid user', async () => {
-      const user = makeUser();
+      const user = createUser();
       await prisma.user.create({ data: user });
       await expect(authController.login(user)).resolves.toEqual({
         accessToken: 'token',
@@ -55,7 +49,7 @@ describe(AuthController, () => {
     });
 
     test('should throw an error when unknown error occurs', async () => {
-      const unknownError = makeUser(JWT_INVALID_ID);
+      const unknownError = createUser({ id: invalidId });
       await expect(authController.login(unknownError)).rejects.toMatchObject({
         status: HttpStatus.INTERNAL_SERVER_ERROR,
       });
@@ -64,7 +58,7 @@ describe(AuthController, () => {
 
   describe(AuthController.prototype.refreshTokens, () => {
     test('should return tokens when called with a valid token', async () => {
-      const user = makeUser(JWT_VALID_ID);
+      const user = createUser({ id: validId });
       await prisma.user.create({ data: user });
       await expect(authController.refreshTokens({ refreshToken: 'valid' })).resolves.toEqual({
         accessToken: 'token',

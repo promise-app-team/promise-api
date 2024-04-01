@@ -9,14 +9,11 @@ import { EncodePromiseID } from '@/modules/promise/promise.interceptor';
 import { PromiseService } from '@/modules/promise/promise.service';
 import { UserService } from '@/modules/user/user.service';
 import { PrismaService } from '@/prisma/prisma.service';
+import { createPrismaClient } from '@/tests/prisma';
 
 describe(PromiseController, () => {
   let promiseController: PromiseController;
-  let prisma: PrismaService;
-
-  beforeAll(async () => {
-    prisma = new PrismaService();
-  });
+  const prisma = createPrismaClient({ logging: false });
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({

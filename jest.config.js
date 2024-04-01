@@ -1,7 +1,7 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   clearMocks: true,
-  maxWorkers: 1,
+  maxWorkers: '50%',
   globalSetup: '<rootDir>/src/tests/setup.ts',
   moduleFileExtensions: ['js', 'json', 'ts'],
   moduleNameMapper: {
@@ -16,6 +16,7 @@ module.exports = {
       },
     ],
   },
+  verbose: false,
   collectCoverageFrom: ['src/app/**/*.{!(module),}.(t|j)s', 'src/modules/**/*.{!(module|gateway),}.(t|j)s'],
   coverageDirectory: 'coverage',
   testEnvironment: 'node',

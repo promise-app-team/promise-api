@@ -6,17 +6,14 @@ import { pick } from 'remeda';
 import { UserController } from '@/modules/user/user.controller';
 import { UserService, UserServiceError } from '@/modules/user/user.service';
 import { PrismaService } from '@/prisma/prisma.service';
-import { userBuilder } from '@/tests/fixtures/users';
+import { createUserBuilder } from '@/tests/fixtures/builder';
+import { createPrismaClient } from '@/tests/prisma';
+
+const createUser = createUserBuilder(2e6);
 
 describe(UserController, () => {
   let userController: UserController;
-  let prisma: PrismaService;
-
-  const makeUser = userBuilder(10e3);
-
-  beforeAll(async () => {
-    prisma = new PrismaService();
-  });
+  const prisma = createPrismaClient({ logging: false });
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -27,18 +24,13 @@ describe(UserController, () => {
     userController = module.get(UserController);
   });
 
-  afterAll(async () => {
-    await prisma.user.deleteMany();
-    await prisma.$disconnect();
-  });
-
   test('should be defined', () => {
     expect(userController).toBeInstanceOf(UserController);
   });
 
   describe(UserController.prototype.getMyProfile, () => {
     test('should return my profile', async () => {
-      const user = makeUser();
+      const user = createUser();
       await prisma.user.create({ data: user });
       await expect(userController.getMyProfile(user)).resolves.toMatchObject(
         pick(user, ['id', 'username', 'profileUrl'])
@@ -51,7 +43,7 @@ describe(UserController, () => {
     const profileUrl = 'http://new.profile.url';
 
     test('should update my profile', async () => {
-      const user = makeUser();
+      const user = createUser();
       const updatedUser = { ...user, username, profileUrl };
       await prisma.user.create({ data: user });
       await expect(userController.updateMyProfile(user, { username, profileUrl })).resolves.toMatchObject(
@@ -60,7 +52,7 @@ describe(UserController, () => {
     });
 
     test('should set a default profileUrl', async () => {
-      const user = makeUser();
+      const user = createUser();
       const updatedUser = { ...user, username };
       await prisma.user.create({ data: user });
       await expect(userController.updateMyProfile(user, { username, profileUrl: null })).resolves.toMatchObject({
@@ -70,7 +62,7 @@ describe(UserController, () => {
     });
 
     test('should throw an error if a user is not found', async () => {
-      const notFoundUser = makeUser(0);
+      const notFoundUser = createUser({ id: 0 });
       await expect(userController.updateMyProfile(notFoundUser, { username, profileUrl })).rejects.toMatchObject({
         message: UserServiceError.NotFoundUser,
         status: HttpStatus.NOT_FOUND,
@@ -78,7 +70,7 @@ describe(UserController, () => {
     });
 
     test('should throw an error when unknown errors occur', async () => {
-      const unknownUser = makeUser('unknown' as any);
+      const unknownUser = createUser({ id: 'unknown' as any });
       return expect(userController.updateMyProfile(unknownUser, { username, profileUrl })).rejects.toMatchObject({
         status: HttpStatus.INTERNAL_SERVER_ERROR,
       });
@@ -89,13 +81,13 @@ describe(UserController, () => {
     const reason = 'reason';
 
     test('should delete my profile', async () => {
-      const user = makeUser();
+      const user = createUser();
       await prisma.user.create({ data: user });
       await expect(userController.deleteMyProfile(user, { reason })).resolves.toEqual({ id: user.id });
     });
 
     test('should throw an error if a user is not found', async () => {
-      const notFoundUser = makeUser(0);
+      const notFoundUser = createUser({ id: 0 });
       await expect(userController.deleteMyProfile(notFoundUser, { reason })).rejects.toMatchObject({
         message: UserServiceError.NotFoundUser,
         status: HttpStatus.NOT_FOUND,
@@ -103,7 +95,7 @@ describe(UserController, () => {
     });
 
     test('should throw an error when unknown errors occur', async () => {
-      const unknownUser = makeUser('unknown' as any);
+      const unknownUser = createUser({ id: 'unknown' as any });
       return expect(userController.deleteMyProfile(unknownUser, { reason: 'unknown' })).rejects.toMatchObject({
         status: HttpStatus.INTERNAL_SERVER_ERROR,
       });
