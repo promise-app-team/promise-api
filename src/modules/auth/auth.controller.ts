@@ -1,5 +1,5 @@
 import { Body, Controller } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { HttpException } from '@/common/exceptions/http.exception';
 import { Post } from '@/customs/nest/decorators/http-api.decorator';
@@ -9,6 +9,7 @@ import { InputCreateUserDTO } from '@/modules/user/user.dto';
 import { UserService } from '@/modules/user/user.service';
 
 @ApiTags('Auth')
+@ApiBearerAuth()
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -19,10 +20,10 @@ export class AuthController {
   @Post('login', { description: '로그인 / 회원가입을 수행합니다.', exceptions: ['BAD_REQUEST'] })
   async login(@Body() input: InputCreateUserDTO): Promise<AuthTokenDTO> {
     const user = await this.userService.upsert(input);
-    return this.authService.authenticate(user).catch((error) => HttpException.throw(error));
+    return this.authService.authenticate(user).catch((error) => HttpException.throw(error, 'BAD_REQUEST'));
   }
 
-  @Post('refresh', { description: '인증 토큰을 갱신합니다.', exceptions: ['BAD_REQUEST'] })
+  @Post('refresh', { auth: true, description: '인증 토큰을 갱신합니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
   async refreshTokens(@Body() { refreshToken }: InputRefreshTokenDTO): Promise<AuthTokenDTO> {
     return this.authService.refresh(refreshToken).catch((error) => {
       switch (error) {
