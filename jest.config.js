@@ -7,7 +7,7 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  testRegex: '.*\\.spec\\.ts$',
+  testRegex: ['.*\\.spec\\.ts$', '.*\\.e2e-spec\\.ts$'],
   transform: {
     '^.+\\.(t|j)s$': [
       'ts-jest',

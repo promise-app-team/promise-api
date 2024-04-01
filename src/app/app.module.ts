@@ -36,9 +36,15 @@ import { PrismaModule } from '@/prisma/prisma.module';
         };
       },
     }),
-    LoggerModule.register({
-      global: true,
-      blacklist: ['NestFactory', 'InstanceLoader', 'RoutesResolver', 'RouterExplorer', 'WebSocketsController'],
+    LoggerModule.registerAsync({
+      isGlobal: true,
+      inject: [TypedConfigService],
+      useFactory(config: TypedConfigService) {
+        return {
+          blacklist: ['NestFactory', 'InstanceLoader', 'RoutesResolver', 'RouterExplorer', 'WebSocketsController'],
+          disable: config.get('stage') === 'test',
+        };
+      },
     }),
     PrismaModule.registerAsync({
       isGlobal: true,

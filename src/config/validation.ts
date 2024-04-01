@@ -2,8 +2,8 @@ import Joi from 'joi';
 
 export const schema = Joi.object({
   TZ: Joi.string().required(),
-  STAGE: Joi.string().valid('local', 'dev', 'prod').required(),
-  NODE_ENV: Joi.string().valid('local', 'development', 'production').required(),
+  STAGE: Joi.string().valid('local', 'test', 'dev', 'prod').required(),
+  NODE_ENV: Joi.string().valid('local', 'test', 'development', 'production').required(),
 
   JWT_SECRET_KEY: Joi.string().required(),
   INTHASH_KEY: Joi.string().required(),

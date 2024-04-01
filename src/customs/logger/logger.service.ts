@@ -1,23 +1,25 @@
 import { Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
 
 import { logger } from './logger';
-import { LoggerOptions, LoggingContext } from './logger.interface';
+import { LoggerModuleOptions, LoggingContext } from './logger.interface';
 
 @Injectable()
 export class LoggerService implements NestLoggerService {
   private readonly logger = logger;
 
-  constructor(private readonly options?: LoggerOptions) {}
+  constructor(private readonly options?: LoggerModuleOptions) {}
 
   // for custom logger
 
   info(message: string, context?: LoggingContext) {
+    if (this.options?.disable) return;
     this.logger.info(message, context);
   }
 
   // for nestjs logger
 
   log(message: any, ...optionalParams: any[]) {
+    if (this.options?.disable) return;
     const param = optionalParams[0];
     if (typeof param === 'string') {
       if (this.options?.blacklist?.includes(param)) return;
@@ -28,10 +30,12 @@ export class LoggerService implements NestLoggerService {
   }
 
   warn(message: any, ...optionalParams: any[]) {
+    if (this.options?.disable) return;
     this.logger.warn(message, { label: optionalParams[0] });
   }
 
   error(message: any, ...optionalParams: any[]) {
+    if (this.options?.disable) return;
     if (typeof optionalParams[1] === 'string') {
       this.logger.error('', {
         error: optionalParams[0],
