@@ -19,16 +19,16 @@ describe(AppController, () => {
     http.prepare(await app.init());
   });
 
-  describe(AppController.prototype.ping, () => {
-    test(http.route.ping, async () => {
+  describe(http.route.ping, () => {
+    test('should return pong', async () => {
       const response = await http.request.ping.get.expect(200);
 
       expect(response.body).toMatchObject({
         message: 'pong',
-        version: '0.0.0',
         env: 'test',
         tz: 'UTC',
       });
+      expect(/^\d+?\.\d+?\.\d+?$/.test(response.body.version)).toBe(true);
       expect(() => new Date(response.body.build).toISOString()).not.toThrow();
       expect(() => new Date(response.body.deploy).toISOString()).not.toThrow();
     });
