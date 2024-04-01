@@ -13,7 +13,7 @@ export class ToArrayOfPipe<T> implements PipeTransform<any, T[]> {
       R.isArray(value) ? value : [value],
       R.map((v) => this.type(v)),
       R.filter(R.isTruthy),
-      this.options?.unique ?? false ? R.uniq() : R.identity
+      this.options?.unique ?? false ? R.unique() : R.identity
     );
   }
 }

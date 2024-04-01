@@ -1,6 +1,6 @@
 import { HttpStatus, Type } from '@nestjs/common';
 import { ApiResponse as BaseApiResponse } from '@nestjs/swagger';
-import { uniq } from 'remeda';
+import { unique } from 'remeda';
 
 import { HttpException, isExceptionStatus } from '@/common/exceptions/http.exception';
 
@@ -21,7 +21,7 @@ type StatusArgs = [Status, Type<unknown> | [Type<unknown>]] | Status;
 
 export function ApiResponse(...args: StatusArgs[]): MethodDecorator {
   return (target, propertyKey, descriptor) => {
-    for (const argument of uniq(args)) {
+    for (const argument of unique(args)) {
       const [status, type] = Array.isArray(argument) ? argument : [argument, undefined];
       BaseApiResponse({
         status: HttpStatus[status],
