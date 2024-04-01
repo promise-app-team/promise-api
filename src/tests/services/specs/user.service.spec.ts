@@ -27,8 +27,7 @@ describe(UserService, () => {
 
   describe(UserService.prototype.findOneById, () => {
     test('should return a user by id', async () => {
-      const user = createUser();
-      await prisma.user.create({ data: user });
+      const user = await createUser((user) => prisma.user.create({ data: user }));
       await expect(userService.findOneById(user.id)).resolves.toMatchObject(
         pick(user, ['id', 'username', 'profileUrl', 'provider', 'providerId'])
       );
@@ -98,8 +97,7 @@ describe(UserService, () => {
     });
 
     test('should set a default profileUrl', async () => {
-      const user = createUser();
-      await prisma.user.create({ data: user });
+      const user = await createUser((user) => prisma.user.create({ data: user }));
       const updatedUserData = { ...user, username, profileUrl: null };
       return expect(userService.update(user.id, updatedUserData)).resolves.toMatchObject({
         ...pick(updatedUserData, ['id', 'username']),
@@ -114,8 +112,7 @@ describe(UserService, () => {
 
   describe(UserService.prototype.delete, () => {
     test('should delete a user', async () => {
-      const user = createUser();
-      await prisma.user.create({ data: user });
+      const user = await createUser((user) => prisma.user.create({ data: user }));
       await expect(userService.delete(user.id, 'reason')).resolves.toMatchObject(pick(user, ['id']));
     });
 

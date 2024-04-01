@@ -22,15 +22,6 @@ describe(UserController, () => {
 
   let jwtService: JwtService;
 
-  const auth = {
-    user: {} as User,
-    token: '',
-  };
-
-  beforeAll(async () => {
-    auth.user = await prisma.user.create({ data: createUser() });
-  });
-
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       imports: [AppModule],
@@ -40,6 +31,11 @@ describe(UserController, () => {
     http.prepare(await app.init());
 
     jwtService = module.get(JwtService);
+  });
+
+  const auth = { user: {} as User, token: '' };
+  beforeEach(async () => {
+    auth.user = await prisma.user.create({ data: createUser() });
     auth.token = jwtService.sign({ id: auth.user.id }, { expiresIn: '1h' });
   });
 

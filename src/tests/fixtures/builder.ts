@@ -1,4 +1,5 @@
 import { Prisma } from '@prisma/client';
+import { addHours } from 'date-fns';
 
 import {
   DestinationType,
@@ -11,14 +12,32 @@ import {
   UserModel,
 } from '@/prisma/prisma.entity';
 
-function createModelBuilder<T extends Record<string, any>>(initialId: number, defaultValue: (id: number) => T) {
-  return (partial?: Partial<T>): T => {
-    const id = partial?.id ?? ++initialId;
-    return {
-      ...defaultValue(id),
+interface ModelBuilder<T extends Record<string, any>> {
+  (partial?: Partial<T>): T;
+  <U>(transform?: (result: T) => U): U;
+  <U>(transform?: (result: T) => Promise<U>): Promise<U>;
+  <U>(partial?: Partial<T>, transform?: (result: T) => U): U;
+  <U>(partial?: Partial<T>, transform?: (result: T) => Promise<U>): Promise<U>;
+}
+
+function createModelBuilder<T extends Record<string, any>>(
+  initialId: number,
+  defaultValue: (id: number) => T
+): ModelBuilder<T> {
+  const builder: any = (partial: any, transform: any) => {
+    if (typeof partial === 'function') {
+      return builder(undefined, partial);
+    }
+
+    const result = {
+      ...defaultValue(partial?.id ?? ++initialId),
       ...partial,
     } as T;
+
+    return transform?.(result) ?? result;
   };
+
+  return builder as ModelBuilder<T>;
 }
 
 export function createUserBuilder(initialId: number) {
@@ -69,7 +88,7 @@ export function createPromiseBuilder(initialId: number) {
     locationShareStartValue: 0,
     locationShareEndType: randomEnum(LocationShareType),
     locationShareEndValue: 0,
-    promisedAt: new Date(),
+    promisedAt: addHours(new Date(), 1),
     completedAt: null,
   }));
 }

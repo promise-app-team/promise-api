@@ -1,5 +1,6 @@
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
+import { User } from '@prisma/client';
 
 import { createHttpServer } from '../../utils/http-server';
 
@@ -45,16 +46,9 @@ describe(AuthController, () => {
   });
 
   describe(http.name.refreshTokens, () => {
-    const auth = {
-      user: {} as Awaited<ReturnType<typeof prisma.user.create>>,
-      token: '',
-    };
-
-    beforeAll(async () => {
+    const auth = { user: {} as User, token: '' };
+    beforeEach(async () => {
       auth.user = await prisma.user.create({ data: createUser() });
-    });
-
-    beforeEach(() => {
       auth.token = jwtService.sign({ id: auth.user.id }, { expiresIn: '1h' });
     });
 

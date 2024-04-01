@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
+import { User } from '@prisma/client';
 
 import { AppModule } from '@/app/app.module';
 import { FileUploadController } from '@/modules/upload/upload.controller';
@@ -19,15 +20,6 @@ describe(FileUploadController, () => {
 
   let jwtService: JwtService;
 
-  const auth = {
-    user: {} as Awaited<ReturnType<typeof prisma.user.create>>,
-    token: '',
-  };
-
-  beforeAll(async () => {
-    auth.user = await prisma.user.create({ data: createUser() });
-  });
-
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       imports: [AppModule],
@@ -37,6 +29,11 @@ describe(FileUploadController, () => {
     http.prepare(await app.init());
 
     jwtService = module.get(JwtService);
+  });
+
+  const auth = { user: {} as User, token: '' };
+  beforeEach(async () => {
+    auth.user = await prisma.user.create({ data: createUser() });
     auth.token = jwtService.sign({ id: auth.user.id }, { expiresIn: '1h' });
   });
 
