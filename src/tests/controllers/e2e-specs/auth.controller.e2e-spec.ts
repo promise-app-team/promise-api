@@ -1,7 +1,7 @@
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 
-import { createHttpServer } from './helper';
+import { createHttpServer } from '../../utils/http-server';
 
 import { AppModule } from '@/app/app.module';
 import { HttpException } from '@/common/exceptions/http.exception';
@@ -32,7 +32,7 @@ describe(AuthController, () => {
     jwtService = module.get(JwtService);
   });
 
-  describe(http.route.login, () => {
+  describe(http.name.login, () => {
     test('should return access token and refresh token', async () => {
       const user = await prisma.user.create({ data: createUser() });
       const res1 = await http.request.login.post.send(user).expect(201);
@@ -44,7 +44,7 @@ describe(AuthController, () => {
     });
   });
 
-  describe(http.route.refreshTokens, () => {
+  describe(http.name.refreshTokens, () => {
     let accessToken = '';
     let refreshToken = '';
 

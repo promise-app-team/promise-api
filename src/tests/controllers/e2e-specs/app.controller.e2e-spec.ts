@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 
-import { createHttpServer } from './helper';
+import { createHttpServer } from '../../utils/http-server';
 
 import { AppController } from '@/app/app.controller';
 import { AppModule } from '@/app/app.module';
@@ -19,7 +19,7 @@ describe(AppController, () => {
     http.prepare(await app.init());
   });
 
-  describe(http.route.ping, () => {
+  describe(http.name.ping, () => {
     test('should return pong', async () => {
       const response = await http.request.ping.get.expect(200);
 

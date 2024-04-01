@@ -1,4 +1,5 @@
 import { INestApplication } from '@nestjs/common';
+import { mapValues } from 'remeda';
 import request from 'supertest';
 
 type HttpMethod = 'get' | 'post' | 'put' | 'delete' | 'patch';
@@ -7,14 +8,14 @@ type ExtractMethodName<T> = {
   [K in keyof T]: T[K] extends (...args: any[]) => any ? K : never;
 }[keyof T];
 
-type ExtendRequestTest = Record<HttpMethod, request.Test>;
+type RequestTestMap = Record<HttpMethod, request.Test>;
 
-export type E2EHelper<T> = Record<ExtractMethodName<T>, ExtendRequestTest> & {
+export type HttpRequest<T> = Record<ExtractMethodName<T>, RequestTestMap> & {
   close: INestApplication['close'];
 };
 
-export function initializeE2EHelper<T>(app: INestApplication, routes: Routes<T>): E2EHelper<T> {
-  const http = {} as E2EHelper<T>;
+export function initializeHttpRequest<T>(app: INestApplication, routes: Routes<T>): HttpRequest<T> {
+  const http = {} as HttpRequest<T>;
   http.close = app.close.bind(app);
 
   for (const [route, path] of Object.entries(routes)) {
@@ -31,22 +32,22 @@ export function initializeE2EHelper<T>(app: INestApplication, routes: Routes<T>)
 type Routes<T> = Record<ExtractMethodName<T>, string>;
 
 export type HttpServer<T> = {
-  route: Routes<T>;
+  name: Routes<T>;
   prepare(app: INestApplication): void;
-  request: E2EHelper<T>;
+  request: HttpRequest<T>;
 };
 
 export function createHttpServer<T>(routes: Routes<T>): HttpServer<T> {
-  let helper: E2EHelper<T>;
+  let request: HttpRequest<T>;
 
   return {
-    route: routes,
+    name: mapValues(routes, (path, operator) => `${path} (${operator})`) as Routes<T>,
     prepare(app: INestApplication) {
-      helper = initializeE2EHelper<T>(app, routes);
+      request = initializeHttpRequest<T>(app, routes);
     },
     get request() {
-      if (!helper) throw new Error('Server is not prepared');
-      return helper;
+      if (!request) throw new Error('Server is not prepared');
+      return request;
     },
   };
 }
