@@ -1,13 +1,19 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
+
+import { memoize } from '@/utils/func';
 
 interface PrismaClientOptions {
   logging?: boolean;
 }
 
-export function createPrismaClient(options: PrismaClientOptions = {}): PrismaClient {
-  const prisma = new PrismaClient<Prisma.PrismaClientOptions, 'query'>({
+const memoizePrismaClient = memoize((options: PrismaClientOptions) => {
+  return new PrismaClient({
     log: options.logging ? [{ emit: 'event', level: 'query' }] : [],
   });
+});
+
+export function createPrismaClient(options: PrismaClientOptions = {}): PrismaClient {
+  const prisma = memoizePrismaClient(options);
 
   prisma.$on('query', ({ query, params, duration }) => {
     const tableName = process.env.DB_NAME;

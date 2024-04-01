@@ -1,7 +1,7 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   clearMocks: true,
-  maxWorkers: '50%',
+  maxWorkers: 5,
   globalSetup: '<rootDir>/src/tests/setup.ts',
   moduleFileExtensions: ['js', 'json', 'ts'],
   moduleNameMapper: {
