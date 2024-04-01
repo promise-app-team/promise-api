@@ -7,9 +7,9 @@ type ExtractMethodName<T> = {
   [K in keyof T]: T[K] extends (...args: any[]) => any ? K : never;
 }[keyof T];
 
-type RequestMap = Record<HttpMethod, request.Test>;
+type ExtendRequestTest = Record<HttpMethod, request.Test>;
 
-export type E2EHelper<T> = Record<ExtractMethodName<T>, RequestMap> & {
+export type E2EHelper<T> = Record<ExtractMethodName<T>, ExtendRequestTest> & {
   close: INestApplication['close'];
 };
 
@@ -17,11 +17,10 @@ export function initializeE2EHelper<T>(app: INestApplication, routes: Routes<T>)
   const http = {} as E2EHelper<T>;
   http.close = app.close.bind(app);
 
-  let route: ExtractMethodName<T>;
-  for (route in routes) {
-    http[route] = new Proxy({} as any, {
+  for (const [route, path] of Object.entries(routes)) {
+    http[route as ExtractMethodName<T>] = new Proxy({} as any, {
       get(_target, method: HttpMethod) {
-        return request(app.getHttpServer())[method](routes[route]);
+        return request(app.getHttpServer())[method](path as string);
       },
     });
   }
