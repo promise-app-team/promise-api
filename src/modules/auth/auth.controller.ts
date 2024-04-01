@@ -17,10 +17,10 @@ export class AuthController {
     private readonly authService: AuthService
   ) {}
 
-  @Post('login', { description: '로그인 / 회원가입을 수행합니다.', exceptions: ['BAD_REQUEST'] })
+  @Post('login', { description: '로그인 / 회원가입을 수행합니다.' })
   async login(@Body() input: InputCreateUserDTO): Promise<AuthTokenDTO> {
     const user = await this.userService.upsert(input);
-    return this.authService.authenticate(user).catch((error) => HttpException.throw(error, 'BAD_REQUEST'));
+    return this.authService.authenticate(user).catch((error) => HttpException.throw(error));
   }
 
   @Post('refresh', { auth: true, description: '인증 토큰을 갱신합니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })

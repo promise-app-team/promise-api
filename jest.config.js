@@ -17,7 +17,7 @@ module.exports = {
     ],
   },
   verbose: false,
-  collectCoverageFrom: ['src/app/**/*.{!(module),}.(t|j)s', 'src/modules/**/*.{!(module|gateway),}.(t|j)s'],
+  collectCoverageFrom: ['src/app/**/*.(t|j)s', 'src/modules/**/*.{!(gateway),}.(t|j)s'],
   coverageDirectory: 'coverage',
   testEnvironment: 'node',
   preset: 'ts-jest',
