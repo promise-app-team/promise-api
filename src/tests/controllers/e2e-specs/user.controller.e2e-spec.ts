@@ -1,5 +1,6 @@
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
+import { User } from '@prisma/client';
 import { pick } from 'remeda';
 
 import { createHttpServer } from '../../utils/http-server';
@@ -21,11 +22,13 @@ describe(UserController, () => {
 
   let jwtService: JwtService;
 
-  let globalUser: Awaited<ReturnType<typeof prisma.user.create>>;
-  let accessToken = '';
+  const auth = {
+    user: {} as User,
+    token: '',
+  };
 
   beforeAll(async () => {
-    globalUser = await prisma.user.create({ data: createUser() });
+    auth.user = await prisma.user.create({ data: createUser() });
   });
 
   beforeEach(async () => {
@@ -37,15 +40,15 @@ describe(UserController, () => {
     http.prepare(await app.init());
 
     jwtService = module.get(JwtService);
-    accessToken = jwtService.sign({ id: globalUser.id }, { expiresIn: '1h' });
+    auth.token = jwtService.sign({ id: auth.user.id }, { expiresIn: '1h' });
   });
 
   describe(http.name.getMyProfile, () => {
     test('should return user profile', async () => {
-      const res = await http.request.getMyProfile.get.auth(accessToken, { type: 'bearer' }).expect(200);
+      const res = await http.request.getMyProfile.get.auth(auth.token, { type: 'bearer' }).expect(200);
 
       expect(res.body).toEqual({
-        ...pick(globalUser, ['id', 'username', 'profileUrl', 'provider']),
+        ...pick(auth.user, ['id', 'username', 'profileUrl', 'provider']),
         createdAt: expect.any(String),
       });
     });
@@ -64,12 +67,12 @@ describe(UserController, () => {
   describe(http.name.updateMyProfile, () => {
     test('should update user profile', async () => {
       const res = await http.request.updateMyProfile.put
-        .auth(accessToken, { type: 'bearer' })
+        .auth(auth.token, { type: 'bearer' })
         .send({ username: 'new username', profileUrl: 'new profileUrl' })
         .expect(200);
 
       expect(res.body).toEqual({
-        ...pick(globalUser, ['id', 'provider']),
+        ...pick(auth.user, ['id', 'provider']),
         username: 'new username',
         profileUrl: 'new profileUrl',
         createdAt: expect.any(String),
@@ -93,12 +96,12 @@ describe(UserController, () => {
   describe(http.name.deleteMyProfile, () => {
     test('should delete user profile', async () => {
       const res = await http.request.deleteMyProfile.delete
-        .auth(accessToken, { type: 'bearer' })
+        .auth(auth.token, { type: 'bearer' })
         .send({ reason: 'test' })
         .expect(200);
 
       expect(res.body).toEqual({
-        id: globalUser.id,
+        id: auth.user.id,
       });
     });
 
