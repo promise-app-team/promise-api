@@ -1,4 +1,5 @@
-import { Prisma } from '@prisma/client';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Prisma, PrismaClient } from '@prisma/client';
 import { addHours } from 'date-fns';
 
 import {
@@ -6,24 +7,44 @@ import {
   LocationModel,
   LocationShareType,
   PromiseModel,
+  PromiseThemeModel,
   PromiseUserModel,
   Provider,
   ThemeModel,
   UserModel,
 } from '@/prisma/prisma.entity';
 
-interface ModelBuilder<T extends Record<string, any>> {
-  (partial?: Partial<T>): T;
-  <U>(transform?: (result: T) => U): U;
-  <U>(transform?: (result: T) => Promise<U>): Promise<U>;
-  <U>(partial?: Partial<T>, transform?: (result: T) => U): U;
-  <U>(partial?: Partial<T>, transform?: (result: T) => Promise<U>): Promise<U>;
+export interface Result<Input, Output> {
+  input: Input;
+  output: Output;
 }
 
-function createModelBuilder<T extends Record<string, any>>(
+type Param<T extends Record<string, any>, R extends keyof T = never> = [R] extends [never]
+  ? Partial<T>
+  : Partial<T> & Required<Pick<T, R>>;
+
+interface RequiredModuleBuilder<T extends Record<string, any>, R extends keyof T, P = Param<T, R>> {
+  (partial: P): T;
+  <U>(partial: P, transform?: (result: T) => Promise<U>): Promise<Result<T, U>>;
+  <U>(partial: P, transform?: (result: T) => U): Result<T, U>;
+}
+
+interface OptionalModuleBuilder<T extends Record<string, any>, P = Param<T>> {
+  (partial?: P): T;
+  <U>(transform?: (result: T) => Promise<U>): Promise<Result<T, U>>;
+  <U>(transform?: (result: T) => U): Result<T, U>;
+  <U>(partial?: P, transform?: (result: T) => Promise<U>): Promise<Result<T, U>>;
+  <U>(partial?: P, transform?: (result: T) => U): Result<T, U>;
+}
+
+export type ModelBuilder<T extends Record<string, any>, R extends keyof T = never> = [R] extends [never]
+  ? OptionalModuleBuilder<T>
+  : RequiredModuleBuilder<T, R>;
+
+function createModelBuilder<T extends Record<string, any>, R extends keyof T = never>(
   initialId: number,
   defaultValue: (id: number) => T
-): ModelBuilder<T> {
+): ModelBuilder<T, R> {
   const builder: any = (partial: any, transform: any) => {
     if (typeof partial === 'function') {
       return builder(undefined, partial);
@@ -34,19 +55,34 @@ function createModelBuilder<T extends Record<string, any>>(
       ...partial,
     } as T;
 
-    return transform?.(result) ?? result;
+    if (typeof transform === 'undefined') {
+      return result;
+    }
+
+    const input = { ...result };
+    const output = transform(result);
+
+    if (isPromiseLike(output)) {
+      return output.then((output) => ({ input, output }));
+    }
+
+    return { input, output };
   };
 
-  return builder as ModelBuilder<T>;
+  return builder as ModelBuilder<T, R>;
+}
+
+function isPromiseLike(value: any): value is Promise<any> {
+  return value && typeof value.then === 'function';
 }
 
 export function createUserBuilder(initialId: number) {
   return createModelBuilder<UserModel>(initialId, (id) => ({
     id,
-    username: 'username',
+    username: `username ${id}`,
     profileUrl: 'http://profile.url',
-    provider: randomEnum(Provider),
-    providerId: `${id}`,
+    provider: Provider.KAKAO,
+    providerId: `providerId ${id}`,
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedAt: new Date(),
@@ -56,45 +92,43 @@ export function createUserBuilder(initialId: number) {
 export function createLocationBuilder(initialId: number) {
   return createModelBuilder<LocationModel>(initialId, (id) => ({
     id,
-    city: 'city',
-    district: 'district',
-    address: 'address',
+    city: `city ${id}`,
+    district: `district ${id}`,
+    address: `address ${id}`,
     latitude: new Prisma.Decimal(37.123456),
     longitude: new Prisma.Decimal(127.123456),
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: iso8601Date(),
+    updatedAt: iso8601Date(),
   }));
 }
 
 export function createThemeBuilder(initialId: number) {
   return createModelBuilder<ThemeModel>(initialId, (id) => ({
     id,
-    name: 'theme',
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    name: randomString(10, (str) => str.toUpperCase()),
   }));
 }
 
 export function createPromiseBuilder(initialId: number) {
-  return createModelBuilder<Omit<PromiseModel, 'pid'>>(initialId, (id) => ({
+  return createModelBuilder<Omit<PromiseModel, 'pid'>, 'hostId'>(initialId, (id) => ({
     id,
-    title: 'promise',
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    title: `title ${id}`,
     hostId: 0,
-    destinationType: randomEnum(DestinationType),
-    destinationId: 0,
-    locationShareStartType: randomEnum(LocationShareType),
-    locationShareStartValue: 0,
-    locationShareEndType: randomEnum(LocationShareType),
-    locationShareEndValue: 0,
+    destinationType: DestinationType.STATIC,
+    destinationId: null,
+    locationShareStartType: LocationShareType.TIME,
+    locationShareStartValue: id,
+    locationShareEndType: LocationShareType.TIME,
+    locationShareEndValue: id,
     promisedAt: addHours(new Date(), 1),
     completedAt: null,
+    createdAt: iso8601Date(),
+    updatedAt: iso8601Date(),
   }));
 }
 
 export function createPromiseUserBuilder(initialId: number) {
-  return createModelBuilder<PromiseUserModel>(initialId, () => ({
+  return createModelBuilder<PromiseUserModel, 'userId' | 'promiseId'>(initialId, () => ({
     userId: 0,
     promiseId: 0,
     startLocationId: null,
@@ -103,7 +137,23 @@ export function createPromiseUserBuilder(initialId: number) {
   }));
 }
 
-function randomEnum<E extends Record<string, any>>(enumType: E): E[keyof E] {
-  const values = Object.values(enumType);
-  return values[Math.floor(Math.random() * values.length)];
+export function createPromiseThemeBuilder(initialId: number) {
+  return createModelBuilder<PromiseThemeModel, 'promiseId' | 'themeId'>(initialId, (id: number) => ({
+    promiseId: 0,
+    themeId: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }));
+}
+
+function randomString(length: number, fn?: (str: string) => string) {
+  const str = Math.random()
+    .toString(36)
+    .substring(2, 2 + length);
+  return fn?.(str) ?? str;
+}
+
+function iso8601Date(date = new Date()) {
+  date.setMilliseconds(0);
+  return date;
 }

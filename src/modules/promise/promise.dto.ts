@@ -102,11 +102,11 @@ export class InputLocationDTO {
 
   @IsLatitude({ message: '위도 값을 입력해주세요.' })
   @ApiProperty({ example: 37.123456 })
-  latitude!: number;
+  latitude!: number | string;
 
   @IsLongitude({ message: '경도 값을 입력해주세요.' })
   @ApiProperty({ example: 127.123456 })
-  longitude!: number;
+  longitude!: number | string;
 }
 
 export class InputCreatePromiseDTO {

@@ -37,7 +37,7 @@ describe(AuthService, () => {
 
   describe(AuthService.prototype.authenticate, () => {
     test('should return tokens when called with a valid user', async () => {
-      const user = await createUser((user) => prisma.user.create({ data: user }));
+      const { output: user } = await createUser((user) => prisma.user.create({ data: user }));
       return expect(authService.authenticate({ id: user.id })).resolves.toEqual({
         accessToken: 'token',
         refreshToken: 'token',
@@ -51,7 +51,7 @@ describe(AuthService, () => {
 
   describe(AuthService.prototype.refresh, () => {
     test('should return tokens when called with a valid token', async () => {
-      await createUser({ id: validId }, (user) => prisma.user.create({ data: user }));
+      await prisma.user.create({ data: createUser({ id: validId }) });
       await expect(authService.refresh('valid')).resolves.toEqual({
         accessToken: 'token',
         refreshToken: 'token',

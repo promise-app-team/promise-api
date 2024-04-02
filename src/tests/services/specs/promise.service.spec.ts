@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { addDays, formatISO, subDays } from 'date-fns';
-import { pick } from 'remeda';
+import * as R from 'remeda';
 
 import {
   InputCreatePromiseDTO,
@@ -11,20 +11,20 @@ import {
   PromiseUserRole,
 } from '@/modules/promise/promise.dto';
 import { PromiseService, PromiseServiceError } from '@/modules/promise/promise.service';
-import { DestinationType, LocationShareType } from '@/prisma/prisma.entity';
+import { DestinationType } from '@/prisma/prisma.entity';
 import { PrismaService } from '@/prisma/prisma.service';
 import {
   createLocationBuilder,
   createPromiseBuilder,
-  createPromiseUserBuilder,
+  createThemeBuilder,
   createUserBuilder,
 } from '@/tests/fixtures/builder';
 import { createPrismaClient } from '@/tests/prisma';
 
 const createUser = createUserBuilder(3e5);
-const createLocation = createLocationBuilder(1e5);
-const createPromise = createPromiseBuilder(1e5);
-const createPromiseUser = createPromiseUserBuilder(1e5);
+const createLocation = createLocationBuilder(3e5);
+const createPromise = createPromiseBuilder(3e5);
+const createTheme = createThemeBuilder(3e5);
 
 describe(PromiseService, () => {
   let promiseService: PromiseService;
@@ -42,15 +42,57 @@ describe(PromiseService, () => {
     expect(promiseService).toBeInstanceOf(PromiseService);
   });
 
+  async function fixture() {
+    const host = await createUser((user) => prisma.user.create({ data: user }));
+    const destination = await createLocation((location) => prisma.location.create({ data: location }));
+    const startLocations = await Promise.all(
+      R.times(3, () => createLocation((location) => prisma.location.create({ data: location })))
+    );
+    const attendees = await Promise.all(R.times(3, () => createUser((user) => prisma.user.create({ data: user }))));
+    const themes = await Promise.all(R.times(3, () => createTheme((theme) => prisma.theme.create({ data: theme }))));
+
+    const promise = await createPromise({ hostId: host.input.id }, (promise) =>
+      prisma.promise.create({
+        data: {
+          ...promise,
+          destinationId: destination?.output.id ?? null,
+          themes: { createMany: { data: themes.map((theme) => ({ themeId: theme.output.id })) } },
+          users: {
+            createMany: {
+              data: [host, ...attendees].map((user, i) => ({
+                userId: user.output.id,
+                startLocationId: i === 0 ? null : startLocations[i - 1]?.output.id ?? null,
+              })),
+            },
+          },
+        },
+      })
+    );
+
+    return {
+      host,
+      destination,
+      startLocations,
+      attendees,
+      themes,
+      promise,
+    };
+  }
+  async function fixtures(number: number, foreignKey?: { hostId: number }) {
+    const fs = await Promise.all(R.times(Math.max(1, number), () => fixture()));
+    await prisma.promise.updateMany({
+      where: { id: { in: fs.map((f) => f.promise.output.id) } },
+      data: { hostId: foreignKey?.hostId },
+    });
+    foreignKey?.hostId && fs.forEach((f) => (f.host.input.id = foreignKey.hostId));
+    foreignKey?.hostId && fs.forEach((f) => (f.host.output.id = foreignKey.hostId));
+    return fs;
+  }
+
   describe(PromiseService.prototype.exists, () => {
     test('should return true if the promise exists', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: createPromise({ hostId: host.id, destinationId: destination.id }),
-      });
-
-      await expect(promiseService.exists({ id: promise.id })).resolves.toBe(true);
+      const { promise } = await fixture();
+      await expect(promiseService.exists({ id: promise.input.id })).resolves.toBe(true);
     });
 
     test('should return false if the promise does not exist', async () => {
@@ -64,17 +106,9 @@ describe(PromiseService, () => {
     ])(
       'should return true if the promise exists by filtering with the status (Available)',
       async (status, expected) => {
-        const host = await prisma.user.create({ data: createUser() });
-        const destination = await prisma.location.create({ data: createLocation() });
-        const promise = await prisma.promise.create({
-          data: createPromise({
-            hostId: host.id,
-            destinationId: destination.id,
-            promisedAt: addDays(new Date(), 1),
-          }),
-        });
-
-        await expect(promiseService.exists({ id: promise.id, status })).resolves.toBe(expected);
+        const { promise } = await fixture();
+        await prisma.promise.update({ where: { id: promise.input.id }, data: { promisedAt: addDays(new Date(), 1) } });
+        await expect(promiseService.exists({ id: promise.input.id, status })).resolves.toBe(expected);
       }
     );
 
@@ -83,17 +117,9 @@ describe(PromiseService, () => {
       [PromiseStatus.AVAILABLE, false],
       [PromiseStatus.UNAVAILABLE, true],
     ])('should return true if the promise exists by filtering with the status (Overdue)', async (status, expected) => {
-      const host = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: createPromise({
-          hostId: host.id,
-          destinationId: destination.id,
-          promisedAt: subDays(new Date(), 1),
-        }),
-      });
-
-      await expect(promiseService.exists({ id: promise.id, status })).resolves.toBe(expected);
+      const { promise } = await fixture();
+      await prisma.promise.update({ where: { id: promise.output.id }, data: { promisedAt: subDays(new Date(), 1) } });
+      await expect(promiseService.exists({ id: promise.input.id, status })).resolves.toBe(expected);
     });
 
     test.each([
@@ -103,13 +129,9 @@ describe(PromiseService, () => {
     ])(
       'should return true if the promise exists by filtering with the status (Completed)',
       async (status, expected) => {
-        const host = await prisma.user.create({ data: createUser() });
-        const destination = await prisma.location.create({ data: createLocation() });
-        const promise = await prisma.promise.create({
-          data: createPromise({ hostId: host.id, destinationId: destination.id, completedAt: new Date() }),
-        });
-
-        await expect(promiseService.exists({ id: promise.id, status })).resolves.toBe(expected);
+        const { promise } = await fixture();
+        await prisma.promise.update({ where: { id: promise.output.id }, data: { completedAt: new Date() } });
+        await expect(promiseService.exists({ id: promise.output.id, status })).resolves.toBe(expected);
       }
     );
 
@@ -118,13 +140,10 @@ describe(PromiseService, () => {
       [PromiseUserRole.ATTENDEE, false],
       [PromiseUserRole.ALL, true],
     ])('should return false if the promise exists by filtering with the role (Host)', async (role, expected) => {
-      const host = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: createPromise({ hostId: host.id, destinationId: destination.id }),
-      });
-
-      await expect(promiseService.exists({ id: promise.id, role, userId: host.id })).resolves.toBe(expected);
+      const { promise, host } = await fixture();
+      await expect(promiseService.exists({ id: promise.output.id, role, userId: host.output.id })).resolves.toBe(
+        expected
+      );
     });
 
     test.each([
@@ -132,17 +151,10 @@ describe(PromiseService, () => {
       [PromiseUserRole.ATTENDEE, true],
       [PromiseUserRole.ALL, true],
     ])('should return false if the promise exists by filtering with the role (Attendee)', async (role, expected) => {
-      const host = await prisma.user.create({ data: createUser() });
-      const attendee = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          users: { create: { userId: attendee.id } },
-        },
-      });
-
-      await expect(promiseService.exists({ id: promise.id, role, userId: attendee.id })).resolves.toBe(expected);
+      const { promise, attendees } = await fixture();
+      await expect(
+        promiseService.exists({ id: promise.output.id, role, userId: attendees[0].output.id })
+      ).resolves.toBe(expected);
     });
 
     test.each([
@@ -152,17 +164,11 @@ describe(PromiseService, () => {
     ])(
       'should return false if the promise exists by filtering with the status (Available) and role (Host)',
       async (status, role, expected) => {
-        const host = await prisma.user.create({ data: createUser() });
-        const destination = await prisma.location.create({ data: createLocation() });
-        const promise = await prisma.promise.create({
-          data: createPromise({
-            hostId: host.id,
-            destinationId: destination.id,
-            promisedAt: addDays(new Date(), 1),
-          }),
-        });
-
-        await expect(promiseService.exists({ id: promise.id, status, role, userId: host.id })).resolves.toBe(expected);
+        const { promise, host } = await fixture();
+        await prisma.promise.update({ where: { id: promise.output.id }, data: { promisedAt: addDays(new Date(), 1) } });
+        await expect(
+          promiseService.exists({ id: promise.output.id, status, role, userId: host.output.id })
+        ).resolves.toBe(expected);
       }
     );
 
@@ -173,23 +179,12 @@ describe(PromiseService, () => {
     ])(
       'should return false if the promise exists by filtering with the status (Available) and role (Attendee)',
       async (status, role, expected) => {
-        const host = await prisma.user.create({ data: createUser() });
-        const attendee = await prisma.user.create({ data: createUser() });
-        const destination = await prisma.location.create({ data: createLocation() });
-        const promise = await prisma.promise.create({
-          data: {
-            ...createPromise({
-              hostId: host.id,
-              destinationId: destination.id,
-              promisedAt: addDays(new Date(), 1),
-            }),
-            users: { create: { userId: attendee.id } },
-          },
-        });
+        const { promise, attendees } = await fixture();
+        await prisma.promise.update({ where: { id: promise.output.id }, data: { promisedAt: addDays(new Date(), 1) } });
 
-        await expect(promiseService.exists({ id: promise.id, status, role, userId: attendee.id })).resolves.toBe(
-          expected
-        );
+        await expect(
+          promiseService.exists({ id: promise.output.id, status, role, userId: attendees[0].output.id })
+        ).resolves.toBe(expected);
       }
     );
 
@@ -200,17 +195,11 @@ describe(PromiseService, () => {
     ])(
       'should return false if the promise exists by filtering with the status (Unavailable) and role (Host)',
       async (status, role, expected) => {
-        const host = await prisma.user.create({ data: createUser() });
-        const destination = await prisma.location.create({ data: createLocation() });
-        const promise = await prisma.promise.create({
-          data: createPromise({
-            hostId: host.id,
-            destinationId: destination.id,
-            promisedAt: subDays(new Date(), 1),
-          }),
-        });
-
-        await expect(promiseService.exists({ id: promise.id, status, role, userId: host.id })).resolves.toBe(expected);
+        const { host, promise } = await fixture();
+        await prisma.promise.update({ where: { id: promise.output.id }, data: { promisedAt: subDays(new Date(), 1) } });
+        await expect(
+          promiseService.exists({ id: promise.output.id, status, role, userId: host.output.id })
+        ).resolves.toBe(expected);
       }
     );
 
@@ -221,23 +210,11 @@ describe(PromiseService, () => {
     ])(
       'should return false if the promise exists by filtering with the status (Unavailable) and role (Attendee)',
       async (status, role, expected) => {
-        const host = await prisma.user.create({ data: createUser() });
-        const attendee = await prisma.user.create({ data: createUser() });
-        const destination = await prisma.location.create({ data: createLocation() });
-        const promise = await prisma.promise.create({
-          data: {
-            ...createPromise({
-              hostId: host.id,
-              destinationId: destination.id,
-              promisedAt: subDays(new Date(), 1),
-            }),
-            users: { create: { userId: attendee.id } },
-          },
-        });
-
-        await expect(promiseService.exists({ id: promise.id, status, role, userId: attendee.id })).resolves.toBe(
-          expected
-        );
+        const { promise, attendees } = await fixture();
+        await prisma.promise.update({ where: { id: promise.output.id }, data: { promisedAt: subDays(new Date(), 1) } });
+        await expect(
+          promiseService.exists({ id: promise.output.id, status, role, userId: attendees[0].output.id })
+        ).resolves.toBe(expected);
       }
     );
 
@@ -248,19 +225,9 @@ describe(PromiseService, () => {
     ])(
       'should return true if the promise exists by filtering with the status (All) and role (Host)',
       async (status, role, expected) => {
-        const host = await prisma.user.create({ data: createUser() });
-        const destination = await prisma.location.create({ data: createLocation() });
-        const promise = await prisma.promise.create({
-          data: createPromise({ hostId: host.id, destinationId: destination.id }),
-        });
-
+        const { promise, host } = await fixture();
         await expect(
-          promiseService.exists({
-            id: promise.id,
-            status,
-            role,
-            userId: host.id,
-          })
+          promiseService.exists({ id: promise.output.id, status, role, userId: host.output.id })
         ).resolves.toBe(expected);
       }
     );
@@ -272,49 +239,31 @@ describe(PromiseService, () => {
     ])(
       'should return true if the promise exists by filtering with the status (All) and role (Attendee)',
       async (status, role, expected) => {
-        const host = await prisma.user.create({ data: createUser() });
-        const attendee = await prisma.user.create({ data: createUser() });
-        const destination = await prisma.location.create({ data: createLocation() });
-        const promise = await prisma.promise.create({
-          data: {
-            ...createPromise({ hostId: host.id, destinationId: destination.id }),
-            users: { create: { userId: attendee.id } },
-          },
-        });
-
-        await expect(promiseService.exists({ id: promise.id, status, role, userId: attendee.id })).resolves.toBe(
-          expected
-        );
+        const { promise, attendees } = await fixture();
+        await expect(
+          promiseService.exists({ id: promise.output.id, status, role, userId: attendees[0].output.id })
+        ).resolves.toBe(expected);
       }
     );
   });
 
   describe(PromiseService.prototype.findAll, () => {
     test('should return promises by the user', async () => {
-      const host = await prisma.user.create({
-        data: createUser(),
-        select: { id: true, username: true, profileUrl: true },
-      });
-      const attendee = await prisma.user.create({
-        data: createUser(),
-        select: { id: true, username: true, profileUrl: true },
-      });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          users: { create: { userId: attendee.id } },
-        },
-      });
-
-      await expect(promiseService.findAll({ role: PromiseUserRole.ALL, userId: host.id })).resolves.toMatchObject([
-        {
-          ...promise,
-          host,
-          users: [{ user: attendee }],
-          destination,
-        },
-      ]);
+      const host = await prisma.user.create({ data: createUser() });
+      const fs = await fixtures(3, { hostId: host.id });
+      const result = await promiseService.findAll({ role: PromiseUserRole.ALL, userId: host.id });
+      expect(result).toHaveLength(3);
+      expect(result).toMatchObject(
+        R.pipe(
+          fs,
+          R.map((f) => ({
+            ...f.promise.output,
+            hostId: host.id,
+            updatedAt: expect.any(Date),
+          })),
+          R.sort((a, b) => a.id - b.id)
+        )
+      );
     });
 
     test('should return empty array if the user does not have any promises', async () => {
@@ -326,34 +275,25 @@ describe(PromiseService, () => {
       [PromiseUserRole.ATTENDEE, false],
       [PromiseUserRole.ALL, true],
     ])('should return promises by the user with the role (Host)', async (role, expected) => {
-      const host = await prisma.user.create({
-        data: createUser(),
-        select: { id: true, username: true, profileUrl: true },
-      });
-      const attendee = await prisma.user.create({
-        data: createUser(),
-        select: { id: true, username: true, profileUrl: true },
-      });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          users: { create: { userId: attendee.id } },
-        },
-      });
-
-      await expect(promiseService.findAll({ role, userId: host.id })).resolves.toMatchObject(
-        expected
-          ? [
-              {
-                ...promise,
-                host,
-                users: [{ user: attendee }],
-                destination,
-              },
-            ]
-          : []
-      );
+      const host = await prisma.user.create({ data: createUser() });
+      const fs = await fixtures(3, { hostId: host.id });
+      const result = await promiseService.findAll({ role, userId: host.id });
+      if (expected) {
+        expect(result).toHaveLength(3);
+        expect(result).toMatchObject(
+          R.pipe(
+            fs,
+            R.map((f) => ({
+              ...f.promise.output,
+              hostId: host.id,
+              updatedAt: expect.any(Date),
+            })),
+            R.sort((a, b) => a.id - b.id)
+          )
+        );
+      } else {
+        expect(result).toEqual([]);
+      }
     });
 
     test.each([
@@ -361,34 +301,27 @@ describe(PromiseService, () => {
       [PromiseUserRole.ATTENDEE, true],
       [PromiseUserRole.ALL, true],
     ])('should return promises by the user with the role (Attendee)', async (role, expected) => {
-      const host = await prisma.user.create({
-        data: createUser(),
-        select: { id: true, username: true, profileUrl: true },
-      });
-      const attendee = await prisma.user.create({
-        data: createUser(),
-        select: { id: true, username: true, profileUrl: true },
-      });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          users: { create: { userId: attendee.id } },
-        },
-      });
+      await prisma.promise.deleteMany();
 
-      await expect(promiseService.findAll({ role, userId: attendee.id })).resolves.toMatchObject(
-        expected
-          ? [
-              {
-                ...promise,
-                host,
-                users: [{ user: attendee }],
-                destination,
-              },
-            ]
-          : []
-      );
+      const { host, promise, attendees, destination } = await fixture();
+      const updatedPromise = await prisma.promise.update({
+        where: { id: promise.output.id },
+        data: { promisedAt: addDays(new Date(), 1) },
+      });
+      const result = await promiseService.findAll({ role, userId: attendees[0].output.id });
+
+      if (expected) {
+        expect(result).toMatchObject([
+          {
+            ...updatedPromise,
+            host: R.pick(host.output, ['id', 'username', 'profileUrl']),
+            users: [host.output, ...attendees.map((a) => a.output)].map((user) => ({ user })),
+            destination: destination.output,
+          },
+        ]);
+      } else {
+        expect(result).toEqual([]);
+      }
     });
 
     test.each([
@@ -398,38 +331,27 @@ describe(PromiseService, () => {
     ])(
       'should return promises by the user with the status (Available) and role (Host)',
       async (status, role, expected) => {
-        const host = await prisma.user.create({
-          data: createUser(),
-          select: { id: true, username: true, profileUrl: true },
-        });
-        const attendee = await prisma.user.create({
-          data: createUser(),
-          select: { id: true, username: true, profileUrl: true },
-        });
-        const destination = await prisma.location.create({ data: createLocation() });
-        const promise = await prisma.promise.create({
-          data: {
-            ...createPromise({
-              hostId: host.id,
-              destinationId: destination.id,
-              promisedAt: addDays(new Date(), 1),
-            }),
-            users: { create: { userId: attendee.id } },
-          },
-        });
+        await prisma.promise.deleteMany();
 
-        await expect(promiseService.findAll({ role, userId: host.id, status })).resolves.toMatchObject(
-          expected
-            ? [
-                {
-                  ...promise,
-                  host,
-                  users: [{ user: attendee }],
-                  destination,
-                },
-              ]
-            : []
-        );
+        const { host, promise, attendees, destination } = await fixture();
+        const updatedPromise = await prisma.promise.update({
+          where: { id: promise.output.id },
+          data: { promisedAt: addDays(new Date(), 1) },
+        });
+        const result = await promiseService.findAll({ role, userId: host.output.id, status });
+
+        if (expected) {
+          expect(result).toMatchObject([
+            {
+              ...updatedPromise,
+              host: R.pick(host.output, ['id', 'username', 'profileUrl']),
+              users: [host.output, ...attendees.map((a) => a.output)].map((user) => ({ user })),
+              destination: destination.output,
+            },
+          ]);
+        } else {
+          expect(result).toEqual([]);
+        }
       }
     );
 
@@ -440,38 +362,27 @@ describe(PromiseService, () => {
     ])(
       'should return promises by the user with the status (Available) and role (Attendee)',
       async (status, role, expected) => {
-        const host = await prisma.user.create({
-          data: createUser(),
-          select: { id: true, username: true, profileUrl: true },
-        });
-        const attendee = await prisma.user.create({
-          data: createUser(),
-          select: { id: true, username: true, profileUrl: true },
-        });
-        const destination = await prisma.location.create({ data: createLocation() });
-        const promise = await prisma.promise.create({
-          data: {
-            ...createPromise({
-              hostId: host.id,
-              destinationId: destination.id,
-              promisedAt: addDays(new Date(), 1),
-            }),
-            users: { create: { userId: attendee.id } },
-          },
-        });
+        await prisma.promise.deleteMany();
 
-        await expect(promiseService.findAll({ role, userId: attendee.id, status })).resolves.toMatchObject(
-          expected
-            ? [
-                {
-                  ...promise,
-                  host,
-                  users: [{ user: attendee }],
-                  destination,
-                },
-              ]
-            : []
-        );
+        const { host, promise, attendees, destination } = await fixture();
+        const updatedPromise = await prisma.promise.update({
+          where: { id: promise.output.id },
+          data: { promisedAt: addDays(new Date(), 1) },
+        });
+        const result = await promiseService.findAll({ role, userId: attendees[0].output.id, status });
+
+        if (expected) {
+          expect(result).toMatchObject([
+            {
+              ...updatedPromise,
+              host: R.pick(host.output, ['id', 'username', 'profileUrl']),
+              users: [host.output, ...attendees.map((a) => a.output)].map((user) => ({ user })),
+              destination: destination.output,
+            },
+          ]);
+        } else {
+          expect(result).toEqual([]);
+        }
       }
     );
 
@@ -484,30 +395,22 @@ describe(PromiseService, () => {
       async (status, role, expected) => {
         await prisma.promise.deleteMany();
 
-        const host = await prisma.user.create({
-          data: createUser(),
-          select: { id: true, username: true, profileUrl: true },
+        const { host, promise, attendees, destination } = await fixture();
+        const updatedPromise = await prisma.promise.update({
+          where: { id: promise.output.id },
+          data: { promisedAt: subDays(new Date(), 1) },
         });
-        const attendee = await prisma.user.create({
-          data: createUser(),
-          select: { id: true, username: true, profileUrl: true },
-        });
-        const destination = await prisma.location.create({ data: createLocation() });
-        const promise = await prisma.promise.create({
-          data: {
-            ...createPromise({
-              hostId: host.id,
-              destinationId: destination.id,
-              promisedAt: subDays(new Date(), 1),
-            }),
-            users: { create: { userId: attendee.id } },
-          },
-        });
-
-        const result = await promiseService.findAll({ role, userId: host.id, status });
+        const result = await promiseService.findAll({ role, userId: host.output.id, status });
 
         if (expected) {
-          expect(result).toMatchObject([{ id: promise.id }]);
+          expect(result).toMatchObject([
+            {
+              ...updatedPromise,
+              host: R.pick(host.output, ['id', 'username', 'profileUrl']),
+              users: [host.output, ...attendees.map((a) => a.output)].map((user) => ({ user })),
+              destination: destination.output,
+            },
+          ]);
         } else {
           expect(result).toEqual([]);
         }
@@ -522,52 +425,35 @@ describe(PromiseService, () => {
       'should return promises by the user with the status (Unavailable) and role (Attendee)',
       async (status, role, expected) => {
         await prisma.promise.deleteMany();
+        const { host, promise, attendees, destination } = await fixture();
+        const attendee = attendees[0].output;
+        const updatedPromise = await prisma.promise.update({
+          where: { id: promise.output.id },
+          data: { promisedAt: subDays(new Date(), 1) },
+        });
+        const users = [host.output, ...attendees.map((a) => a.output)];
+        const result = await promiseService.findAll({ role, userId: attendee.id, status });
 
-        const host = await prisma.user.create({
-          data: createUser(),
-          select: { id: true, username: true, profileUrl: true },
-        });
-        const attendee = await prisma.user.create({
-          data: createUser(),
-          select: { id: true, username: true, profileUrl: true },
-        });
-        const destination = await prisma.location.create({ data: createLocation() });
-        const promise = await prisma.promise.create({
-          data: {
-            ...createPromise({
-              hostId: host.id,
-              destinationId: destination.id,
-              promisedAt: subDays(new Date(), 1),
-            }),
-            users: { create: { userId: attendee.id } },
-          },
-        });
-
-        await expect(promiseService.findAll({ role, userId: attendee.id, status })).resolves.toMatchObject(
-          expected
-            ? [
-                {
-                  ...promise,
-                  host,
-                  users: [{ user: attendee }],
-                  destination,
-                },
-              ]
-            : []
-        );
+        if (expected) {
+          expect(result).toMatchObject([
+            {
+              ...updatedPromise,
+              host: R.pick(host.output, ['id', 'username', 'profileUrl']),
+              users: users.map((user) => ({ user })),
+              destination: destination.output,
+            },
+          ]);
+        } else {
+          expect(result).toEqual([]);
+        }
       }
     );
   });
 
   describe(PromiseService.prototype.findOne, () => {
     test('should return a promise by the id', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: createPromise({ hostId: host.id, destinationId: destination.id }),
-      });
-
-      await expect(promiseService.findOne({ id: promise.id })).resolves.toMatchObject(promise);
+      const { promise } = await fixture();
+      await expect(promiseService.findOne({ id: promise.output.id })).resolves.toMatchObject(promise.output);
     });
 
     test('should throw an error if the promise does not exist', async () => {
@@ -576,127 +462,159 @@ describe(PromiseService, () => {
   });
 
   describe(PromiseService.prototype.create, () => {
-    test('should create a promise', async () => {
+    test('should create a simple promise', async () => {
       const host = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const inputPromise = createPromise({ hostId: host.id });
-
-      const promise = {
-        ...pick(inputPromise, [
-          'title',
-          'promisedAt',
-          'destinationType',
-          'locationShareStartType',
-          'locationShareStartValue',
-          'locationShareEndType',
-          'locationShareEndValue',
-        ]),
-        promisedAt: formatISO(inputPromise.promisedAt),
-        themeIds: [1, 2, 3],
-        destination: {
-          ...pick(destination, ['city', 'district', 'address']),
-          latitude: parseFloat(destination.latitude.toString()),
-          longitude: parseFloat(destination.longitude.toString()),
-        },
+      const promiseInput = {
+        ...createPromise({ hostId: host.id }),
+        themeIds: [],
+        destination: null,
+        promisedAt: formatISO(addDays(new Date(), 1)),
       } satisfies InputCreatePromiseDTO;
+      const result = await promiseService.create(host.id, promiseInput);
 
-      await expect(promiseService.create(host.id, promise)).resolves.toMatchObject({
-        ...pick(promise, [
-          'title',
-          'promisedAt',
-          'destinationType',
-          'locationShareStartType',
-          'locationShareStartValue',
-          'locationShareEndType',
-          'locationShareEndValue',
-        ]),
-        promisedAt: new Date(promise.promisedAt),
-        completedAt: null,
-        host: pick(host, ['id', 'username', 'profileUrl']),
-        hostId: host.id,
-        users: [{ user: host }],
-        themes: expect.arrayContaining([
-          { theme: { id: 1, name: expect.any(String) } },
-          { theme: { id: 2, name: expect.any(String) } },
-          { theme: { id: 3, name: expect.any(String) } },
-        ]),
+      expect(result).toMatchObject({
+        ...R.omit(promiseInput, ['id', 'themeIds']),
+        promisedAt: new Date(promiseInput.promisedAt),
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      });
+    });
+
+    test('should create a promise with themes', async () => {
+      const host = await prisma.user.create({ data: createUser() });
+      const themes = await Promise.all(R.times(3, () => prisma.theme.create({ data: createTheme() })));
+      const promiseInput = {
+        ...createPromise({ hostId: host.id }),
+        themeIds: themes.map((theme) => theme.id),
+        destination: null,
+        promisedAt: formatISO(addDays(new Date(), 1)),
+      } satisfies InputCreatePromiseDTO;
+      const result = await promiseService.create(host.id, promiseInput);
+
+      expect(result).toMatchObject({
+        ...R.omit(promiseInput, ['id', 'themeIds']),
+        themes: themes.map((theme) => ({ theme })),
+        promisedAt: new Date(promiseInput.promisedAt),
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
+      });
+    });
+
+    test('should create a promise with a destination', async () => {
+      const host = await prisma.user.create({ data: createUser() });
+
+      const destination = {
+        ...createLocation(),
+        latitude: 37.0,
+        longitude: 127.0,
+      } satisfies InputLocationDTO;
+
+      const promiseInput = {
+        ...createPromise({ hostId: host.id }),
+        themeIds: [],
+        destination,
+        promisedAt: formatISO(addDays(new Date(), 1)),
+      } satisfies InputCreatePromiseDTO;
+      const result = await promiseService.create(host.id, promiseInput);
+
+      expect(result).toMatchObject({
+        ...R.omit(promiseInput, ['id', 'themeIds', 'destination']),
         destination: {
-          ...promise.destination,
-          latitude: destination.latitude,
-          longitude: destination.longitude,
+          ...destination,
+          latitude: new Prisma.Decimal(destination.latitude),
+          longitude: new Prisma.Decimal(destination.longitude),
         },
+        destinationId: expect.any(Number),
+        promisedAt: new Date(promiseInput.promisedAt),
+        createdAt: expect.any(Date),
+        updatedAt: expect.any(Date),
       });
     });
   });
 
   describe(PromiseService.prototype.update, () => {
-    test('should update a promise', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          themes: { create: [{ themeId: 1 }, { themeId: 2 }, { themeId: 3 }] },
-          users: { create: { userId: host.id } },
-        },
-      });
-      const inputPromise = createPromise({ hostId: host.id });
+    test('should update a simple promise', async () => {
+      const { host, promise } = await fixture();
 
-      const updatedPromise = {
+      const updatedPromiseInput = {
+        ...createPromise({ hostId: host.input.id }),
         title: 'updated title',
-        themeIds: [3, 4, 5],
-        promisedAt: formatISO(inputPromise.promisedAt),
         destinationType: DestinationType.DYNAMIC,
-        locationShareStartType: LocationShareType.DISTANCE,
-        locationShareStartValue: 100,
-        locationShareEndType: LocationShareType.TIME,
-        locationShareEndValue: 60,
-        destination: {
-          city: 'updated city',
-          district: 'updated district',
-          address: 'updated address',
-          latitude: 37.0,
-          longitude: 127.0,
-        },
+        themeIds: [],
+        destination: null,
+        promisedAt: formatISO(addDays(new Date(), 2)),
       } satisfies InputUpdatePromiseDTO;
 
-      await expect(promiseService.update(promise.id, host.id, updatedPromise)).resolves.toMatchObject({
-        ...pick(updatedPromise, [
-          'title',
-          'promisedAt',
-          'destinationType',
-          'locationShareStartType',
-          'locationShareStartValue',
-          'locationShareEndType',
-          'locationShareEndValue',
-          'destination',
-        ]),
-        promisedAt: new Date(updatedPromise.promisedAt),
-        completedAt: null,
-        host: pick(host, ['id', 'username', 'profileUrl']),
-        hostId: host.id,
-        users: [{ user: host }],
-        themes: expect.arrayContaining([
-          { theme: { id: 3, name: expect.any(String) } },
-          { theme: { id: 4, name: expect.any(String) } },
-          { theme: { id: 5, name: expect.any(String) } },
-        ]),
+      const result = await promiseService.update(promise.output.id, host.output.id, updatedPromiseInput);
+
+      expect(result).toMatchObject({
+        ...R.omit(updatedPromiseInput, ['themeIds']),
+        id: promise.output.id,
+        promisedAt: new Date(updatedPromiseInput.promisedAt),
+        updatedAt: expect.any(Date),
+      });
+    });
+
+    test('should update a promise with themes', async () => {
+      const { host, promise, themes } = await fixture();
+      const newThemes = await Promise.all(R.times(3, () => prisma.theme.create({ data: createTheme() })));
+      const updatedThemes = [...themes.map((t) => t.output).slice(1), ...newThemes.slice(1)];
+
+      const updatedPromiseInput = {
+        ...promise.input,
+        title: 'updated title',
+        destinationType: DestinationType.DYNAMIC,
+        themeIds: updatedThemes.map((theme) => theme.id),
+        destination: null,
+        promisedAt: formatISO(addDays(new Date(), 2)),
+      } satisfies InputUpdatePromiseDTO;
+
+      const result = await promiseService.update(promise.input.id, host.input.id, updatedPromiseInput);
+
+      expect(result).toMatchObject({
+        ...R.omit(updatedPromiseInput, ['themeIds']),
+        themes: updatedThemes.map((theme) => ({ theme })),
+        promisedAt: new Date(updatedPromiseInput.promisedAt),
+        updatedAt: expect.any(Date),
+      });
+    });
+
+    test('should update a promise with a destination', async () => {
+      const { host, promise } = await fixture();
+
+      const updatedDestination = {
+        ...createLocation(),
+        latitude: 37.0,
+        longitude: 127.0,
+      } satisfies InputLocationDTO;
+      const updatedPromiseInput = {
+        ...promise.input,
+        title: 'updated title',
+        destinationType: DestinationType.DYNAMIC,
+        themeIds: [],
+        destination: updatedDestination,
+        promisedAt: formatISO(addDays(new Date(), 2)),
+      } satisfies InputUpdatePromiseDTO;
+
+      const result = await promiseService.update(promise.input.id, host.input.id, updatedPromiseInput);
+
+      expect(result).toMatchObject({
+        ...R.omit(updatedPromiseInput, ['themeIds', 'destination']),
         destination: {
-          ...updatedPromise.destination,
-          latitude: new Prisma.Decimal(updatedPromise.destination.latitude),
-          longitude: new Prisma.Decimal(updatedPromise.destination.longitude),
+          ...updatedDestination,
+          latitude: new Prisma.Decimal(updatedDestination.latitude),
+          longitude: new Prisma.Decimal(updatedDestination.longitude),
+          updatedAt: expect.any(Date),
         },
+        destinationId: expect.any(Number),
+        promisedAt: new Date(updatedPromiseInput.promisedAt),
+        updatedAt: expect.any(Date),
       });
     });
 
     test('should throw an error if the attendees try to update the promise', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: createPromise({ hostId: host.id, destinationId: destination.id }),
-      });
-
-      await expect(promiseService.update(promise.id, -1, {} as any)).rejects.toEqual(
+      const { promise } = await fixture();
+      await expect(promiseService.update(promise.output.id, -1, {} as any)).rejects.toEqual(
         PromiseServiceError.OnlyHostUpdatable
       );
     });
@@ -708,28 +626,18 @@ describe(PromiseService, () => {
 
   describe(PromiseService.prototype.getStartLocation, () => {
     test('should return a start location by the promise id', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
+      const { host, promise, attendees, startLocations } = await fixture();
       const startLocation = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          users: { create: { userId: host.id, startLocationId: startLocation.id } },
-        },
+      await prisma.promiseUser.update({
+        where: { identifier: { promiseId: promise.output.id, userId: host.output.id } },
+        data: { startLocationId: startLocation.id },
       });
-      await expect(promiseService.getStartLocation(promise.id, host.id)).resolves.toMatchObject(startLocation);
+      await expect(promiseService.getStartLocation(promise.output.id, host.output.id)).resolves.toMatchObject(
+        startLocation
+      );
 
-      const attendee = await prisma.user.create({ data: createUser() });
-      const attendeeStartLocation = await prisma.location.create({ data: createLocation() });
-      await prisma.promiseUser.create({
-        data: createPromiseUser({
-          promiseId: promise.id,
-          userId: attendee.id,
-          startLocationId: attendeeStartLocation.id,
-        }),
-      });
-      await expect(promiseService.getStartLocation(promise.id, attendee.id)).resolves.toMatchObject(
-        attendeeStartLocation
+      await expect(promiseService.getStartLocation(promise.output.id, attendees[0].output.id)).resolves.toMatchObject(
+        startLocations[0].output
       );
     });
 
@@ -738,31 +646,15 @@ describe(PromiseService, () => {
     });
 
     test('should throw an error if the user is not attending the promise', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          users: { create: { userId: host.id } },
-        },
-      });
-
-      await expect(promiseService.getStartLocation(promise.id, -1)).rejects.toEqual(
+      const { promise } = await fixture();
+      await expect(promiseService.getStartLocation(promise.output.id, -1)).rejects.toEqual(
         PromiseServiceError.NotFoundPromise
       );
     });
 
     test('should throw an error if the user does not have a start location', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          users: { create: { userId: host.id } },
-        },
-      });
-
-      await expect(promiseService.getStartLocation(promise.id, host.id)).rejects.toEqual(
+      const { host, promise } = await fixture();
+      await expect(promiseService.getStartLocation(promise.output.id, host.output.id)).rejects.toEqual(
         PromiseServiceError.NotFoundStartLocation
       );
     });
@@ -770,25 +662,15 @@ describe(PromiseService, () => {
 
   describe(PromiseService.prototype.updateStartLocation, () => {
     test('should update a start location by the promise id', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const startLocation = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          users: { create: { userId: host.id, startLocationId: startLocation.id } },
-        },
-      });
+      const { host, promise } = await fixture();
       const updatedStartLocation = {
-        city: 'updated city',
-        district: 'updated district',
-        address: 'updated address',
+        ...createLocation(),
         latitude: 37.0,
         longitude: 127.0,
       } satisfies InputLocationDTO;
 
       await expect(
-        promiseService.updateStartLocation(promise.id, host.id, updatedStartLocation)
+        promiseService.updateStartLocation(promise.output.id, host.output.id, updatedStartLocation)
       ).resolves.toMatchObject({
         ...updatedStartLocation,
         latitude: new Prisma.Decimal(updatedStartLocation.latitude),
@@ -803,16 +685,8 @@ describe(PromiseService, () => {
     });
 
     test('should throw an error if the user is not attending the promise', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          users: { create: { userId: host.id } },
-        },
-      });
-
-      await expect(promiseService.updateStartLocation(promise.id, -1, {} as any)).rejects.toEqual(
+      const { promise } = await fixture();
+      await expect(promiseService.updateStartLocation(promise.output.id, -1, {} as any)).rejects.toEqual(
         PromiseServiceError.NotFoundPromise
       );
     });
@@ -820,18 +694,11 @@ describe(PromiseService, () => {
 
   describe(PromiseService.prototype.deleteStartLocation, () => {
     test('should delete a start location by the promise id', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const startLocation = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          users: { create: { userId: host.id, startLocationId: startLocation.id } },
-        },
-      });
-
-      await expect(promiseService.deleteStartLocation(promise.id, host.id)).resolves.toBeUndefined();
-      await expect(promiseService.getStartLocation(promise.id, host.id)).rejects.toEqual(
+      const { promise, attendees } = await fixture();
+      await expect(
+        promiseService.deleteStartLocation(promise.output.id, attendees[0].output.id)
+      ).resolves.toBeUndefined();
+      await expect(promiseService.getStartLocation(promise.output.id, attendees[0].output.id)).rejects.toEqual(
         PromiseServiceError.NotFoundStartLocation
       );
     });
@@ -843,22 +710,15 @@ describe(PromiseService, () => {
 
   describe(PromiseService.prototype.attend, () => {
     test('should attend a promise by the user', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const attendee = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          users: { create: { userId: host.id } },
-        },
+      const { host, promise, attendees } = await fixture();
+      const newAttendee = await prisma.user.create({ data: createUser() });
+      await expect(promiseService.attend(promise.output.id, newAttendee.id)).resolves.toMatchObject({
+        id: promise.output.id,
       });
-
-      await expect(promiseService.attend(promise.id, attendee.id)).resolves.toMatchObject({
-        id: promise.id,
-      });
-      await expect(promiseService.findOne({ id: promise.id })).resolves.toMatchObject({
-        ...promise,
-        users: [{ user: host }, { user: attendee }],
+      const users = [host.output, ...attendees.map((attendee) => attendee.output), newAttendee];
+      await expect(promiseService.findOne({ id: promise.output.id })).resolves.toMatchObject({
+        ...promise.output,
+        users: users.map((user) => ({ user })),
       });
     });
 
@@ -867,17 +727,10 @@ describe(PromiseService, () => {
     });
 
     test('should throw an error if the user is already attending the promise', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const attendee = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          users: { create: [{ userId: host.id }, { userId: attendee.id }] },
-        },
-      });
-
-      await expect(promiseService.attend(promise.id, attendee.id)).rejects.toEqual(PromiseServiceError.AlreadyAttended);
+      const { promise, attendees } = await fixture();
+      await expect(promiseService.attend(promise.output.id, attendees[0].output.id)).rejects.toEqual(
+        PromiseServiceError.AlreadyAttended
+      );
     });
 
     test('should throw an error when occurred an unexpected error', async () => {
@@ -887,20 +740,12 @@ describe(PromiseService, () => {
 
   describe(PromiseService.prototype.leave, () => {
     test('should leave a promise by the user', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const attendee = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          users: { create: [{ userId: host.id }, { userId: attendee.id }] },
-        },
-      });
-
-      await expect(promiseService.leave(promise.id, attendee.id)).resolves.toBeUndefined();
-      await expect(promiseService.findOne({ id: promise.id })).resolves.toMatchObject({
-        ...promise,
-        users: [{ user: host }],
+      const { host, promise, attendees } = await fixture();
+      const attendee = attendees.splice(0, 1)[0];
+      await expect(promiseService.leave(promise.output.id, attendee.output.id)).resolves.toBeUndefined();
+      await expect(promiseService.findOne({ id: promise.output.id })).resolves.toMatchObject({
+        ...promise.output,
+        users: [{ user: host.output }, ...attendees.map((attendee) => ({ user: attendee.output }))],
       });
     });
 
@@ -909,30 +754,15 @@ describe(PromiseService, () => {
     });
 
     test('should throw an error if the user is not attending the promise', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const attendee = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          users: { create: { userId: host.id } },
-        },
-      });
-
-      await expect(promiseService.leave(promise.id, attendee.id)).rejects.toEqual(PromiseServiceError.NotFoundPromise);
+      const { promise } = await fixture();
+      await expect(promiseService.leave(promise.output.id, -1)).rejects.toEqual(PromiseServiceError.NotFoundPromise);
     });
 
     test('should throw an error if the user is the host of the promise', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          users: { create: { userId: host.id } },
-        },
-      });
-
-      await expect(promiseService.leave(promise.id, host.id)).rejects.toEqual(PromiseServiceError.HostCannotLeave);
+      const { host, promise } = await fixture();
+      await expect(promiseService.leave(promise.output.id, host.output.id)).rejects.toEqual(
+        PromiseServiceError.HostCannotLeave
+      );
     });
 
     test('should throw an error when occurred an unexpected error', async () => {
@@ -942,42 +772,29 @@ describe(PromiseService, () => {
 
   describe(PromiseService.prototype.getAttendees, () => {
     test('should return attendees by the promise id', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const attendee = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          users: { create: [{ userId: host.id }, { userId: attendee.id }] },
-        },
-      });
-
-      const result = await promiseService.getAttendees(promise.id);
-      expect(result).toHaveLength(2);
-      expect(result).toMatchObject([{ userId: host.id }, { userId: attendee.id }]);
+      const { host, promise, attendees } = await fixture();
+      const result = await promiseService.getAttendees(promise.output.id);
+      const users = [host.output, ...attendees.map((attendee) => attendee.output)];
+      expect(result).toHaveLength(4);
+      expect(result).toMatchObject(users.map((user) => ({ userId: user.id })));
     });
 
     test('should return attendees by the promise id and the user ids', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const attendee = await prisma.user.create({ data: createUser() });
-      const anotherAttendee = await prisma.user.create({ data: createUser() });
-      const destination = await prisma.location.create({ data: createLocation() });
-      const promise = await prisma.promise.create({
-        data: {
-          ...createPromise({ hostId: host.id, destinationId: destination.id }),
-          users: { create: [{ userId: host.id }, { userId: attendee.id }, { userId: anotherAttendee.id }] },
-        },
-      });
-
-      const result = await promiseService.getAttendees(promise.id, [attendee.id, anotherAttendee.id]);
+      const { host, promise, attendees } = await fixture();
+      const userIds = [host.output.id, attendees[0].output.id];
+      const result = await promiseService.getAttendees(promise.output.id, userIds);
       expect(result).toHaveLength(2);
-      expect(result).toMatchObject([{ userId: attendee.id }, { userId: anotherAttendee.id }]);
+      expect(result).toMatchObject(userIds.map((userId) => ({ userId })));
     });
   });
 
   describe(PromiseService.prototype.getThemes, () => {
     test('should return themes by the promise id', async () => {
-      expect(await promiseService.getThemes()).toEqual(expect.arrayContaining([{ id: 1, name: expect.any(String) }]));
+      await prisma.theme.deleteMany();
+      const { themes } = await fixture();
+      await expect(promiseService.getThemes()).resolves.toMatchObject(
+        themes.map(({ input: theme }) => ({ id: theme.id, name: expect.any(String) }))
+      );
     });
   });
 });
