@@ -1,6 +1,7 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
+import { times } from 'remeda';
 
 import { TypedConfigService } from '@/config/env';
 import { InthashService } from '@/customs/inthash/inthash.service';
@@ -9,7 +10,12 @@ import { EncodePromiseID } from '@/modules/promise/promise.interceptor';
 import { PromiseService } from '@/modules/promise/promise.service';
 import { UserService } from '@/modules/user/user.service';
 import { PrismaService } from '@/prisma/prisma.service';
+import { createPromiseBuilder } from '@/tests/fixtures/promises';
+import { createUserBuilder } from '@/tests/fixtures/users';
 import { createPrismaClient } from '@/tests/prisma';
+
+const createUser = createUserBuilder(3e6);
+const createPromise = createPromiseBuilder(3e6);
 
 describe(PromiseController, () => {
   let promiseController: PromiseController;
@@ -38,7 +44,17 @@ describe(PromiseController, () => {
   });
 
   describe(PromiseController.prototype.getMyPromises, () => {
-    test('should return a list of promises', async () => {});
+    test('should return a list of promises', async () => {
+      const authUser = createUser();
+      const host = await prisma.user.create({ data: authUser });
+      const inputPromises = times(3, () => createPromise({ hostId: host.id }));
+      await prisma.promise.createMany({ data: inputPromises });
+      await prisma.promiseUser.createMany({
+        data: inputPromises.map(({ id }) => ({ userId: host.id, promiseId: id })),
+      });
+
+      await expect(promiseController.getMyPromises(authUser)).resolves.toHaveLength(3);
+    });
 
     test('should return a list of promises with status filter', async () => {});
 

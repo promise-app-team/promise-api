@@ -13,12 +13,10 @@ import {
 import { PromiseService, PromiseServiceError } from '@/modules/promise/promise.service';
 import { DestinationType } from '@/prisma/prisma.entity';
 import { PrismaService } from '@/prisma/prisma.service';
-import {
-  createLocationBuilder,
-  createPromiseBuilder,
-  createThemeBuilder,
-  createUserBuilder,
-} from '@/tests/fixtures/builder';
+import { createLocationBuilder } from '@/tests/fixtures/locations';
+import { createPromiseBuilder } from '@/tests/fixtures/promises';
+import { createThemeBuilder } from '@/tests/fixtures/themes';
+import { createUserBuilder } from '@/tests/fixtures/users';
 import { createPrismaClient } from '@/tests/prisma';
 
 const createUser = createUserBuilder(3e5);

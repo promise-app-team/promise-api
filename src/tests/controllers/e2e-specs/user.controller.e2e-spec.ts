@@ -7,7 +7,7 @@ import { createHttpServer } from '../../utils/http-server';
 
 import { AppModule } from '@/app/app.module';
 import { UserController } from '@/modules/user/user.controller';
-import { createUserBuilder } from '@/tests/fixtures/builder';
+import { createUserBuilder } from '@/tests/fixtures/users';
 import { createPrismaClient } from '@/tests/prisma';
 
 const createUser = createUserBuilder(2e7);

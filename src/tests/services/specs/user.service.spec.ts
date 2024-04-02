@@ -4,7 +4,7 @@ import { pick } from 'remeda';
 import { UserService, UserServiceError } from '@/modules/user/user.service';
 import { Provider } from '@/prisma/prisma.entity';
 import { PrismaService } from '@/prisma/prisma.service';
-import { createUserBuilder } from '@/tests/fixtures/builder';
+import { createUserBuilder } from '@/tests/fixtures/users';
 import { createPrismaClient } from '@/tests/prisma';
 
 const createUser = createUserBuilder(2e5);

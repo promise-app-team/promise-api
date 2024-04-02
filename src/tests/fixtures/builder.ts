@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Prisma, PrismaClient } from '@prisma/client';
-import { addHours } from 'date-fns';
+import { addHours, isDate, isValid } from 'date-fns';
+import { mapValues } from 'remeda';
 
 import {
   DestinationType,
@@ -41,7 +42,7 @@ export type ModelBuilder<T extends Record<string, any>, R extends keyof T = neve
   ? OptionalModuleBuilder<T>
   : RequiredModuleBuilder<T, R>;
 
-function createModelBuilder<T extends Record<string, any>, R extends keyof T = never>(
+export function createModelBuilder<T extends Record<string, any>, R extends keyof T = never>(
   initialId: number,
   defaultValue: (id: number) => T
 ): ModelBuilder<T, R> {
@@ -50,10 +51,20 @@ function createModelBuilder<T extends Record<string, any>, R extends keyof T = n
       return builder(undefined, partial);
     }
 
-    const result = {
-      ...defaultValue(partial?.id ?? ++initialId),
-      ...partial,
-    } as T;
+    const result = mapValues(
+      {
+        ...defaultValue(partial?.id ?? ++initialId),
+        ...partial,
+      },
+      (value: any) => {
+        if (isDate(value) && isValid(value)) {
+          value.setMilliseconds(0);
+          return value;
+        }
+
+        return value;
+      }
+    ) as T;
 
     if (typeof transform === 'undefined') {
       return result;
@@ -74,86 +85,4 @@ function createModelBuilder<T extends Record<string, any>, R extends keyof T = n
 
 function isPromiseLike(value: any): value is Promise<any> {
   return value && typeof value.then === 'function';
-}
-
-export function createUserBuilder(initialId: number) {
-  return createModelBuilder<UserModel>(initialId, (id) => ({
-    id,
-    username: `username ${id}`,
-    profileUrl: 'http://profile.url',
-    provider: Provider.KAKAO,
-    providerId: `providerId ${id}`,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    lastSignedAt: new Date(),
-  }));
-}
-
-export function createLocationBuilder(initialId: number) {
-  return createModelBuilder<LocationModel>(initialId, (id) => ({
-    id,
-    city: `city ${id}`,
-    district: `district ${id}`,
-    address: `address ${id}`,
-    latitude: new Prisma.Decimal(37.123456),
-    longitude: new Prisma.Decimal(127.123456),
-    createdAt: iso8601Date(),
-    updatedAt: iso8601Date(),
-  }));
-}
-
-export function createThemeBuilder(initialId: number) {
-  return createModelBuilder<ThemeModel>(initialId, (id) => ({
-    id,
-    name: randomString(10, (str) => str.toUpperCase()),
-  }));
-}
-
-export function createPromiseBuilder(initialId: number) {
-  return createModelBuilder<Omit<PromiseModel, 'pid'>, 'hostId'>(initialId, (id) => ({
-    id,
-    title: `title ${id}`,
-    hostId: 0,
-    destinationType: DestinationType.STATIC,
-    destinationId: null,
-    locationShareStartType: LocationShareType.TIME,
-    locationShareStartValue: id,
-    locationShareEndType: LocationShareType.TIME,
-    locationShareEndValue: id,
-    promisedAt: addHours(new Date(), 1),
-    completedAt: null,
-    createdAt: iso8601Date(),
-    updatedAt: iso8601Date(),
-  }));
-}
-
-export function createPromiseUserBuilder(initialId: number) {
-  return createModelBuilder<PromiseUserModel, 'userId' | 'promiseId'>(initialId, () => ({
-    userId: 0,
-    promiseId: 0,
-    startLocationId: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }));
-}
-
-export function createPromiseThemeBuilder(initialId: number) {
-  return createModelBuilder<PromiseThemeModel, 'promiseId' | 'themeId'>(initialId, (id: number) => ({
-    promiseId: 0,
-    themeId: 0,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  }));
-}
-
-function randomString(length: number, fn?: (str: string) => string) {
-  const str = Math.random()
-    .toString(36)
-    .substring(2, 2 + length);
-  return fn?.(str) ?? str;
-}
-
-function iso8601Date(date = new Date()) {
-  date.setMilliseconds(0);
-  return date;
 }

@@ -8,7 +8,7 @@ import { AppModule } from '@/app/app.module';
 import { HttpException } from '@/common/exceptions/http.exception';
 import { AuthController } from '@/modules/auth/auth.controller';
 import { AuthServiceError } from '@/modules/auth/auth.service';
-import { createUserBuilder } from '@/tests/fixtures/builder';
+import { createUserBuilder } from '@/tests/fixtures/users';
 import { createPrismaClient } from '@/tests/prisma';
 
 const createUser = createUserBuilder(1e7);

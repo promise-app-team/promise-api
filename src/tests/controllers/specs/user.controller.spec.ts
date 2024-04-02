@@ -6,7 +6,7 @@ import { pick } from 'remeda';
 import { UserController } from '@/modules/user/user.controller';
 import { UserService, UserServiceError } from '@/modules/user/user.service';
 import { PrismaService } from '@/prisma/prisma.service';
-import { createUserBuilder } from '@/tests/fixtures/builder';
+import { createUserBuilder } from '@/tests/fixtures/users';
 import { createPrismaClient } from '@/tests/prisma';
 
 const createUser = createUserBuilder(2e6);

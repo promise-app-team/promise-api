@@ -6,7 +6,7 @@ import { User } from '@prisma/client';
 
 import { AppModule } from '@/app/app.module';
 import { FileUploadController } from '@/modules/upload/upload.controller';
-import { createUserBuilder } from '@/tests/fixtures/builder';
+import { createUserBuilder } from '@/tests/fixtures/users';
 import { createPrismaClient } from '@/tests/prisma';
 import { createHttpServer } from '@/tests/utils/http-server';
 

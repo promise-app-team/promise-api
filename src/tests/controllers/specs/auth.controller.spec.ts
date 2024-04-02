@@ -7,7 +7,7 @@ import { AuthController } from '@/modules/auth/auth.controller';
 import { AuthService, AuthServiceError } from '@/modules/auth/auth.service';
 import { UserService } from '@/modules/user/user.service';
 import { PrismaService } from '@/prisma/prisma.service';
-import { createUserBuilder } from '@/tests/fixtures/builder';
+import { createUserBuilder } from '@/tests/fixtures/users';
 import { createPrismaClient } from '@/tests/prisma';
 import { mockJwtService } from '@/tests/services/mocks/jwt.service.mock';
 
