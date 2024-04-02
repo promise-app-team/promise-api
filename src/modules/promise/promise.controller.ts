@@ -4,6 +4,8 @@ import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Cache } from 'cache-manager';
 import * as R from 'remeda';
 
+import { PromiseStatus, PromiseUserRole } from './promise.enum';
+
 import { HttpException } from '@/common/exceptions/http.exception';
 import { ToArrayOfPipe } from '@/common/pipes/to-array-of.pipe';
 import { TypedConfigService } from '@/config/env';
@@ -14,9 +16,7 @@ import {
   InputCreatePromiseDTO,
   InputLocationDTO,
   InputUpdatePromiseDTO,
-  PromiseUserRole,
   PromiseDTO,
-  PromiseStatus,
   PublicPromiseDTO,
 } from '@/modules/promise/promise.dto';
 import { EncodePromiseID } from '@/modules/promise/promise.interceptor';
@@ -40,8 +40,8 @@ export class PromiseController {
   @ApiQuery({ name: 'status', enum: PromiseStatus, required: false })
   @ApiQuery({ name: 'role', enum: PromiseUserRole, required: false })
   @UseInterceptors(EncodePromiseID)
-  async getMyPromises(
-    @AuthUser() user: UserModel,
+  async getMyPromises<U extends Pick<UserModel, 'id'>>(
+    @AuthUser() user: U,
     @Query('status') status: PromiseStatus = PromiseStatus.ALL,
     @Query('role') role: PromiseUserRole = PromiseUserRole.ALL
   ): Promise<PromiseDTO[]> {

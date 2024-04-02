@@ -2,11 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as R from 'remeda';
 
-import { InputCreatePromiseDTO, InputLocationDTO, PromiseStatus, PromiseUserRole } from './promise.dto';
+import { InputCreatePromiseDTO, InputLocationDTO } from './promise.dto';
+import { PromiseStatus, PromiseUserRole } from './promise.enum';
 
 import { PrismaClientError } from '@/prisma/error-handler';
 import { LocationModel, ThemeModel } from '@/prisma/prisma.entity';
 import { PrismaService } from '@/prisma/prisma.service';
+import { createQueryBuilder } from '@/prisma/utils/query-builder';
 
 export enum PromiseServiceError {
   NotFoundPromise = '약속을 찾을 수 없습니다.',
@@ -16,17 +18,12 @@ export enum PromiseServiceError {
   HostCannotLeave = '약속장은 약속을 취소할 수 없습니다.',
 }
 
-type PromiseOptionalFilter = {
+type FilterOptions = {
   id?: number;
   status?: PromiseStatus;
+  role?: PromiseUserRole;
+  userId?: number;
 };
-
-type PromiseFilter =
-  | PromiseOptionalFilter
-  | (PromiseOptionalFilter & {
-      role: PromiseUserRole;
-      userId: number;
-    });
 
 const promiseInclude: Prisma.PromiseInclude = {
   host: {
@@ -51,18 +48,19 @@ export type PromiseResult = Prisma.PromiseGetPayload<{ include: typeof promiseIn
 export class PromiseService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async exists(condition?: PromiseFilter): Promise<boolean> {
-    const exists = await this.prisma.promise.findUnique({
+  async exists(condition: FilterOptions): Promise<boolean> {
+    const exists = await this.prisma.promise.findFirst({
       where: this.#makeFilter(condition),
       select: { id: true },
     });
     return !!exists;
   }
 
-  async findAll(condition?: PromiseFilter): Promise<PromiseResult[]> {
+  async findAll(condition: Pick<FilterOptions, 'role' | 'status' | 'userId'>): Promise<PromiseResult[]> {
     return this.prisma.promise.findMany({
       where: this.#makeFilter(condition),
       include: promiseInclude,
+      orderBy: { id: 'asc' },
     });
   }
 
@@ -70,10 +68,11 @@ export class PromiseService {
    *
    * @throws {PromiseServiceError.NotFoundPromise}
    */
-  async findOne(condition?: PromiseFilter): Promise<PromiseResult> {
-    const user = await this.prisma.promise.findUnique({
+  async findOne(condition: FilterOptions): Promise<PromiseResult> {
+    const user = await this.prisma.promise.findFirst({
       where: this.#makeFilter(condition),
       include: promiseInclude,
+      orderBy: { id: 'asc' },
     });
 
     if (!user) {
@@ -269,7 +268,7 @@ export class PromiseService {
             },
           },
           promise: {
-            connect: this.#makeFilter({ id, status: PromiseStatus.AVAILABLE }),
+            connect: this.#makeUniqueFilter({ id, status: PromiseStatus.AVAILABLE }),
           },
         },
         select: { promiseId: true },
@@ -303,7 +302,7 @@ export class PromiseService {
    */
   async leave(id: number, userId: number): Promise<void> {
     const promise = await this.prisma.promise.findUnique({
-      where: this.#makeFilter({ id, status: PromiseStatus.AVAILABLE }),
+      where: this.#makeUniqueFilter({ id, status: PromiseStatus.AVAILABLE }),
       select: { id: true, hostId: true, promisedAt: true, completedAt: true },
     });
 
@@ -333,44 +332,47 @@ export class PromiseService {
     return this.prisma.theme.findMany();
   }
 
-  #makeFilter(condition?: PromiseFilter): Prisma.PromiseWhereUniqueInput;
-  #makeFilter(condition?: PromiseFilter): Prisma.PromiseWhereInput;
-  #makeFilter(condition?: PromiseFilter) {
-    if (!condition) return {};
-    const result = {} as Prisma.PromiseWhereInput | Prisma.PromiseWhereUniqueInput;
-    const now = new Date();
+  #makeUniqueFilter<F extends FilterOptions>(filter: F): Prisma.PromiseWhereUniqueInput {
+    return this.#makeFilter(filter).AND[0] as Prisma.PromiseWhereUniqueInput;
+  }
 
-    if (typeof condition.id === 'number') {
-      result.id = condition.id;
+  #makeFilter(filter: FilterOptions) {
+    const qb = createQueryBuilder<Prisma.PromiseWhereInput>();
+
+    if (typeof filter.id === 'number') {
+      qb.andWhere({ id: filter.id });
     }
 
-    if ('status' in condition) {
-      switch (condition.status) {
-        case PromiseStatus.AVAILABLE:
-          result.promisedAt = { gte: now };
-          result.completedAt = null;
-          break;
-        case PromiseStatus.UNAVAILABLE:
-          (result.OR ??= []).push({ promisedAt: { lt: now } }, { completedAt: { not: null } });
-          break;
-      }
-    }
+    if (typeof filter.userId === 'number') {
+      qb.andWhere({ OR: [{ hostId: filter.userId }, { users: { some: { userId: filter.userId } } }] });
 
-    if ('role' in condition) {
-      switch (condition.role) {
-        case PromiseUserRole.ALL:
-          (result.OR ??= []).push({ hostId: condition.userId }, { users: { some: { userId: condition.userId } } });
-          break;
+      switch (filter.role) {
         case PromiseUserRole.HOST:
-          result.hostId = condition.userId;
+          qb.andWhere({ hostId: filter.userId });
           break;
         case PromiseUserRole.ATTENDEE:
-          result.hostId = { not: condition.userId };
-          result.users = { some: { userId: condition.userId } };
+          qb.andWhere({
+            NOT: { hostId: filter.userId },
+            users: { some: { userId: filter.userId } },
+          });
+          break;
+        case PromiseUserRole.ALL:
+          qb.andWhere({ OR: [{ hostId: filter.userId }, { users: { some: { userId: filter.userId } } }] });
           break;
       }
     }
 
-    return result;
+    switch (filter.status) {
+      case PromiseStatus.AVAILABLE:
+        qb.andWhere({ promisedAt: { gte: new Date() }, completedAt: null });
+        break;
+      case PromiseStatus.UNAVAILABLE:
+        qb.andWhere({ OR: [{ promisedAt: { lt: new Date() } }, { completedAt: { not: null } }] });
+        break;
+      case PromiseStatus.ALL:
+        break;
+    }
+
+    return qb.build();
   }
 }

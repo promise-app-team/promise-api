@@ -23,18 +23,6 @@ import { ApplyDTO } from '@/common/mixins/dto.mixin';
 import { LocationDTO } from '@/modules/promise/location.dto';
 import { DestinationType, LocationShareType, PromiseEntity, UserEntity } from '@/prisma/prisma.entity';
 
-export enum PromiseStatus {
-  ALL = 'all',
-  AVAILABLE = 'available',
-  UNAVAILABLE = 'unavailable',
-}
-
-export enum PromiseUserRole {
-  ALL = 'all',
-  HOST = 'host',
-  ATTENDEE = 'attendee',
-}
-
 export class HostDTO extends PickType(UserEntity, ['id', 'username', 'profileUrl']) {}
 export class AttendeeDTO extends PickType(UserEntity, ['id', 'username', 'profileUrl']) {
   hasStartLocation!: boolean;
