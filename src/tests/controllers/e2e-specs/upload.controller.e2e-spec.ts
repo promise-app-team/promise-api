@@ -44,7 +44,7 @@ describe(FileUploadController, () => {
         .attach('file', path.resolve(__dirname, '../../assets/promise-logo.png'))
         .expect(201);
 
-      expect(/https:\/\/s3\..+\.amazonaws\.com\/.+\/.+/.test(res.body.url)).toBe(true);
+      expect(/https:\/\/s3\..+\.amazonaws\.com\/.+\/.+/.test(res.body.url)).toBeTrue();
     });
   });
 

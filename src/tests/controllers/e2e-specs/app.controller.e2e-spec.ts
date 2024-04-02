@@ -28,7 +28,7 @@ describe(AppController, () => {
         env: 'test',
         tz: 'UTC',
       });
-      expect(/^\d+?\.\d+?\.\d+?$/.test(response.body.version)).toBe(true);
+      expect(/^\d+?\.\d+?\.\d+?$/.test(response.body.version)).toBeTrue();
       expect(() => new Date(response.body.build).toISOString()).not.toThrow();
       expect(() => new Date(response.body.deploy).toISOString()).not.toThrow();
     });
