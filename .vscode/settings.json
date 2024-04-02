@@ -63,11 +63,5 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
 
-  "typescript.inlayHints.enumMemberValues.enabled": false,
-  "typescript.inlayHints.functionLikeReturnTypes.enabled": false,
-  "typescript.inlayHints.parameterNames.enabled": "all",
-  "typescript.inlayHints.parameterTypes.enabled": false,
-  "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
-  "typescript.inlayHints.variableTypes.enabled": false,
   "typescript.tsdk": "node_modules/typescript/lib"
 }

@@ -15,16 +15,19 @@ module.exports = {
     sourceType: 'module',
   },
 
+  ignorePatterns: ['node_modules', 'dist', '_*'],
+
   extends: [
     'plugin:@typescript-eslint/recommended',
     'plugin:deprecation/recommended',
     'plugin:import/recommended',
     'plugin:import/typescript',
+    'plugin:jest-extended/all',
     'prettier',
   ],
-  ignorePatterns: ['node_modules', 'dist', '_*'],
 
-  plugins: ['@typescript-eslint/eslint-plugin', 'prettier', 'import', 'jsdoc'],
+  plugins: ['@typescript-eslint/eslint-plugin', 'prettier', 'import', 'jsdoc', 'jest-extended'],
+
   rules: {
     'prettier/prettier': ['warn'],
 
