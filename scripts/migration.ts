@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import { formatISO, parse } from 'date-fns';
 import * as R from 'remeda';
 
-import { execute, link, logger, prompt } from './utils';
+import { execute, highlight, link, logger, prompt } from './utils';
 
 ///////////////////////////////////////////////////////////////////////////////
 // Environment
@@ -142,10 +142,10 @@ async function executeList() {
   const columns = (gap: number, messages: string[]) => messages.join(' '.repeat(gap));
 
   logger.info(`${migrations.length} migrations found:`);
-  const nameLength = R.maxBy(migrations, (m) => m.dirname.length)?.dirname.length ?? 10;
+  const nameLength = R.firstBy(migrations, [(m) => m.dirname.length, 'desc'])?.dirname.length ?? 10;
   const sqlLength = 'UP / DOWN'.length;
-  const createdLength = R.maxBy(migrations, (m) => m.createdAt.length)?.createdAt.length ?? 21;
-  const appliedLength = R.maxBy(migrations, (m) => m.appliedAt?.length ?? 21)?.appliedAt?.length ?? 21;
+  const createdLength = R.firstBy(migrations, [(m) => m.createdAt.length, 'desc'])?.createdAt.length ?? 21;
+  const appliedLength = R.firstBy(migrations, [(m) => m.appliedAt?.length ?? 21, 'desc'])?.appliedAt?.length ?? 21;
 
   logger.log(
     columns(2, [
@@ -180,22 +180,37 @@ async function executeList() {
 
 async function executeNew() {
   await checkMigrationNotLatest();
+  const [upSql, downSql] = await Promise.all([
+    command.prisma(
+      ['migrate diff', `--to-schema-datamodel "${SCHEMA_FILE}"`, `--from-url "${envs.database.url}"`, `--script`].join(
+        ' '
+      )
+    ),
+    command.prisma(
+      [
+        'migrate diff',
+        `--from-schema-datamodel "${SCHEMA_FILE}"`,
+        `--to-migrations "${MIGRATION_DIR}"`,
+        `--shadow-database-url "${envs.database.shadowUrl}"`,
+        `--script`,
+      ].join(' ')
+    ),
+  ]);
 
-  const downSql = await command.prisma(
-    [
-      'migrate diff',
-      `--from-schema-datamodel "${SCHEMA_FILE}"`,
-      `--to-migrations "${MIGRATION_DIR}"`,
-      `--shadow-database-url "${envs.database.shadowUrl}"`,
-      `--script`,
-    ].join(' ')
-  );
-
-  if (!downSql.trim() || downSql.includes('This is an empty migration')) {
-    return logger.warn('No changes detected. Update your schema and try again.\n');
+  if (!upSql.trim() || upSql.includes('This is an empty migration')) {
+    logger.warn('No changes detected. Are you sure you want to create a empty migration?');
+    const ok = await requestContinue();
+    if (!ok) return logger.warn('Aborted.');
+  } else {
+    logger.info('Changes detected. Check the SQL scripts below:');
+    logger.newline();
+    logger.log(chalk.bold('UP SQL:'));
+    logger.log(highlight(upSql, { language: 'sql' }));
+    logger.log(chalk.bold('DOWN SQL:'));
+    logger.log(highlight(downSql, { language: 'sql' }));
   }
 
-  const name = await prompt('Changes detected. Enter a name for the migration: ').then((res) =>
+  const name = await prompt('Enter a name for the migration:').then((res) =>
     res
       .toLowerCase()
       .replace(/(\s|\-)/g, '_')
@@ -205,7 +220,7 @@ async function executeNew() {
   const filtered = name.replace(/[^a-z]/g, '');
   if (filtered.length < 1) return logger.error('Invalid name. Must contain at least one letter.');
 
-  const ok = await requestContinue(`Create migration file: ${chalk.bold.blue(name)}? (y|n)`);
+  const ok = await requestContinue(`Create migration file: ${chalk.bold.blue(name)}?`);
   if (!ok) return logger.warn('Aborted.');
 
   logger.info('Generating migration file...');
@@ -258,9 +273,9 @@ async function main() {
 ///////////////////////////////////////////////////////////////////////////////
 // Helpers
 
-async function requestContinue(message = `Continue? ${chalk.dim('(Y|n)')}`): Promise<boolean> {
+async function requestContinue(message = 'Continue?'): Promise<boolean> {
   while (true) {
-    const response = await prompt(message);
+    const response = await prompt(`${message} ${chalk.dim('[Y|n]')}`);
     if (['', 'y', 'yes'].includes(response.toLowerCase())) return true;
     if (['n', 'no'].includes(response.toLowerCase())) return false;
     process.stdout.write('\x1b[1A\x1b[2K');

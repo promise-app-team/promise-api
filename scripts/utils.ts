@@ -2,6 +2,8 @@ import { exec } from 'node:child_process';
 import readline from 'node:readline';
 
 import chalk from 'chalk';
+import { HighlightOptions, highlight as cliHighlight } from 'cli-highlight';
+import { mergeDeep } from 'remeda';
 
 export const logger = {
   log: (...msg: string[]) => console.log(...msg),
@@ -58,4 +60,22 @@ export async function execute(command: string, options: ExecuteOptions = {}) {
       }
     });
   });
+}
+
+export function highlight(code: string, options: HighlightOptions = {}) {
+  return cliHighlight(
+    code,
+    mergeDeep(
+      {
+        language: 'sql',
+        ignoreIllegals: true,
+        theme: {
+          literal: chalk.blueBright,
+          type: chalk.magentaBright,
+          built_in: chalk.magenta,
+        },
+      },
+      options as Record<string, unknown>
+    )
+  );
 }
