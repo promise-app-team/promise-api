@@ -82,20 +82,21 @@ describe(PromiseService, () => {
     const promises = () => [fixture1, fixture2, fixture3, fixture4, fixture5, fixture6].map((f) => f.promise);
 
     beforeEach(async () => {
-      [fixture1, fixture2, fixture3, fixture4, fixture5, fixture6] = await Promise.all(
-        R.times(6, async () => {
-          const host = await fixture.write.user();
-          const { promise } = await fixture.write.promise({ host, partial: { id: host.output.id } });
-          return { host: host.output, promise: promise.output };
-        })
+      [fixture1, fixture2, fixture3, fixture4, fixture5, fixture6] = R.pipe(
+        await Promise.all(
+          R.times(6, async () => {
+            const host = await fixture.write.user();
+            const { promise } = await fixture.write.promise({ host, partial: { id: host.output.id } });
+            return { host: host.output, promise: promise.output };
+          })
+        ),
+        R.sortBy(({ promise }) => promise.id)
       );
+    });
 
-      const { host: h1, promise: p1 } = fixture1;
-      const { host: _h2, promise: p2 } = fixture2;
-      const { host: h3, promise: p3 } = fixture3;
-      const { host: h4, promise: p4 } = fixture4;
-      const { host: h5, promise: p5 } = fixture5;
-      const { host: _h6, promise: p6 } = fixture6;
+    beforeEach(async () => {
+      const [h1, _h2, h3, h4, h5, _h6] = hosts();
+      const [p1, p2, p3, p4, p5, p6] = promises();
 
       /**
        * promise1: host1 [host1]               available   (promisedAt = tomorrow)
@@ -111,16 +112,18 @@ describe(PromiseService, () => {
           prisma.promise.update({ where: { id: p2.id }, data: { promisedAt: tomorrow } }),
           prisma.promise.update({ where: { id: p3.id }, data: { promisedAt: yesterday } }),
           prisma.promise.update({ where: { id: p4.id }, data: { promisedAt: yesterday } }),
-          prisma.promise.update({ where: { id: p5.id }, data: { promisedAt: tomorrow } }),
+          prisma.promise.update({ where: { id: p5.id }, data: { promisedAt: tomorrow, completedAt: null } }),
           prisma.promise.update({ where: { id: p6.id }, data: { promisedAt: tomorrow, completedAt: yesterday } }),
-
-          prisma.promiseUser.create({ data: { userId: h3.id, promiseId: p2.id } }),
-          prisma.promiseUser.create({ data: { userId: h5.id, promiseId: p4.id } }),
-          prisma.promiseUser.create({ data: { userId: h1.id, promiseId: p5.id } }),
-          prisma.promiseUser.create({ data: { userId: h4.id, promiseId: p5.id } }),
-          prisma.promiseUser.create({ data: { userId: h1.id, promiseId: p6.id } }),
-          prisma.promiseUser.create({ data: { userId: h4.id, promiseId: p6.id } }),
         ]);
+
+      await Promise.all([
+        prisma.promiseUser.create({ data: { userId: h3.id, promiseId: p2.id } }),
+        prisma.promiseUser.create({ data: { userId: h5.id, promiseId: p4.id } }),
+        prisma.promiseUser.create({ data: { userId: h1.id, promiseId: p5.id } }),
+        prisma.promiseUser.create({ data: { userId: h4.id, promiseId: p5.id } }),
+        prisma.promiseUser.create({ data: { userId: h1.id, promiseId: p6.id } }),
+        prisma.promiseUser.create({ data: { userId: h4.id, promiseId: p6.id } }),
+      ]);
     });
 
     test.each(Object.values(PromiseStatus))('should return promises by the status (%s) w/o userId', async (status) => {
@@ -791,10 +794,10 @@ describe(PromiseService, () => {
 
   describe(PromiseService.prototype.deleteStartLocation, () => {
     test('should delete a start location by the promise id', async () => {
-      const { promise, attendees } = await fixture.write.promise({ attendees: 1, startLocations: 1 });
+      const { promise, attendees, startLocations } = await fixture.write.promise({ attendees: 1, startLocations: 1 });
       await expect(
         promiseService.deleteStartLocation(promise.output.id, attendees[0].output.id)
-      ).resolves.toBeUndefined();
+      ).resolves.toMatchObject({ id: startLocations[0].output.id });
       await expect(promiseService.getStartLocation(promise.output.id, attendees[0].output.id)).rejects.toEqual(
         PromiseServiceError.NotFoundStartLocation
       );

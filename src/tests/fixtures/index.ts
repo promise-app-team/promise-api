@@ -40,14 +40,14 @@ type Falsy = false | 0 | '' | null | undefined;
 
 type NonNullableIf<T, C> = C extends Falsy ? null : NonNullable<T>;
 
-interface PromiseComplete<Opts extends PromiseCompleteOptions> {
+interface PromiseComplete<Options extends PromiseCompleteOptions> {
   host: Result<UserModel, PrismaUser>;
-  destination: NonNullableIf<Result<LocationModel, PrismaLocation>, Opts['destination']>;
-  theme: NonNullableIf<Result<ThemeModel, PrismaTheme>, Opts['theme']>;
+  destination: NonNullableIf<Result<LocationModel, PrismaLocation>, Options['destination']>;
+  theme: NonNullableIf<Result<ThemeModel, PrismaTheme>, Options['theme']>;
   themes: Result<ThemeModel, PrismaTheme>[];
-  startLocation: NonNullableIf<Result<LocationModel, PrismaLocation>, Opts['startLocation']>;
+  startLocation: NonNullableIf<Result<LocationModel, PrismaLocation>, Options['startLocation']>;
   startLocations: Result<LocationModel, PrismaLocation>[];
-  attendee: NonNullableIf<Result<UserModel, PrismaUser>, Opts['attendee']>;
+  attendee: NonNullableIf<Result<UserModel, PrismaUser>, Options['attendee']>;
   attendees: Result<UserModel, PrismaUser>[];
   promise: Result<Omit<PromiseModel, 'pid'>, PrismaPromise>;
 }
@@ -185,7 +185,6 @@ export function createTestFixture(
       prisma.promise.create({
         data: {
           ...promise,
-          promisedAt: tomorrow,
           destinationId: destination?.output.id ?? null,
           themes: { createMany: { data: themeIds.map((id) => ({ themeId: id })) } },
           users: {
@@ -205,8 +204,8 @@ export function createTestFixture(
     await deleteMany(prisma, range.from, range.to);
   }
 
-  beforeEach(clear);
-  afterAll(clear);
+  beforeEach(async () => clear());
+  afterAll(async () => clear());
 
   return {
     input: {
