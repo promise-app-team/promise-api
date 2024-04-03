@@ -249,8 +249,12 @@ export class PromiseService {
       throw PromiseServiceError.NotFoundPromise;
     }
 
+    if (!promiseUser.startLocationId) {
+      throw PromiseServiceError.NotFoundStartLocation;
+    }
+
     await this.prisma.location.delete({
-      where: { id: promiseUser?.startLocationId ?? 0 },
+      where: { id: promiseUser.startLocationId },
     });
   }
 
@@ -300,32 +304,30 @@ export class PromiseService {
    * @throws {PromiseServiceError.NotFoundPromise}
    * @throws {PromiseServiceError.HostCannotLeave}
    */
-  async leave(id: number, userId: number): Promise<void> {
-    const promise = await this.prisma.promise.findUnique({
-      where: this.#makeUniqueFilter({ id, status: PromiseStatus.AVAILABLE }),
-      select: { id: true, hostId: true, promisedAt: true, completedAt: true },
-    });
-
-    if (!promise) {
-      throw PromiseServiceError.NotFoundPromise;
-    }
-
-    if (promise.hostId === userId) {
-      throw PromiseServiceError.HostCannotLeave;
-    }
-
-    await this.prisma.promiseUser
-      .delete({
-        where: { identifier: { userId, promiseId: promise.id } },
-      })
-      .catch((error) => {
-        switch (PrismaClientError.from(error)?.code) {
-          case 'P2025':
-            throw PromiseServiceError.NotFoundPromise;
-          default:
-            throw error;
-        }
+  async leave(id: number, userId: number): Promise<{ id: number }> {
+    try {
+      const promise = await this.prisma.promise.findUniqueOrThrow({
+        where: this.#makeUniqueFilter({ id, status: PromiseStatus.AVAILABLE }),
+        select: { id: true, hostId: true, promisedAt: true, completedAt: true },
       });
+
+      if (promise.hostId === userId) {
+        throw PromiseServiceError.HostCannotLeave;
+      }
+
+      await this.prisma.promiseUser.delete({
+        where: { identifier: { userId, promiseId: promise.id } },
+      });
+
+      return { id: promise.id };
+    } catch (error) {
+      switch (PrismaClientError.from(error)?.code) {
+        case 'P2025':
+          throw PromiseServiceError.NotFoundPromise;
+        default:
+          throw error;
+      }
+    }
   }
 
   async getThemes(): Promise<ThemeModel[]> {
@@ -341,6 +343,8 @@ export class PromiseService {
 
     if (typeof filter.id === 'number') {
       qb.andWhere({ id: filter.id });
+    } else if (typeof filter.id === 'string') {
+      throw new Error('Invalid ID');
     }
 
     if (typeof filter.userId === 'number') {
