@@ -8,7 +8,7 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
-  testRegex: ['.*\\.test\\.ts$', '.*\\.spec\\.ts$', '.*\\.e2e-spec\\.ts$'],
+  testRegex: ['^(?!.*/_).*\\.test\\.ts$', '^(?!.*/_)..*\\.spec\\.ts$', '^(?!.*/_)..*\\.e2e-spec\\.ts$'],
   transform: {
     '^.+\\.(t|j)s$': [
       'ts-jest',
@@ -18,7 +18,11 @@ module.exports = {
     ],
   },
   verbose: false,
-  collectCoverageFrom: ['src/app/**/*.(t|j)s', 'src/modules/**/*.{!(gateway),}.(t|j)s', 'src/utils/**/*.(t|j)s'],
+  collectCoverageFrom: [
+    'src/app/**/[^_]*.(t|j)s',
+    'src/modules/**/[^_]*.{!(gateway),}.(t|j)s',
+    'src/utils/**/[^_]*.(t|j)s',
+  ],
   coverageDirectory: 'coverage',
   testEnvironment: 'node',
   preset: 'ts-jest',
