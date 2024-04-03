@@ -239,23 +239,30 @@ export class PromiseService {
    * @throws {PromiseServiceError.NotFoundPromise}
    * @throws {PromiseServiceError.NotFoundStartLocation}
    */
-  async deleteStartLocation(id: number, userId: number): Promise<void> {
-    const promiseUser = await this.prisma.promiseUser.findFirst({
-      where: { userId, promiseId: id },
-      select: { startLocationId: true },
-    });
+  async deleteStartLocation(id: number, userId: number): Promise<{ id: number }> {
+    try {
+      const promiseUser = await this.prisma.promiseUser.findFirstOrThrow({
+        where: { userId, promiseId: id },
+        select: { startLocationId: true },
+      });
 
-    if (!promiseUser) {
-      throw PromiseServiceError.NotFoundPromise;
+      if (!promiseUser.startLocationId) {
+        throw PromiseServiceError.NotFoundStartLocation;
+      }
+
+      await this.prisma.location.delete({
+        where: { id: promiseUser.startLocationId },
+      });
+
+      return { id: promiseUser.startLocationId };
+    } catch (error) {
+      switch (PrismaClientError.from(error)?.code) {
+        case 'P2025':
+          throw PromiseServiceError.NotFoundPromise;
+        default:
+          throw error;
+      }
     }
-
-    if (!promiseUser.startLocationId) {
-      throw PromiseServiceError.NotFoundStartLocation;
-    }
-
-    await this.prisma.location.delete({
-      where: { id: promiseUser.startLocationId },
-    });
   }
 
   /**
