@@ -16,8 +16,6 @@ describe(FileUploadController, () => {
     uploadImageFile: '/upload/image',
   });
 
-  let jwt: JwtService;
-
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       imports: [AppModule],
@@ -26,15 +24,13 @@ describe(FileUploadController, () => {
     const app = module.createNestApplication();
     http.prepare(await app.init());
 
-    jwt = module.get(JwtService);
+    const { input: authUser } = await fixture.write.user();
+    http.request.authorize(authUser, { jwt: module.get(JwtService) });
   });
 
   describe(http.name.uploadImageFile, () => {
     test('should return uploaded file url', async () => {
-      const { input: user } = await fixture.write.user();
-      const token = jwt.sign({ id: user.id }, { expiresIn: '1h' });
       const res = await http.request.uploadImageFile.post
-        .auth(token, { type: 'bearer' })
         .attach('file', path.resolve(__dirname, '../../assets/promise-logo.png'))
         .expect(201);
 

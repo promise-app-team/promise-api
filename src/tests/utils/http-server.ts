@@ -1,6 +1,9 @@
 import { INestApplication } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { mapValues } from 'remeda';
 import request from 'supertest';
+
+import { UserModel } from '@/prisma/prisma.entity';
 
 type HttpMethod = 'get' | 'post' | 'put' | 'delete' | 'patch';
 
@@ -10,18 +13,45 @@ type ExtractMethodName<T> = {
 
 type RequestTestMap = Record<HttpMethod, request.Test>;
 
-export type HttpRequest<T> = Record<ExtractMethodName<T>, RequestTestMap> & {
-  close: INestApplication['close'];
+type Routes<T> = Record<ExtractMethodName<T>, string>;
+
+type Auth = {
+  user: UserModel;
+  token: string;
 };
 
-export function initializeHttpRequest<T>(app: INestApplication, routes: Routes<T>): HttpRequest<T> {
-  const http = {} as HttpRequest<T>;
-  http.close = app.close.bind(app);
+type HttpRequest<T> = Record<ExtractMethodName<T>, RequestTestMap> & {
+  auth: Auth;
+  close: INestApplication['close'];
+  authorize(token: string): void;
+  authorize<U extends UserModel>(user: U, options: { jwt: JwtService }): void;
+  unauthorize(): void;
+};
+
+function initializeHttpRequest<T>(app: INestApplication, routes: Routes<T>): HttpRequest<T> {
+  let auth: Auth;
+
+  const http = {
+    get auth() {
+      if (!auth) throw new Error('User is not authorized');
+      return auth;
+    },
+    close: app.close.bind(app),
+    authorize(user, options) {
+      if (!request) throw new Error('Server is not prepared');
+      const token = options.jwt.sign({ id: user.id }, { expiresIn: '1h' });
+      auth = { user, token };
+    },
+    unauthorize() {
+      auth = null as any;
+    },
+  } as HttpRequest<T>;
 
   for (const [route, path] of Object.entries(routes)) {
     http[route as ExtractMethodName<T>] = new Proxy({} as any, {
       get(_target, method: HttpMethod) {
-        return request(app.getHttpServer())[method](path as string);
+        const res = request(app.getHttpServer())[method](path as string);
+        return auth ? res.auth(auth.token, { type: 'bearer' }) : res;
       },
     });
   }
@@ -29,12 +59,10 @@ export function initializeHttpRequest<T>(app: INestApplication, routes: Routes<T
   return http;
 }
 
-type Routes<T> = Record<ExtractMethodName<T>, string>;
-
 export type HttpServer<T> = {
   name: Routes<T>;
-  prepare(app: INestApplication): void;
   request: HttpRequest<T>;
+  prepare(app: INestApplication): void;
 };
 
 export function createHttpServer<T>(routes: Routes<T>): HttpServer<T> {

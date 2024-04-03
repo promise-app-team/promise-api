@@ -1,6 +1,5 @@
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
-import { User } from '@prisma/client';
 import { pick } from 'remeda';
 
 import { createHttpServer } from '../../utils/http-server';
@@ -30,20 +29,16 @@ describe(UserController, () => {
     http.prepare(await app.init());
 
     jwt = module.get(JwtService);
-  });
-
-  const auth = { user: {} as User, token: '' };
-  beforeEach(async () => {
-    auth.user = (await fixture.write.user()).output;
-    auth.token = jwt.sign({ id: auth.user.id }, { expiresIn: '1h' });
+    const { input: authUser } = await fixture.write.user();
+    http.request.authorize(authUser, { jwt });
   });
 
   describe(http.name.getMyProfile, () => {
     test('should return user profile', async () => {
-      const res = await http.request.getMyProfile.get.auth(auth.token, { type: 'bearer' }).expect(200);
+      const res = await http.request.getMyProfile.get.expect(200);
 
       expect(res.body).toEqual({
-        ...pick(auth.user, ['id', 'username', 'profileUrl', 'provider']),
+        ...pick(http.request.auth.user, ['id', 'username', 'profileUrl', 'provider']),
         createdAt: expect.any(String),
       });
     });
@@ -62,12 +57,11 @@ describe(UserController, () => {
   describe(http.name.updateMyProfile, () => {
     test('should update user profile', async () => {
       const res = await http.request.updateMyProfile.put
-        .auth(auth.token, { type: 'bearer' })
         .send({ username: 'new username', profileUrl: 'new profileUrl' })
         .expect(200);
 
       expect(res.body).toEqual({
-        ...pick(auth.user, ['id', 'provider']),
+        ...pick(http.request.auth.user, ['id', 'provider']),
         username: 'new username',
         profileUrl: 'new profileUrl',
         createdAt: expect.any(String),
@@ -90,13 +84,10 @@ describe(UserController, () => {
 
   describe(http.name.deleteMyProfile, () => {
     test('should delete user profile', async () => {
-      const res = await http.request.deleteMyProfile.delete
-        .auth(auth.token, { type: 'bearer' })
-        .send({ reason: 'test' })
-        .expect(200);
+      const res = await http.request.deleteMyProfile.delete.send({ reason: 'test' }).expect(200);
 
       expect(res.body).toEqual({
-        id: auth.user.id,
+        id: http.request.auth.user.id,
       });
     });
 
