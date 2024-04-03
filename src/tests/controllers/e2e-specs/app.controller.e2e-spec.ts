@@ -1,14 +1,12 @@
 import { Test } from '@nestjs/testing';
 
-import { createHttpServer } from '../../utils/http-server';
+import { createHttpRequest } from '../utils/http-request';
 
 import { AppController } from '@/app/app.controller';
 import { AppModule } from '@/app/app.module';
 
 describe(AppController, () => {
-  const http = createHttpServer<AppController>({
-    ping: '/',
-  });
+  const http = createHttpRequest<AppController>('/', { ping: '' });
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -19,9 +17,9 @@ describe(AppController, () => {
     http.prepare(await app.init());
   });
 
-  describe(http.name.ping, () => {
+  describe(http.request.ping, () => {
     test('should return pong', async () => {
-      const response = await http.request.ping.get.expect(200);
+      const response = await http.request.ping().get.expect(200);
 
       expect(response.body).toMatchObject({
         message: 'pong',
