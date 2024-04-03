@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { Prisma, Promise as PromiseModel, User as UserModel } from '@prisma/client';
-import { addDays, formatISO, subDays } from 'date-fns';
+import { formatISO } from 'date-fns';
 import * as R from 'remeda';
 
 import { InputCreatePromiseDTO, InputLocationDTO, InputUpdatePromiseDTO } from '@/modules/promise/promise.dto';
@@ -8,21 +8,14 @@ import { PromiseStatus, PromiseUserRole } from '@/modules/promise/promise.enum';
 import { PromiseService, PromiseServiceError } from '@/modules/promise/promise.service';
 import { DestinationType } from '@/prisma/prisma.entity';
 import { PrismaService } from '@/prisma/prisma.service';
-import { createLocationBuilder } from '@/tests/fixtures/locations';
-import { createPromiseBuilder } from '@/tests/fixtures/promises';
-import { createThemeBuilder } from '@/tests/fixtures/themes';
-import { createUserBuilder } from '@/tests/fixtures/users';
+import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/prisma';
-
-const [MIN, MAX] = [3e5, 4e5];
-const createUser = createUserBuilder(MIN);
-const createLocation = createLocationBuilder(MIN);
-const createPromise = createPromiseBuilder(MIN);
-const createTheme = createThemeBuilder(MIN);
 
 describe(PromiseService, () => {
   let promiseService: PromiseService;
   const prisma = createPrismaClient({ logging: false });
+  const fixture = createTestFixture(prisma, { from: 3e5, to: 4e5 });
+  const { tomorrow, yesterday } = fixture.date;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -32,71 +25,13 @@ describe(PromiseService, () => {
     promiseService = module.get(PromiseService);
   });
 
-  beforeEach(async () => {
-    await prisma.promise.deleteMany({ where: { id: { gte: MIN, lt: MAX } } });
-    await prisma.location.deleteMany({ where: { id: { gte: MIN, lt: MAX } } });
-    await prisma.theme.deleteMany({ where: { id: { gte: MIN, lt: MAX } } });
-    await prisma.user.deleteMany({ where: { id: { gte: MIN, lt: MAX } } });
-  });
-
   test('should be defined', () => {
     expect(promiseService).toBeInstanceOf(PromiseService);
   });
 
-  async function fixture() {
-    const host = await createUser((user) => prisma.user.create({ data: user }));
-    const destination = await createLocation((location) => prisma.location.create({ data: location }));
-    const startLocations = await Promise.all(
-      R.times(3, () => createLocation((location) => prisma.location.create({ data: location })))
-    );
-    const attendees = await Promise.all(R.times(3, () => createUser((user) => prisma.user.create({ data: user }))));
-    const themes = await Promise.all(R.times(3, () => createTheme((theme) => prisma.theme.create({ data: theme }))));
-
-    const promise = await createPromise({ hostId: host.input.id }, (promise) =>
-      prisma.promise.create({
-        data: {
-          ...promise,
-          destinationId: destination?.output.id ?? null,
-          themes: { createMany: { data: themes.map((theme) => ({ themeId: theme.output.id })) } },
-          users: {
-            createMany: {
-              data: [host, ...attendees].map((user, i) => ({
-                userId: user.output.id,
-                startLocationId: i === 0 ? null : startLocations[i - 1]?.output.id ?? null,
-              })),
-            },
-          },
-        },
-      })
-    );
-
-    return {
-      host,
-      destination,
-      startLocations,
-      attendees,
-      themes,
-      promise,
-    };
-  }
-
-  async function fixtures(number: number, foreignKey?: { hostId: number }) {
-    const fs = await Promise.all(R.times(Math.max(1, number), () => fixture()));
-    await prisma.promise.updateMany({
-      where: { id: { in: fs.map((f) => f.promise.output.id) } },
-      data: { hostId: foreignKey?.hostId },
-    });
-    foreignKey?.hostId && fs.forEach((f) => (f.host.input.id = foreignKey.hostId));
-    foreignKey?.hostId && fs.forEach((f) => (f.host.output.id = foreignKey.hostId));
-    return fs;
-  }
-
-  const tomorrow = addDays(new Date(), 1);
-  const yesterday = subDays(new Date(), 1);
-
   describe(PromiseService.prototype.exists, () => {
     test('should return true if the promise exists by the id', async () => {
-      const { promise } = await fixture();
+      const { promise } = await fixture.write.promise();
       await expect(promiseService.exists({ id: promise.input.id })).resolves.toBeTrue();
     });
 
@@ -107,21 +42,16 @@ describe(PromiseService, () => {
 
   describe(PromiseService.prototype.findAll, () => {
     test('should return promises by the user', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const fs = await fixtures(3, { hostId: host.id });
-      const result = await promiseService.findAll({ role: PromiseUserRole.ALL, userId: host.id });
-      expect(result).toHaveLength(3);
-      expect(result).toMatchObject(
-        R.pipe(
-          fs,
-          R.map((f) => ({
-            ...f.promise.output,
-            hostId: host.id,
-            updatedAt: expect.any(Date),
-          })),
-          R.sort((a, b) => a.id - b.id)
-        )
-      );
+      const host = await fixture.write.user();
+      const { promise: p1 } = await fixture.write.promise({ host });
+      const { promise: p2 } = await fixture.write.promise({ host });
+      const { promise: p3 } = await fixture.write.promise({ host });
+
+      const result = await promiseService.findAll({ role: PromiseUserRole.ALL, userId: host.output.id });
+
+      const promises = [p1, p2, p3].map((p) => p.output);
+      expect(result).toBeArrayOfSize(3);
+      expect(result).toMatchObject(promises);
     });
 
     test('should return empty array if the user does not have any promises', async () => {
@@ -131,7 +61,7 @@ describe(PromiseService, () => {
 
   describe(PromiseService.prototype.findOne, () => {
     test('should return a promise by the id', async () => {
-      const { promise } = await fixture();
+      const { promise } = await fixture.write.promise();
       await expect(promiseService.findOne({ id: promise.output.id })).resolves.toMatchObject(promise.output);
     });
 
@@ -154,11 +84,11 @@ describe(PromiseService, () => {
     beforeEach(async () => {
       [fixture1, fixture2, fixture3, fixture4, fixture5, fixture6] = await Promise.all(
         R.times(6, async () => {
-          const host = await prisma.user.create({ data: createUser() });
-          const promise = await prisma.promise.create({ data: createPromise({ id: host.id, hostId: host.id }) });
-          return { host, promise };
+          const host = await fixture.write.user();
+          const { promise } = await fixture.write.promise({ host, partial: { id: host.output.id } });
+          return { host: host.output, promise: promise.output };
         })
-      ).then((fs) => fs.sort((a, b) => a.promise.id - b.promise.id));
+      );
 
       const { host: h1, promise: p1 } = fixture1;
       const { host: _h2, promise: p2 } = fixture2;
@@ -219,7 +149,7 @@ describe(PromiseService, () => {
     test.each(Object.values(PromiseStatus))('should return promises by the status (%s) w/ userId', async (status) => {
       const [h1, h2, h3, h4, h5, h6] = hosts();
       const [p1, p2, p3, p4, p5, p6] = promises();
-      const hx = await prisma.user.create({ data: createUser() });
+      const { output: hx } = await fixture.write.user();
       const cond = (id: number) => ({ status, userId: id });
 
       switch (status) {
@@ -305,7 +235,7 @@ describe(PromiseService, () => {
       async (role) => {
         const [h1, h2, h3, h4, h5, h6] = hosts();
         const [p1, p2, p3, p4, p5, p6] = promises();
-        const hx = await prisma.user.create({ data: createUser() });
+        const { output: hx } = await fixture.write.user();
         const cond = (id: number) => ({ role, userId: id });
 
         switch (role) {
@@ -401,7 +331,7 @@ describe(PromiseService, () => {
       const { status, role } = condition;
       const [h1, h2, h3, h4, h5, h6] = hosts();
       const [p1, p2, p3, p4, p5, p6] = promises();
-      const hx = await prisma.user.create({ data: createUser() });
+      const { output: hx } = await fixture.write.user();
 
       const cond = (id: number) => ({ ...condition, userId: id });
 
@@ -633,12 +563,12 @@ describe(PromiseService, () => {
 
   describe(PromiseService.prototype.create, () => {
     test('should create a simple promise', async () => {
-      const host = await prisma.user.create({ data: createUser() });
+      const { output: host } = await fixture.write.user();
       const promiseInput = {
-        ...createPromise({ hostId: host.id }),
+        ...fixture.input.promise({ hostId: host.id }),
         themeIds: [],
         destination: null,
-        promisedAt: formatISO(addDays(new Date(), 1)),
+        promisedAt: formatISO(tomorrow),
       } satisfies InputCreatePromiseDTO;
       const result = await promiseService.create(host.id, promiseInput);
 
@@ -651,13 +581,13 @@ describe(PromiseService, () => {
     });
 
     test('should create a promise with themes', async () => {
-      const host = await prisma.user.create({ data: createUser() });
-      const themes = await Promise.all(R.times(3, () => prisma.theme.create({ data: createTheme() })));
+      const { output: host } = await fixture.write.user();
+      const themes = (await fixture.write.themes(3)).map((theme) => theme.output);
       const promiseInput = {
-        ...createPromise({ hostId: host.id }),
+        ...fixture.input.promise({ hostId: host.id }),
         themeIds: themes.map((theme) => theme.id),
         destination: null,
-        promisedAt: formatISO(addDays(new Date(), 1)),
+        promisedAt: tomorrow,
       } satisfies InputCreatePromiseDTO;
       const result = await promiseService.create(host.id, promiseInput);
 
@@ -671,19 +601,19 @@ describe(PromiseService, () => {
     });
 
     test('should create a promise with a destination', async () => {
-      const host = await prisma.user.create({ data: createUser() });
+      const { output: host } = await fixture.write.user();
 
       const destination = {
-        ...createLocation(),
+        ...fixture.input.location(),
         latitude: 37.0,
         longitude: 127.0,
       } satisfies InputLocationDTO;
 
       const promiseInput = {
-        ...createPromise({ hostId: host.id }),
+        ...fixture.input.promise({ hostId: host.id }),
         themeIds: [],
         destination,
-        promisedAt: formatISO(addDays(new Date(), 1)),
+        promisedAt: tomorrow,
       } satisfies InputCreatePromiseDTO;
       const result = await promiseService.create(host.id, promiseInput);
 
@@ -704,15 +634,15 @@ describe(PromiseService, () => {
 
   describe(PromiseService.prototype.update, () => {
     test('should update a simple promise', async () => {
-      const { host, promise } = await fixture();
+      const { host, promise } = await fixture.write.promise();
 
       const updatedPromiseInput = {
-        ...createPromise({ hostId: host.input.id }),
+        ...promise.input,
         title: 'updated title',
         destinationType: DestinationType.DYNAMIC,
         themeIds: [],
         destination: null,
-        promisedAt: formatISO(addDays(new Date(), 2)),
+        promisedAt: tomorrow,
       } satisfies InputUpdatePromiseDTO;
 
       const result = await promiseService.update(promise.output.id, host.output.id, updatedPromiseInput);
@@ -726,8 +656,8 @@ describe(PromiseService, () => {
     });
 
     test('should update a promise with themes', async () => {
-      const { host, promise, themes } = await fixture();
-      const newThemes = await Promise.all(R.times(3, () => prisma.theme.create({ data: createTheme() })));
+      const { host, promise, themes } = await fixture.write.promise({ themes: 3 });
+      const newThemes = (await fixture.write.themes(3)).map((theme) => theme.output);
       const updatedThemes = [...themes.map((t) => t.output).slice(1), ...newThemes.slice(1)];
 
       const updatedPromiseInput = {
@@ -736,7 +666,7 @@ describe(PromiseService, () => {
         destinationType: DestinationType.DYNAMIC,
         themeIds: updatedThemes.map((theme) => theme.id),
         destination: null,
-        promisedAt: formatISO(addDays(new Date(), 2)),
+        promisedAt: tomorrow,
       } satisfies InputUpdatePromiseDTO;
 
       const result = await promiseService.update(promise.input.id, host.input.id, updatedPromiseInput);
@@ -750,20 +680,21 @@ describe(PromiseService, () => {
     });
 
     test('should update a promise with a destination', async () => {
-      const { host, promise } = await fixture();
+      const { host, promise } = await fixture.write.promise({ destination: true });
 
       const updatedDestination = {
-        ...createLocation(),
+        ...fixture.input.location(),
         latitude: 37.0,
         longitude: 127.0,
       } satisfies InputLocationDTO;
+
       const updatedPromiseInput = {
         ...promise.input,
         title: 'updated title',
         destinationType: DestinationType.DYNAMIC,
         themeIds: [],
         destination: updatedDestination,
-        promisedAt: formatISO(addDays(new Date(), 2)),
+        promisedAt: tomorrow,
       } satisfies InputUpdatePromiseDTO;
 
       const result = await promiseService.update(promise.input.id, host.input.id, updatedPromiseInput);
@@ -783,7 +714,7 @@ describe(PromiseService, () => {
     });
 
     test('should throw an error if the attendees try to update the promise', async () => {
-      const { promise } = await fixture();
+      const { promise } = await fixture.write.promise();
       await expect(promiseService.update(promise.output.id, -1, {} as any)).rejects.toEqual(
         PromiseServiceError.OnlyHostUpdatable
       );
@@ -796,18 +727,13 @@ describe(PromiseService, () => {
 
   describe(PromiseService.prototype.getStartLocation, () => {
     test('should return a start location by the promise id', async () => {
-      const { host, promise, attendees, startLocations } = await fixture();
-      const startLocation = await prisma.location.create({ data: createLocation() });
-      await prisma.promiseUser.update({
-        where: { identifier: { promiseId: promise.output.id, userId: host.output.id } },
-        data: { startLocationId: startLocation.id },
+      const { promise, attendee, startLocation } = await fixture.write.promise({
+        attendee: true,
+        startLocation: true,
       });
-      await expect(promiseService.getStartLocation(promise.output.id, host.output.id)).resolves.toMatchObject(
-        startLocation
-      );
 
-      await expect(promiseService.getStartLocation(promise.output.id, attendees[0].output.id)).resolves.toMatchObject(
-        startLocations[0].output
+      await expect(promiseService.getStartLocation(promise.output.id, attendee.output.id)).resolves.toMatchObject(
+        startLocation.output
       );
     });
 
@@ -816,14 +742,14 @@ describe(PromiseService, () => {
     });
 
     test('should throw an error if the user is not attending the promise', async () => {
-      const { promise } = await fixture();
+      const { promise } = await fixture.write.promise();
       await expect(promiseService.getStartLocation(promise.output.id, -1)).rejects.toEqual(
         PromiseServiceError.NotFoundPromise
       );
     });
 
     test('should throw an error if the user does not have a start location', async () => {
-      const { host, promise } = await fixture();
+      const { host, promise } = await fixture.write.promise();
       await expect(promiseService.getStartLocation(promise.output.id, host.output.id)).rejects.toEqual(
         PromiseServiceError.NotFoundStartLocation
       );
@@ -832,9 +758,10 @@ describe(PromiseService, () => {
 
   describe(PromiseService.prototype.updateStartLocation, () => {
     test('should update a start location by the promise id', async () => {
-      const { host, promise } = await fixture();
+      const { host, promise } = await fixture.write.promise({});
+
       const updatedStartLocation = {
-        ...createLocation(),
+        ...fixture.input.location(),
         latitude: 37.0,
         longitude: 127.0,
       } satisfies InputLocationDTO;
@@ -855,7 +782,7 @@ describe(PromiseService, () => {
     });
 
     test('should throw an error if the user is not attending the promise', async () => {
-      const { promise } = await fixture();
+      const { promise } = await fixture.write.promise();
       await expect(promiseService.updateStartLocation(promise.output.id, -1, {} as any)).rejects.toEqual(
         PromiseServiceError.NotFoundPromise
       );
@@ -864,7 +791,7 @@ describe(PromiseService, () => {
 
   describe(PromiseService.prototype.deleteStartLocation, () => {
     test('should delete a start location by the promise id', async () => {
-      const { promise, attendees } = await fixture();
+      const { promise, attendees } = await fixture.write.promise({ attendees: 1, startLocations: 1 });
       await expect(
         promiseService.deleteStartLocation(promise.output.id, attendees[0].output.id)
       ).resolves.toBeUndefined();
@@ -876,16 +803,30 @@ describe(PromiseService, () => {
     test('should throw an error if the promise does not exist', async () => {
       await expect(promiseService.deleteStartLocation(0, 0)).rejects.toEqual(PromiseServiceError.NotFoundPromise);
     });
+
+    test('should throw an error if the user is not attending the promise', async () => {
+      const { promise } = await fixture.write.promise();
+      await expect(promiseService.deleteStartLocation(promise.output.id, -1)).rejects.toEqual(
+        PromiseServiceError.NotFoundPromise
+      );
+    });
+
+    test('should throw an error if the user does not have a start location', async () => {
+      const { host, promise } = await fixture.write.promise();
+      await expect(promiseService.deleteStartLocation(promise.output.id, host.output.id)).rejects.toEqual(
+        PromiseServiceError.NotFoundStartLocation
+      );
+    });
   });
 
   describe(PromiseService.prototype.attend, () => {
     test('should attend a promise by the user', async () => {
-      const { host, promise, attendees } = await fixture();
-      const newAttendee = await prisma.user.create({ data: createUser() });
-      await expect(promiseService.attend(promise.output.id, newAttendee.id)).resolves.toMatchObject({
+      const { host, promise, attendee } = await fixture.write.promise({ attendee: true });
+      const newAttendee = await fixture.write.user();
+      await expect(promiseService.attend(promise.output.id, newAttendee.output.id)).resolves.toMatchObject({
         id: promise.output.id,
       });
-      const users = [host.output, ...attendees.map((attendee) => attendee.output), newAttendee];
+      const users = [host, attendee, newAttendee].map((attendee) => attendee.output);
       await expect(promiseService.findOne({ id: promise.output.id })).resolves.toMatchObject({
         ...promise.output,
         users: users.map((user) => ({ user })),
@@ -897,25 +838,27 @@ describe(PromiseService, () => {
     });
 
     test('should throw an error if the user is already attending the promise', async () => {
-      const { promise, attendees } = await fixture();
-      await expect(promiseService.attend(promise.output.id, attendees[0].output.id)).rejects.toEqual(
+      const { promise, attendee } = await fixture.write.promise({ attendee: true });
+      await expect(promiseService.attend(promise.output.id, attendee.output.id)).rejects.toEqual(
         PromiseServiceError.AlreadyAttended
       );
     });
 
     test('should throw an error when occurred an unexpected error', async () => {
-      await expect(promiseService.attend('unknown' as any, 'unknown' as any)).rejects.toThrow();
+      await expect(promiseService.attend(undefined as any, undefined as any)).rejects.toThrow();
     });
   });
 
   describe(PromiseService.prototype.leave, () => {
     test('should leave a promise by the user', async () => {
-      const { host, promise, attendees } = await fixture();
-      const attendee = attendees.splice(0, 1)[0];
-      await expect(promiseService.leave(promise.output.id, attendee.output.id)).resolves.toBeUndefined();
+      const { host, promise, attendees } = await fixture.write.promise({ attendees: 2 });
+      const [attendee1, attendee2] = attendees.map((attendee) => attendee.output);
+      await expect(promiseService.leave(promise.output.id, attendee1.id)).resolves.toEqual({
+        id: promise.output.id,
+      });
       await expect(promiseService.findOne({ id: promise.output.id })).resolves.toMatchObject({
         ...promise.output,
-        users: [{ user: host.output }, ...attendees.map((attendee) => ({ user: attendee.output }))],
+        users: [{ user: host.output }, { user: attendee2 }],
       });
     });
 
@@ -924,12 +867,12 @@ describe(PromiseService, () => {
     });
 
     test('should throw an error if the user is not attending the promise', async () => {
-      const { promise } = await fixture();
+      const { promise } = await fixture.write.promise();
       await expect(promiseService.leave(promise.output.id, -1)).rejects.toEqual(PromiseServiceError.NotFoundPromise);
     });
 
     test('should throw an error if the user is the host of the promise', async () => {
-      const { host, promise } = await fixture();
+      const { host, promise } = await fixture.write.promise();
       await expect(promiseService.leave(promise.output.id, host.output.id)).rejects.toEqual(
         PromiseServiceError.HostCannotLeave
       );
@@ -942,7 +885,7 @@ describe(PromiseService, () => {
 
   describe(PromiseService.prototype.getAttendees, () => {
     test('should return attendees by the promise id', async () => {
-      const { host, promise, attendees } = await fixture();
+      const { host, promise, attendees } = await fixture.write.promise({ attendees: 3 });
       const result = await promiseService.getAttendees(promise.output.id);
       const users = [host.output, ...attendees.map((attendee) => attendee.output)];
       expect(result).toHaveLength(4);
@@ -950,7 +893,7 @@ describe(PromiseService, () => {
     });
 
     test('should return attendees by the promise id and the user ids', async () => {
-      const { host, promise, attendees } = await fixture();
+      const { host, promise, attendees } = await fixture.write.promise({ attendees: 3 });
       const userIds = [host.output.id, attendees[0].output.id];
       const result = await promiseService.getAttendees(promise.output.id, userIds);
       expect(result).toHaveLength(2);
@@ -960,9 +903,13 @@ describe(PromiseService, () => {
 
   describe(PromiseService.prototype.getThemes, () => {
     test('should return themes by the promise id', async () => {
-      const { themes } = await fixture();
+      const { output: theme1 } = await fixture.write.theme();
+      const { output: theme2 } = await fixture.write.theme();
+      const { output: theme3 } = await fixture.write.theme();
+
+      const themes = [theme1, theme2, theme3];
       await expect(promiseService.getThemes()).resolves.toMatchObject(
-        themes.map(({ input: theme }) => ({ id: theme.id, name: expect.any(String) }))
+        themes.map((theme) => ({ id: theme.id, name: expect.any(String) }))
       );
     });
   });

@@ -2,23 +2,21 @@ import path from 'node:path';
 
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
-import { User } from '@prisma/client';
 
 import { AppModule } from '@/app/app.module';
 import { FileUploadController } from '@/modules/upload/upload.controller';
-import { createUserBuilder } from '@/tests/fixtures/users';
+import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/prisma';
 import { createHttpServer } from '@/tests/utils/http-server';
 
-const createUser = createUserBuilder(3e7);
-
 describe(FileUploadController, () => {
   const prisma = createPrismaClient();
+  const fixture = createTestFixture(prisma, { from: 3e7, to: 4e7 });
   const http = createHttpServer<FileUploadController>({
     uploadImageFile: '/upload/image',
   });
 
-  let jwtService: JwtService;
+  let jwt: JwtService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -28,19 +26,15 @@ describe(FileUploadController, () => {
     const app = module.createNestApplication();
     http.prepare(await app.init());
 
-    jwtService = module.get(JwtService);
-  });
-
-  const auth = { user: {} as User, token: '' };
-  beforeEach(async () => {
-    auth.user = await prisma.user.create({ data: createUser() });
-    auth.token = jwtService.sign({ id: auth.user.id }, { expiresIn: '1h' });
+    jwt = module.get(JwtService);
   });
 
   describe(http.name.uploadImageFile, () => {
     test('should return uploaded file url', async () => {
+      const { input: user } = await fixture.write.user();
+      const token = jwt.sign({ id: user.id }, { expiresIn: '1h' });
       const res = await http.request.uploadImageFile.post
-        .auth(auth.token, { type: 'bearer' })
+        .auth(token, { type: 'bearer' })
         .attach('file', path.resolve(__dirname, '../../assets/promise-logo.png'))
         .expect(201);
 

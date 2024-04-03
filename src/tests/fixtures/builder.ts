@@ -1,21 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Prisma, PrismaClient } from '@prisma/client';
-import { addHours, isDate, isValid } from 'date-fns';
+import { isDate, isValid } from 'date-fns';
 import { mapValues } from 'remeda';
 
-import {
-  DestinationType,
-  LocationModel,
-  LocationShareType,
-  PromiseModel,
-  PromiseThemeModel,
-  PromiseUserModel,
-  Provider,
-  ThemeModel,
-  UserModel,
-} from '@/prisma/prisma.entity';
-
-export interface Result<Input, Output> {
+export interface Result<Input, Output = Input> {
   input: Input;
   output: Output;
 }
@@ -81,6 +67,10 @@ export function createModelBuilder<T extends Record<string, any>, R extends keyo
   };
 
   return builder as ModelBuilder<T, R>;
+}
+
+export function isResult<T extends Record<string, any>>(value: any): value is Result<T> {
+  return value && typeof value === 'object' && 'input' in value && 'output' in value;
 }
 
 function isPromiseLike(value: any): value is Promise<any> {

@@ -5,17 +5,16 @@ import { TypedConfigService } from '@/config/env';
 import { AuthService, AuthServiceError } from '@/modules/auth/auth.service';
 import { UserService } from '@/modules/user/user.service';
 import { PrismaService } from '@/prisma/prisma.service';
-import { createUserBuilder } from '@/tests/fixtures/users';
+import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/prisma';
 import { mockJwtService } from '@/tests/services/mocks/jwt.service.mock';
-
-const createUser = createUserBuilder(1e5);
-const validId = 1e5 - 1;
-const invalidId = 1e5 - 2;
 
 describe(AuthService, () => {
   let authService: AuthService;
   const prisma = createPrismaClient({ logging: false });
+  const fixture = createTestFixture(prisma, { from: 1e5, to: 1e6 });
+  const validId = 1e5 - 1;
+  const invalidId = 1e5 - 2;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -37,7 +36,7 @@ describe(AuthService, () => {
 
   describe(AuthService.prototype.authenticate, () => {
     test('should return tokens when called with a valid user', async () => {
-      const { output: user } = await createUser((user) => prisma.user.create({ data: user }));
+      const { output: user } = await fixture.write.user();
       return expect(authService.authenticate({ id: user.id })).resolves.toEqual({
         accessToken: 'token',
         refreshToken: 'token',
@@ -51,7 +50,7 @@ describe(AuthService, () => {
 
   describe(AuthService.prototype.refresh, () => {
     test('should return tokens when called with a valid token', async () => {
-      await prisma.user.create({ data: createUser({ id: validId }) });
+      await fixture.write.user({ id: validId });
       await expect(authService.refresh('valid')).resolves.toEqual({
         accessToken: 'token',
         refreshToken: 'token',

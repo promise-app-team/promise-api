@@ -8,19 +8,18 @@ import { AppModule } from '@/app/app.module';
 import { HttpException } from '@/common/exceptions/http.exception';
 import { AuthController } from '@/modules/auth/auth.controller';
 import { AuthServiceError } from '@/modules/auth/auth.service';
-import { createUserBuilder } from '@/tests/fixtures/users';
+import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/prisma';
-
-const createUser = createUserBuilder(1e7);
 
 describe(AuthController, () => {
   const prisma = createPrismaClient();
+  const fixture = createTestFixture(prisma, { from: 1e7, to: 2e7 });
   const http = createHttpServer<AuthController>({
     refreshTokens: '/auth/refresh',
     login: '/auth/login',
   });
 
-  let jwtService: JwtService;
+  let jwt: JwtService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -30,12 +29,12 @@ describe(AuthController, () => {
     const app = module.createNestApplication();
     http.prepare(await app.init());
 
-    jwtService = module.get(JwtService);
+    jwt = module.get(JwtService);
   });
 
   describe(http.name.login, () => {
     test('should return access token and refresh token', async () => {
-      const user = await prisma.user.create({ data: createUser() });
+      const { input: user } = await fixture.write.user();
       const res1 = await http.request.login.post.send(user).expect(201);
 
       expect(res1.body).toEqual({
@@ -48,12 +47,12 @@ describe(AuthController, () => {
   describe(http.name.refreshTokens, () => {
     const auth = { user: {} as User, token: '' };
     beforeEach(async () => {
-      auth.user = await prisma.user.create({ data: createUser() });
-      auth.token = jwtService.sign({ id: auth.user.id }, { expiresIn: '1h' });
+      auth.user = (await fixture.write.user()).output;
+      auth.token = jwt.sign({ id: auth.user.id }, { expiresIn: '1h' });
     });
 
     test('should return new access token and refresh token', async () => {
-      const refreshToken = jwtService.sign({ id: auth.user.id }, { expiresIn: '1d' });
+      const refreshToken = jwt.sign({ id: auth.user.id }, { expiresIn: '1d' });
       const res2 = await http.request.refreshTokens.post
         .auth(auth.token, { type: 'bearer' })
         .send({ refreshToken: refreshToken })
@@ -75,7 +74,7 @@ describe(AuthController, () => {
     });
 
     test('should throw 401 error when user is not found from auth token', async () => {
-      const authToken = jwtService.sign({ id: 0 }, { expiresIn: '1h' });
+      const authToken = jwt.sign({ id: 0 }, { expiresIn: '1h' });
       const res = await http.request.refreshTokens.post
         .auth(authToken, { type: 'bearer' })
         .send({ refreshToken: 'any-token' })
@@ -111,7 +110,7 @@ describe(AuthController, () => {
     test('should throw 400 error when refresh token is expired', async () => {
       const res = await http.request.refreshTokens.post
         .auth(auth.token, { type: 'bearer' })
-        .send({ refreshToken: jwtService.sign({ id: 0 }, { expiresIn: '0s' }) })
+        .send({ refreshToken: jwt.sign({ id: 0 }, { expiresIn: '0s' }) })
         .expect(400);
       expect(res.body).toEqual(HttpException.new(AuthServiceError.AuthTokenExpired, 'BAD_REQUEST').getResponse());
     });
@@ -119,7 +118,7 @@ describe(AuthController, () => {
     test('should throw 404 error when user not found', async () => {
       const res = await http.request.refreshTokens.post
         .auth(auth.token, { type: 'bearer' })
-        .send({ refreshToken: jwtService.sign({ id: 0 }, { expiresIn: '1d' }) })
+        .send({ refreshToken: jwt.sign({ id: 0 }, { expiresIn: '1d' }) })
         .expect(404);
 
       expect(res.body).toEqual(HttpException.new(AuthServiceError.UserNotFound, 'NOT_FOUND').getResponse());
@@ -128,7 +127,7 @@ describe(AuthController, () => {
     test('should throw 500 error when unknown error occurred', async () => {
       const res2 = await http.request.refreshTokens.post
         .auth(auth.token, { type: 'bearer' })
-        .send({ refreshToken: jwtService.sign({ id: 'unknown' }, { expiresIn: '1d' }) })
+        .send({ refreshToken: jwt.sign({ id: 'unknown' }, { expiresIn: '1d' }) })
         .expect(500);
       expect(res2.body).toMatchObject({ statusCode: 500, error: 'Internal Server Error' });
     });

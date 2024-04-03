@@ -36,3 +36,12 @@ export function createPrismaClient(options: PrismaClientOptions = {}): PrismaCli
 
   return prisma;
 }
+
+export async function deleteMany(prisma: PrismaClient, min: number, max: number) {
+  await prisma.$transaction([
+    prisma.location.deleteMany({ where: { id: { gte: min, lt: max } } }),
+    prisma.theme.deleteMany({ where: { id: { gte: min, lt: max } } }),
+    prisma.user.deleteMany({ where: { id: { gte: min, lt: max } } }),
+    prisma.promise.deleteMany({ where: { id: { gte: min, lt: max } } }),
+  ]);
+}

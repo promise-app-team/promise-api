@@ -1,12 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 
 export default async function () {
-  await new PrismaClient().$transaction(async (prisma) => {
-    await prisma.promiseTheme.deleteMany();
-    await prisma.promiseUser.deleteMany();
-    await prisma.location.deleteMany();
-    await prisma.theme.deleteMany();
-    await prisma.user.deleteMany();
-    await prisma.promise.deleteMany();
-  });
+  const prisma = new PrismaClient();
+  await prisma.$transaction([
+    prisma.location.deleteMany(),
+    prisma.theme.deleteMany(),
+    prisma.user.deleteMany(),
+    prisma.promise.deleteMany(),
+  ]);
 }

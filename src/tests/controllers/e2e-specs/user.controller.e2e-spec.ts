@@ -7,20 +7,19 @@ import { createHttpServer } from '../../utils/http-server';
 
 import { AppModule } from '@/app/app.module';
 import { UserController } from '@/modules/user/user.controller';
-import { createUserBuilder } from '@/tests/fixtures/users';
+import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/prisma';
-
-const createUser = createUserBuilder(2e7);
 
 describe(UserController, () => {
   const prisma = createPrismaClient();
+  const fixture = createTestFixture(prisma, { from: 2e7, to: 3e7 });
   const http = createHttpServer<UserController>({
     getMyProfile: '/user/profile',
     updateMyProfile: '/user/profile',
     deleteMyProfile: '/user/profile',
   });
 
-  let jwtService: JwtService;
+  let jwt: JwtService;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
@@ -30,13 +29,13 @@ describe(UserController, () => {
     const app = module.createNestApplication();
     http.prepare(await app.init());
 
-    jwtService = module.get(JwtService);
+    jwt = module.get(JwtService);
   });
 
   const auth = { user: {} as User, token: '' };
   beforeEach(async () => {
-    auth.user = await prisma.user.create({ data: createUser() });
-    auth.token = jwtService.sign({ id: auth.user.id }, { expiresIn: '1h' });
+    auth.user = (await fixture.write.user()).output;
+    auth.token = jwt.sign({ id: auth.user.id }, { expiresIn: '1h' });
   });
 
   describe(http.name.getMyProfile, () => {
@@ -50,7 +49,7 @@ describe(UserController, () => {
     });
 
     test('should return 401 if user is not found', async () => {
-      const accessToken = jwtService.sign({ id: 0 }, { expiresIn: '1h' });
+      const accessToken = jwt.sign({ id: 0 }, { expiresIn: '1h' });
       const res = await http.request.getMyProfile.get.auth(accessToken, { type: 'bearer' }).expect(401);
 
       expect(res.body).toMatchObject({
@@ -76,7 +75,7 @@ describe(UserController, () => {
     });
 
     test('should return 401 if user is not found', async () => {
-      const accessToken = jwtService.sign({ id: 0 }, { expiresIn: '1h' });
+      const accessToken = jwt.sign({ id: 0 }, { expiresIn: '1h' });
       const res = await http.request.updateMyProfile.put
         .auth(accessToken, { type: 'bearer' })
         .send({ username: 'new username', profileUrl: 'new profileUrl' })
@@ -102,7 +101,7 @@ describe(UserController, () => {
     });
 
     test('should return 401 if user is not found', async () => {
-      const accessToken = jwtService.sign({ id: 0 }, { expiresIn: '1h' });
+      const accessToken = jwt.sign({ id: 0 }, { expiresIn: '1h' });
       const res = await http.request.deleteMyProfile.delete
         .auth(accessToken, { type: 'bearer' })
         .send({ reason: 'test' })
