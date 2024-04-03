@@ -47,10 +47,15 @@
     "*.enum.ts": "nest-filter",
     "*.interface.ts": "nest-filter",
     "*.interceptor.ts": "nest-gateway",
+    "*.exception.ts": "nest-filter",
     "*.strategy.ts": "nest-decorator",
     "*.type.ts": "nest-filter",
     "*.schema.ts": "nest-pipe",
     "*.mock.ts": "test-ts"
+  },
+
+  "material-icon-theme.folders.associations": {
+    "e2e-specs": "test"
   },
 
   "[json]": {
