@@ -45,7 +45,7 @@ describe(AuthController, () => {
 
   describe(http.request.refreshTokens, () => {
     beforeEach(async () => {
-      const { output: user } = await fixture.write.user();
+      const user = await fixture.write.user.output();
       http.request.authorize(user, { jwt });
     });
 

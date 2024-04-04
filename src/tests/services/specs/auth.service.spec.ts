@@ -36,7 +36,7 @@ describe(AuthService, () => {
 
   describe(AuthService.prototype.authenticate, () => {
     test('should return tokens when called with a valid user', async () => {
-      const { output: user } = await fixture.write.user();
+      const user = await fixture.write.user.output();
       return expect(authService.authenticate({ id: user.id })).resolves.toEqual({
         accessToken: 'token',
         refreshToken: 'token',

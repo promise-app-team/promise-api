@@ -53,6 +53,15 @@ interface PromiseComplete<Options extends PromiseCompleteOptions> {
   promise: Result<Omit<PromiseModel, 'pid'>, PrismaPromise>;
 }
 
+type ExtractResultOutput<T> =
+  T extends Result<any, infer O>
+    ? O
+    : T extends Record<string, any>
+      ? { [K in keyof T]: ExtractResultOutput<T[K]> }
+      : T;
+
+type PromiseCompleteOutput<Options extends PromiseCompleteOptions> = PromiseComplete<Options>;
+
 interface TestFixtureOptions {
   logging?: boolean;
 }
@@ -247,6 +256,38 @@ export function createTestFixture(
     log('Creating a promise');
     return result;
   }
+
+  function createOutputFunction<
+    T extends (...args: any[]) => Promise<any>,
+    P extends any[] = Parameters<T>,
+    R = Awaited<ReturnType<T>>,
+  >(writeFunction: T): (...args: P) => Promise<ExtractResultOutput<R>> {
+    const extract = (value: any): any => {
+      if (isResult(value)) return value.output;
+      if (Array.isArray(value)) return value.map(extract);
+      if (R.isPlainObject(value)) return R.mapValues(value, extract);
+      return value;
+    };
+
+    return async (...args) => {
+      const result = await writeFunction(...args);
+      return extract(result);
+    };
+  }
+
+  writeUser.output = createOutputFunction(writeUser);
+  writeUsers.output = createOutputFunction(writeUsers);
+  writeLocation.output = createOutputFunction(writeLocation);
+  writeLocations.output = createOutputFunction(writeLocations);
+  writeTheme.output = createOutputFunction(writeTheme);
+  writeThemes.output = createOutputFunction(writeThemes);
+
+  // 함수로 생성 시 PromiseCompleteOutput 타입이 적용되지 않음.
+  writePromise.output = async <Options extends PromiseCompleteOptions>(
+    options?: Options
+  ): Promise<ExtractResultOutput<PromiseCompleteOutput<Options>>> => {
+    return createOutputFunction(writePromise)(options) as any;
+  };
 
   async function clear() {
     await deleteMany(prisma, range.from, range.to);

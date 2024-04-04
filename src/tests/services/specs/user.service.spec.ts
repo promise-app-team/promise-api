@@ -26,7 +26,7 @@ describe(UserService, () => {
 
   describe(UserService.prototype.findOneById, () => {
     test('should return a user by id', async () => {
-      const { output: user } = await fixture.write.user();
+      const user = await fixture.write.user.output();
       await expect(userService.findOneById(user.id)).resolves.toMatchObject(
         pick(user, ['id', 'username', 'profileUrl', 'provider', 'providerId'])
       );
@@ -85,7 +85,7 @@ describe(UserService, () => {
     const profileUrl = 'http://changed.profile.url';
 
     test('should update a user', async () => {
-      const { output: user } = await fixture.write.user();
+      const user = await fixture.write.user.output();
       const updatedUser = { ...user, username, profileUrl };
       await expect(userService.update(user.id, { username, profileUrl })).resolves.toMatchObject(
         pick(updatedUser, ['id', 'username', 'profileUrl'])
@@ -108,7 +108,7 @@ describe(UserService, () => {
 
   describe(UserService.prototype.delete, () => {
     test('should delete a user', async () => {
-      const { output: user } = await fixture.write.user();
+      const user = await fixture.write.user.output();
       await expect(userService.delete(user.id, 'reason')).resolves.toMatchObject(pick(user, ['id']));
     });
 

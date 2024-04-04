@@ -161,7 +161,7 @@ describe(PromiseController, () => {
         R.map(({ host, promise }) => [host.output, promise.output] as const),
         R.sortBy(([, p]) => p.id)
       );
-      const { output: hx } = await fixture.write.user();
+      const hx = await fixture.write.user.output();
 
       /**
        * promise1: host1 [host1]               available   (promisedAt = tomorrow)
@@ -284,9 +284,9 @@ describe(PromiseController, () => {
 
   describe(PromiseController.prototype.getPromise, () => {
     test('should return a promise', async () => {
-      const { promise } = await fixture.write.promise();
-      const result = await promiseController.getPromise(promise.output.id);
-      expect(result).toMatchObject(R.pick(promise.output, ['id']));
+      const { promise } = await fixture.write.promise.output();
+      const result = await promiseController.getPromise(promise.id);
+      expect(result).toMatchObject(R.pick(promise, ['id']));
     });
 
     test('should throw an error if the promise is not found', async () => {
@@ -300,31 +300,34 @@ describe(PromiseController, () => {
 
   describe(PromiseController.prototype.createPromise, () => {
     test('should create a promise', async () => {
-      const { host, destination, themes, promise } = await fixture.write.promise({ destination: true, themes: 3 });
-      await prisma.promise.delete({ where: { id: promise.output.id } });
+      const { host, destination, themes, promise } = await fixture.write.promise.output({
+        destination: true,
+        themes: 3,
+      });
+      await prisma.promise.delete({ where: { id: promise.id } });
 
       const input = {
-        ...fixture.input.promise({ hostId: host.input.id }),
+        ...fixture.input.promise({ hostId: host.id }),
         promisedAt: formatISO(tomorrow),
-        themeIds: themes.map((theme) => theme.output.id),
+        themeIds: themes.map((theme) => theme.id),
         destination: {
-          ...R.omit(destination.input, ['id']),
+          ...R.omit(destination, ['id']),
           latitude: 37.1234,
           longitude: 127.5678,
         },
       } satisfies InputCreatePromiseDTO;
 
-      const result = await promiseController.createPromise(host.input, input);
+      const result = await promiseController.createPromise(host, input);
 
       expect(result).toMatchObject({
         id: expect.any(Number),
-        host: { id: host.input.id },
+        host: { id: host.id },
         destination: {
-          ...R.omit(destination.input, ['id', 'createdAt', 'updatedAt']),
+          ...R.omit(destination, ['id', 'createdAt', 'updatedAt']),
           latitude: parseFloat(input.destination.latitude.toString()),
           longitude: parseFloat(input.destination.longitude.toString()),
         },
-        themes: themes.map((theme) => theme.output.name),
+        themes: themes.map((theme) => theme.name),
         attendees: [],
       });
     });
@@ -332,28 +335,31 @@ describe(PromiseController, () => {
 
   describe(PromiseController.prototype.updatePromise, () => {
     test('should update a promise', async () => {
-      const { host, destination, themes, promise } = await fixture.write.promise({ destination: true, themes: 3 });
+      const { host, destination, themes, promise } = await fixture.write.promise.output({
+        destination: true,
+        themes: 3,
+      });
 
-      const updatedThemes = [...themes.slice(0, 2), await fixture.write.theme()].map((theme) => theme.output);
+      const updatedThemes = [...themes.slice(0, 2), await fixture.write.theme.output()];
       const input = {
-        ...fixture.input.promise({ hostId: host.input.id }),
+        ...fixture.input.promise({ hostId: host.id }),
         promisedAt: formatISO(tomorrow),
         themeIds: updatedThemes.map((theme) => theme.id),
         destination: {
-          ...R.omit(destination.input, ['id']),
+          ...R.omit(destination, ['id']),
           latitude: 37.1234,
           longitude: 127.5678,
         },
       } satisfies InputUpdatePromiseDTO;
 
-      const result = await promiseController.updatePromise(host.input, promise.output.id, input);
+      const result = await promiseController.updatePromise(host, promise.id, input);
 
       expect(result).toMatchObject({
         ...R.omit(input, ['hostId', 'destinationId', 'themeIds', 'updatedAt']),
-        id: promise.output.id,
+        id: promise.id,
         promisedAt: new Date(input.promisedAt),
         destination: {
-          ...R.omit(destination.input, ['id', 'createdAt', 'updatedAt']),
+          ...R.omit(destination, ['id', 'createdAt', 'updatedAt']),
           latitude: parseFloat(input.destination.latitude.toString()),
           longitude: parseFloat(input.destination.longitude.toString()),
         },
@@ -368,8 +374,8 @@ describe(PromiseController, () => {
     });
 
     test('should throw an error if the user is not the host of the promise', async () => {
-      const { promise } = await fixture.write.promise();
-      await expect(promiseController.updatePromise({ id: 0 }, promise.output.id, {} as any)).rejects.toMatchObject({
+      const { promise } = await fixture.write.promise.output();
+      await expect(promiseController.updatePromise({ id: 0 }, promise.id, {} as any)).rejects.toMatchObject({
         status: HttpStatus.BAD_REQUEST,
       });
     });
@@ -385,10 +391,8 @@ describe(PromiseController, () => {
 
   describe(PromiseController.prototype.attendPromise, () => {
     test('should attend a promise', async () => {
-      const {
-        promise: { output: promise },
-      } = await fixture.write.promise();
-      const { output: user } = await fixture.write.user();
+      const { promise } = await fixture.write.promise.output();
+      const user = await fixture.write.user.output();
       const result = await promiseController.attendPromise(user, promise.id);
 
       expect(result).toMatchObject({ id: promise.id });
@@ -401,15 +405,15 @@ describe(PromiseController, () => {
     });
 
     test('should throw an error if the promise is not found', async () => {
-      const { output: user } = await fixture.write.user();
+      const user = await fixture.write.user.output();
       await expect(promiseController.attendPromise(user, 0)).rejects.toMatchObject({
         status: HttpStatus.NOT_FOUND,
       });
     });
 
     test('should throw an error if the user is already attending the promise', async () => {
-      const { promise, attendee } = await fixture.write.promise({ attendee: true });
-      await expect(promiseController.attendPromise(attendee.output, promise.output.id)).rejects.toMatchObject({
+      const { promise, attendee } = await fixture.write.promise.output({ attendee: true });
+      await expect(promiseController.attendPromise(attendee, promise.id)).rejects.toMatchObject({
         status: HttpStatus.BAD_REQUEST,
       });
     });
@@ -423,36 +427,36 @@ describe(PromiseController, () => {
 
   describe(PromiseController.prototype.leavePromise, () => {
     test('should leave a promise', async () => {
-      const { promise, attendee } = await fixture.write.promise({ attendee: true });
-      const result = await promiseController.leavePromise(attendee.output, promise.output.id);
+      const { promise, attendee } = await fixture.write.promise.output({ attendee: true });
+      const result = await promiseController.leavePromise(attendee, promise.id);
 
-      expect(result).toMatchObject({ id: promise.output.id });
+      expect(result).toMatchObject({ id: promise.id });
 
       await expect(
         prisma.promiseUser.findUniqueOrThrow({
-          where: { identifier: { userId: attendee.output.id, promiseId: promise.output.id } },
+          where: { identifier: { userId: attendee.id, promiseId: promise.id } },
         })
       ).rejects.toThrow();
     });
 
     test('should throw an error if the promise is not found', async () => {
-      const { output: user } = await fixture.write.user();
+      const user = await fixture.write.user.output();
       await expect(promiseController.leavePromise(user, 0)).rejects.toMatchObject({
         status: HttpStatus.NOT_FOUND,
       });
     });
 
     test('should throw an error if the user is not attending the promise', async () => {
-      const { promise } = await fixture.write.promise();
-      const { output: user } = await fixture.write.user();
-      await expect(promiseController.leavePromise(user, promise.output.id)).rejects.toMatchObject({
+      const { promise } = await fixture.write.promise.output();
+      const user = await fixture.write.user.output();
+      await expect(promiseController.leavePromise(user, promise.id)).rejects.toMatchObject({
         status: HttpStatus.NOT_FOUND,
       });
     });
 
     test('should throw an error if the user is host of the promise', async () => {
-      const { host, promise } = await fixture.write.promise();
-      await expect(promiseController.leavePromise(host.output, promise.output.id)).rejects.toMatchObject({
+      const { host, promise } = await fixture.write.promise.output();
+      await expect(promiseController.leavePromise(host, promise.id)).rejects.toMatchObject({
         status: HttpStatus.BAD_REQUEST,
       });
     });
@@ -466,22 +470,25 @@ describe(PromiseController, () => {
 
   describe(PromiseController.prototype.getStartLocation, () => {
     test('should return a start location', async () => {
-      const { promise, attendee, startLocation } = await fixture.write.promise({ attendee: true, startLocation: true });
-      const result = await promiseController.getStartLocation(attendee.output, promise.output.id);
+      const { promise, attendee, startLocation } = await fixture.write.promise.output({
+        attendee: true,
+        startLocation: true,
+      });
+      const result = await promiseController.getStartLocation(attendee, promise.id);
 
-      expect(result).toMatchObject(R.pick(startLocation.output, ['id']));
+      expect(result).toMatchObject(R.pick(startLocation, ['id']));
     });
 
     test('should throw an error if the promise is not found', async () => {
-      const { output: user } = await fixture.write.user();
+      const user = await fixture.write.user.output();
       await expect(promiseController.getStartLocation(user, 0)).rejects.toMatchObject({
         status: HttpStatus.NOT_FOUND,
       });
     });
 
     test('should throw an error if the start location is not found', async () => {
-      const { promise, attendee } = await fixture.write.promise({ attendee: true });
-      await expect(promiseController.getStartLocation(attendee.output, promise.output.id)).rejects.toMatchObject({
+      const { promise, attendee } = await fixture.write.promise.output({ attendee: true });
+      await expect(promiseController.getStartLocation(attendee, promise.id)).rejects.toMatchObject({
         status: HttpStatus.NOT_FOUND,
       });
     });
@@ -497,14 +504,14 @@ describe(PromiseController, () => {
 
   describe(PromiseController.prototype.updateStartLocation, () => {
     test('should update a start location', async () => {
-      const { promise, attendee } = await fixture.write.promise({ attendee: true, startLocation: true });
+      const { promise, attendee } = await fixture.write.promise.output({ attendee: true, startLocation: true });
       const input = {
         ...fixture.input.location(),
         latitude: 37.1234,
         longitude: 127.5678,
       } satisfies InputLocationDTO;
 
-      const result = await promiseController.updateStartLocation(attendee.output, promise.output.id, input);
+      const result = await promiseController.updateStartLocation(attendee, promise.id, input);
 
       expect(result).toMatchObject({
         ...R.omit(input, ['id', 'createdAt', 'updatedAt']),
@@ -514,7 +521,7 @@ describe(PromiseController, () => {
     });
 
     test('should throw an error if the promise is not found', async () => {
-      const { output: user } = await fixture.write.user();
+      const user = await fixture.write.user.output();
       await expect(promiseController.updateStartLocation(user, 0, {} as any)).rejects.toMatchObject({
         status: HttpStatus.NOT_FOUND,
       });
@@ -531,22 +538,25 @@ describe(PromiseController, () => {
 
   describe(PromiseController.prototype.deleteStartLocation, () => {
     test('should delete a start location', async () => {
-      const { promise, attendee, startLocation } = await fixture.write.promise({ attendee: true, startLocation: true });
-      const result = await promiseController.deleteStartLocation(attendee.output, promise.output.id);
+      const { promise, attendee, startLocation } = await fixture.write.promise.output({
+        attendee: true,
+        startLocation: true,
+      });
+      const result = await promiseController.deleteStartLocation(attendee, promise.id);
 
-      expect(result).toMatchObject(R.pick(startLocation.output, ['id']));
+      expect(result).toMatchObject(R.pick(startLocation, ['id']));
     });
 
     test('should throw an error if the promise is not found', async () => {
-      const { output: user } = await fixture.write.user();
+      const user = await fixture.write.user.output();
       await expect(promiseController.deleteStartLocation(user, 0)).rejects.toMatchObject({
         status: HttpStatus.NOT_FOUND,
       });
     });
 
     test('should throw an error if the start location is not found', async () => {
-      const { promise, attendee } = await fixture.write.promise({ attendee: true });
-      await expect(promiseController.deleteStartLocation(attendee.output, promise.output.id)).rejects.toMatchObject({
+      const { promise, attendee } = await fixture.write.promise.output({ attendee: true });
+      await expect(promiseController.deleteStartLocation(attendee, promise.id)).rejects.toMatchObject({
         status: HttpStatus.NOT_FOUND,
       });
     });
@@ -565,17 +575,14 @@ describe(PromiseController, () => {
     const randomLongitude = () => Math.random() * 360 - 180; // -180 ~ 180
 
     test('should return a middle location calculated from start locations', async () => {
-      const { host, promise, attendees } = await fixture.write.promise({ attendees: 5 });
-      const locations = R.pipe(
-        await Promise.all(
-          R.times(5, () =>
-            fixture.write.location({
-              latitude: new Prisma.Decimal(randomLatitude()),
-              longitude: new Prisma.Decimal(randomLongitude()),
-            })
-          )
-        ),
-        R.map(({ output }) => output)
+      const { host, promise, attendees } = await fixture.write.promise.output({ attendees: 5 });
+      const locations = await Promise.all(
+        R.times(5, () =>
+          fixture.write.location.output({
+            latitude: new Prisma.Decimal(randomLatitude()),
+            longitude: new Prisma.Decimal(randomLongitude()),
+          })
+        )
       );
 
       await Promise.all(
@@ -583,8 +590,8 @@ describe(PromiseController, () => {
           prisma.promiseUser.update({
             where: {
               identifier: {
-                userId: attendees[i].output.id,
-                promiseId: promise.output.id,
+                userId: attendees[i].id,
+                promiseId: promise.id,
               },
             },
             data: { startLocationId: location.id },
@@ -592,7 +599,7 @@ describe(PromiseController, () => {
         )
       );
 
-      const result = await promiseController.getMiddleLocation(host.output, promise.output.id);
+      const result = await promiseController.getMiddleLocation(host, promise.id);
 
       expect(result).toMatchObject({
         latitude: expect.toBeNumber(),
@@ -601,23 +608,23 @@ describe(PromiseController, () => {
     });
 
     test('should throw an error if the promise is not found', async () => {
-      const { output: user } = await fixture.write.user();
+      const user = await fixture.write.user.output();
       await expect(promiseController.getMiddleLocation(user, 0)).rejects.toMatchObject({
         status: HttpStatus.NOT_FOUND,
       });
     });
 
     test('should throw an error if the user does not attend the promise', async () => {
-      const { promise } = await fixture.write.promise();
-      const { output: user } = await fixture.write.user();
-      await expect(promiseController.getMiddleLocation(user, promise.output.id)).rejects.toMatchObject({
+      const { promise } = await fixture.write.promise.output();
+      const user = await fixture.write.user.output();
+      await expect(promiseController.getMiddleLocation(user, promise.id)).rejects.toMatchObject({
         status: HttpStatus.NOT_FOUND,
       });
     });
 
     test('should throw an error if the start locations are less than 2', async () => {
-      const { promise, attendee } = await fixture.write.promise({ attendee: true });
-      await expect(promiseController.getMiddleLocation(attendee.output, promise.output.id)).rejects.toMatchObject({
+      const { promise, attendee } = await fixture.write.promise.output({ attendee: true });
+      await expect(promiseController.getMiddleLocation(attendee, promise.id)).rejects.toMatchObject({
         status: HttpStatus.BAD_REQUEST,
       });
     });
@@ -625,11 +632,11 @@ describe(PromiseController, () => {
 
   describe(PromiseController.prototype.getThemes, () => {
     test('should return a list of themes', async () => {
-      const themes = await Promise.all(R.times(3, () => fixture.write.theme()));
+      const themes = await Promise.all(R.times(3, () => fixture.write.theme.output()));
       const result = await promiseController.getThemes();
 
       expect(result).toBeArrayOfSize(3);
-      expect(result).toMatchObject(themes.map((theme) => R.pick(theme.output, ['id', 'name'])));
+      expect(result).toMatchObject(themes.map((theme) => R.pick(theme, ['id', 'name'])));
     });
 
     test('should return an empty list if there are no themes', async () => {
@@ -641,8 +648,8 @@ describe(PromiseController, () => {
 
   describe(PromiseController.prototype.enqueuePromise, () => {
     test('should enqueue a promise id and device id', async () => {
-      const { promise } = await fixture.write.promise();
-      const result = await promiseController.enqueuePromise(promise.output.id, deviceId);
+      const { promise } = await fixture.write.promise.output();
+      const result = await promiseController.enqueuePromise(promise.id, deviceId);
       expect(result).toBeUndefined();
     });
 
@@ -653,10 +660,10 @@ describe(PromiseController, () => {
 
   describe(PromiseController.prototype.dequeuePromise, () => {
     test('should dequeue a promise id by device id', async () => {
-      const { promise } = await fixture.write.promise();
-      await promiseController.enqueuePromise(promise.output.id, deviceId);
+      const { promise } = await fixture.write.promise.output();
+      await promiseController.enqueuePromise(promise.id, deviceId);
       const result = await promiseController.dequeuePromise(deviceId);
-      expect(result).toEqual({ id: promise.output.id });
+      expect(result).toEqual({ id: promise.id });
     });
 
     test('should throw an error if the device id is not found', async () => {
