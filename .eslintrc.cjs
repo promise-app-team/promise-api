@@ -6,7 +6,6 @@ module.exports = {
 
   env: {
     node: true,
-    jest: true,
   },
 
   parser: '@typescript-eslint/parser',
@@ -22,11 +21,10 @@ module.exports = {
     'plugin:deprecation/recommended',
     'plugin:import/recommended',
     'plugin:import/typescript',
-    'plugin:jest-extended/all',
     'prettier',
   ],
 
-  plugins: ['@typescript-eslint/eslint-plugin', 'prettier', 'import', 'jsdoc', 'jest-extended'],
+  plugins: ['@typescript-eslint/eslint-plugin', 'prettier', 'import', 'jsdoc'],
 
   rules: {
     'prettier/prettier': ['warn'],
@@ -66,4 +64,17 @@ module.exports = {
       typescript: true,
     },
   },
+
+  overrides: [
+    {
+      env: { jest: true },
+      files: ['**/*.test.ts', '**/*.spec.ts', '**/*.e2e-spec.ts'],
+      extends: ['plugin:jest/style', 'plugin:jest/recommended', 'plugin:jest-extended/all'],
+      plugins: ['jest', 'jest-extended'],
+      rules: {
+        'jest/valid-title': 'off',
+        'jest/no-conditional-expect': 'off',
+      },
+    },
+  ],
 };
