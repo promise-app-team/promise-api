@@ -2,11 +2,10 @@ import path from 'node:path';
 
 import { INestApplication } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { User } from '@prisma/client';
 import { compile } from 'path-to-regexp';
 import { mapValues } from 'remeda';
 import request from 'supertest';
-
-import { UserModel } from '@/prisma/prisma.entity';
 
 type HttpMethod = keyof Pick<request.SuperTest, 'get' | 'post' | 'put' | 'patch' | 'delete'>;
 type Param = string | number | boolean | null | undefined;
@@ -21,7 +20,7 @@ type RequestTestMap = Record<HttpMethod, request.Test>;
 type Routes<T> = Record<OperatorName<T>, Route>;
 
 type Auth = {
-  user: UserModel;
+  user: User;
   token: string;
 };
 
@@ -34,7 +33,7 @@ type HttpRequest<T> = Record<OperatorName<T>, Operator> & {
   auth: Auth;
   close: INestApplication['close'];
   authorize(token: string): void;
-  authorize<U extends UserModel>(user: U, options: { jwt: JwtService }): void;
+  authorize<U extends User>(user: U, options: { jwt: JwtService }): void;
   unauthorize(): void;
 };
 

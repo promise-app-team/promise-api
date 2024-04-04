@@ -29,7 +29,7 @@ describe(UserController, () => {
     http.prepare(await app.init());
 
     jwt = module.get(JwtService);
-    const { input: authUser } = await fixture.write.user();
+    const { output: authUser } = await fixture.write.user();
     http.request.authorize(authUser, { jwt });
   });
 

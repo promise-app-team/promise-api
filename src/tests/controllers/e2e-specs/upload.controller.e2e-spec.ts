@@ -24,7 +24,7 @@ describe(FileUploadController, () => {
     const app = module.createNestApplication();
     http.prepare(await app.init());
 
-    const { input: authUser } = await fixture.write.user();
+    const { output: authUser } = await fixture.write.user();
     http.request.authorize(authUser, { jwt: module.get(JwtService) });
   });
 

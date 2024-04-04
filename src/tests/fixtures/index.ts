@@ -20,36 +20,41 @@ import { createUserBuilder } from './users';
 
 import { LocationModel, PromiseModel, ThemeModel, UserModel } from '@/prisma/prisma.entity';
 
-interface TestFixtureOptions {
-  logging?: boolean;
-}
+type RequiredOption<I, O> = O | Result<I, O>;
+type OptionalOption<I, O> = O | Result<I, O> | boolean;
+type ArrayOption<I, O> = O[] | Result<I, O>[] | number;
 
 type PromiseCompleteOptions = {
-  host?: Result<UserModel, PrismaUser>;
-  destination?: boolean | Result<LocationModel, PrismaLocation>;
-  theme?: boolean | Result<ThemeModel, PrismaTheme>;
-  themes?: number | Result<ThemeModel, PrismaTheme>[];
-  attendee?: boolean | Result<UserModel, PrismaUser>;
-  attendees?: number | Result<UserModel, PrismaUser>[];
-  startLocation?: boolean | Result<LocationModel, PrismaLocation>;
-  startLocations?: number | Result<LocationModel, PrismaLocation>[];
+  host?: RequiredOption<UserModel, PrismaUser>;
+  destination?: OptionalOption<LocationModel, PrismaLocation>;
+  theme?: OptionalOption<ThemeModel, PrismaTheme>;
+  themes?: ArrayOption<ThemeModel, PrismaTheme>;
+  attendee?: OptionalOption<UserModel, PrismaUser>;
+  attendees?: ArrayOption<UserModel, PrismaUser>;
+  startLocation?: OptionalOption<LocationModel, PrismaLocation>;
+  startLocations?: ArrayOption<LocationModel, PrismaLocation>;
   partial?: Partial<Omit<PromiseModel, 'pid'>>;
 };
 
-type Falsy = false | 0 | '' | null | undefined;
-
-type NonNullableIf<T, C> = C extends Falsy ? null : NonNullable<T>;
+type IsNotExist<T> = Or<IsFalse<T>, IsUnknown<T>, IsUndefined<T>>;
+type RequiredStrictResult<T, U> = T extends U ? Result<U, T> : Result<U>;
+type OptionalStrictResult<T, U> = IsNotExist<T> extends true ? null : T extends U ? Result<U, T> : Result<U>;
+type ArrayStrictResult<T, U> = T extends U[] ? Result<U, T[number]>[] : Result<U, U>[];
 
 interface PromiseComplete<Options extends PromiseCompleteOptions> {
-  host: Result<UserModel, PrismaUser>;
-  destination: NonNullableIf<Result<LocationModel, PrismaLocation>, Options['destination']>;
-  theme: NonNullableIf<Result<ThemeModel, PrismaTheme>, Options['theme']>;
-  themes: Result<ThemeModel, PrismaTheme>[];
-  startLocation: NonNullableIf<Result<LocationModel, PrismaLocation>, Options['startLocation']>;
-  startLocations: Result<LocationModel, PrismaLocation>[];
-  attendee: NonNullableIf<Result<UserModel, PrismaUser>, Options['attendee']>;
-  attendees: Result<UserModel, PrismaUser>[];
+  host: RequiredStrictResult<Options['host'], UserModel>;
+  destination: OptionalStrictResult<Options['destination'], LocationModel>;
+  theme: OptionalStrictResult<Options['theme'], ThemeModel>;
+  themes: ArrayStrictResult<Options['themes'], ThemeModel>;
+  startLocation: OptionalStrictResult<Options['startLocation'], LocationModel>;
+  startLocations: ArrayStrictResult<Options['startLocations'], LocationModel>;
+  attendee: OptionalStrictResult<Options['attendee'], UserModel>;
+  attendees: ArrayStrictResult<Options['attendees'], UserModel>;
   promise: Result<Omit<PromiseModel, 'pid'>, PrismaPromise>;
+}
+
+interface TestFixtureOptions {
+  logging?: boolean;
 }
 
 export function createTestFixture(
@@ -109,65 +114,108 @@ export function createTestFixture(
 
     result.host = await R.conditional(
       options.host,
-      [(host) => isResult(host), (host) => host!],
+      [R.isNullish, () => writeUser()],
+      [isResult, (result) => result as any],
+      [R.isPlainObject, (input) => new Result(input)],
       R.conditional.defaultCase(() => writeUser())
     );
 
     result.destination = await R.conditional(
       options.destination,
-      [(dest) => isResult(dest), (dest) => dest as any],
+      [R.isNullish, () => null],
+      [isResult, (result) => result as any],
+      [R.isPlainObject, (input) => new Result(input)],
       [R.isTruthy, () => writeLocation()],
       R.conditional.defaultCase(() => null)
     );
 
     result.attendee = await R.conditional(
       options.attendee,
-      [(attendee) => isResult(attendee), (attendee) => attendee as any],
+      [R.isNullish, () => null],
+      [isResult, (result) => result as any],
+      [R.isPlainObject, (input) => new Result(input)],
       [R.isTruthy, () => writeUser()],
       R.conditional.defaultCase(() => null)
     );
 
-    result.attendees = await R.conditional(
+    result.attendees = (await R.conditional(
       options.attendees,
-      [R.isArray, (attendees) => attendees as any[]],
+      [R.isNullish, () => []],
+      [
+        R.isArray,
+        R.piped(
+          R.map((attendee) => {
+            if (isResult(attendee)) return attendee;
+            if (R.isPlainObject(attendee)) return new Result(attendee);
+            return writeUser();
+          })
+        ),
+      ],
       [R.isNumber, (num) => writeUsers(num)],
       R.conditional.defaultCase(() => [])
-    );
+    )) as any;
 
     result.startLocation = await R.conditional(
       options.startLocation,
-      [(start) => isResult(start), (start) => start as any],
+      [R.isNullish, () => null],
+      [isResult, (result) => result as any],
+      [R.isPlainObject, (input) => new Result(input)],
       [R.isTruthy, () => writeLocation()],
       R.conditional.defaultCase(() => null)
     );
 
-    result.startLocations = await R.conditional(
+    result.startLocations = (await R.conditional(
       options.startLocations,
-      [R.isArray, (starts) => starts as any[]],
+      [R.isNullish, () => []],
+      [
+        R.isArray,
+        R.piped(
+          R.map((startLocation) => {
+            if (isResult(startLocation)) return startLocation;
+            if (R.isPlainObject(startLocation)) return new Result(startLocation);
+            return writeLocation();
+          })
+        ),
+      ],
       [R.isNumber, (num) => writeLocations(num)],
       R.conditional.defaultCase(() => [])
-    );
+    )) as any;
 
     result.theme = await R.conditional(
       options.theme,
-      [(theme) => isResult(theme), (theme) => theme as any],
+      [R.isNullish, () => null],
+      [isResult, (result) => result as any],
+      [R.isPlainObject, (input) => new Result(input)],
       [R.isTruthy, () => writeTheme()],
       R.conditional.defaultCase(() => null)
     );
 
-    result.themes = await R.conditional(
+    result.themes = (await R.conditional(
       options.themes,
-      [R.isArray, (themes) => themes as any[]],
+      [R.isNullish, () => []],
+      [
+        R.isArray,
+        R.piped(
+          R.map((theme) => {
+            if (isResult(theme)) return theme;
+            if (R.isPlainObject(theme)) return new Result(theme);
+            return writeTheme();
+          })
+        ),
+      ],
       [R.isNumber, (num) => writeThemes(num)],
       R.conditional.defaultCase(() => [])
-    );
+    )) as any;
 
     const { host, destination, startLocation, attendee, attendees, startLocations, theme, themes } = result;
     startLocations.length = attendees.length;
 
+    const users = [host, attendee, ...attendees] as (Result<UserModel, PrismaUser> | null)[];
+    const locations = [null, startLocation, ...startLocations] as (Result<LocationModel, PrismaLocation> | null)[];
+
     const attendeeIds = R.pipe(
-      [host, attendee, ...attendees],
-      R.zip.strict([null, startLocation, ...startLocations]),
+      users,
+      R.zip.strict(locations),
       R.filter(([attendee]) => R.isTruthy(attendee)),
       R.map(([attendee, startLocation]) => ({
         userId: attendee!.output.id,

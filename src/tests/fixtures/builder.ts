@@ -1,9 +1,16 @@
 import { isDate, isValid } from 'date-fns';
 import { mapValues } from 'remeda';
 
-export interface Result<Input, Output = Input> {
-  input: Input;
-  output: Output;
+export class Result<Input = any, Output = Input> {
+  input!: Input;
+  output!: Output;
+
+  constructor(input: Input);
+  constructor(input: Input, output: Output);
+  constructor(input: Input, output?: Output) {
+    this.input = input;
+    this.output = output ?? (input as any);
+  }
 }
 
 type Param<T extends Record<string, any>, R extends keyof T = never> = [R] extends [never]
