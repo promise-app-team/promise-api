@@ -13,10 +13,11 @@ import { Delete, Get, Post, Put } from '@/customs/nest/decorators/http-api.decor
 import { AuthUser } from '@/modules/auth/auth.decorator';
 import { LocationDTO, PointDTO } from '@/modules/promise/location.dto';
 import {
-  InputCreatePromiseDTO,
+  IdentifiableDTO,
+  InputPromiseDTO,
   InputLocationDTO,
-  InputUpdatePromiseDTO,
   PromiseDTO,
+  PromiseIdentifiableDTO,
   PublicPromiseDTO,
 } from '@/modules/promise/promise.dto';
 import { EncodePromiseID } from '@/modules/promise/promise.interceptor';
@@ -74,17 +75,21 @@ export class PromiseController {
   @UseInterceptors(EncodePromiseID)
   async createPromise<User extends Pick<UserModel, 'id'>>(
     @AuthUser() user: User,
-    @Body() input: InputCreatePromiseDTO
+    @Body() input: InputPromiseDTO
   ): Promise<PublicPromiseDTO> {
     return this.promiseService.create(user.id, input).then((promise) => PublicPromiseDTO.from(promise));
   }
 
-  @Put(':pid(\\d+)', { auth: true, description: '약속을 수정합니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
+  @Put(':pid(\\d+)', {
+    auth: true,
+    description: '약속을 수정합니다.',
+    exceptions: ['BAD_REQUEST', 'NOT_FOUND', 'FORBIDDEN'],
+  })
   @UseInterceptors(EncodePromiseID)
   async updatePromise<User extends Pick<UserModel, 'id'>>(
     @AuthUser() user: User,
     @Param('pid', DecodePromisePID) id: number,
-    @Body() input: InputUpdatePromiseDTO
+    @Body() input: InputPromiseDTO
   ): Promise<PublicPromiseDTO> {
     return this.promiseService
       .update(id, user.id, input)
@@ -94,7 +99,7 @@ export class PromiseController {
           case PromiseServiceError.NotFoundPromise:
             throw HttpException.new(error, 'NOT_FOUND');
           case PromiseServiceError.OnlyHostUpdatable:
-            throw HttpException.new(error, 'BAD_REQUEST');
+            throw HttpException.new(error, 'FORBIDDEN');
           default:
             throw HttpException.new(error);
         }
@@ -104,6 +109,7 @@ export class PromiseController {
   @Post(':pid(\\d+)/attendees', {
     auth: true,
     description: '약속에 참여합니다.',
+    response: PromiseIdentifiableDTO,
     exceptions: ['BAD_REQUEST', 'NOT_FOUND'],
   })
   @UseInterceptors(EncodePromiseID)
@@ -129,6 +135,7 @@ export class PromiseController {
   @Delete(':pid(\\d+)/attendees', {
     auth: true,
     description: '약속을 떠납니다.',
+    response: PromiseIdentifiableDTO,
     exceptions: ['BAD_REQUEST', 'NOT_FOUND'],
   })
   @UseInterceptors(EncodePromiseID)
@@ -172,7 +179,7 @@ export class PromiseController {
       });
   }
 
-  @Post(':pid(\\d+)/start-location', {
+  @Put(':pid(\\d+)/start-location', {
     auth: true,
     description: '약속 출발지를 설정합니다.',
     exceptions: ['BAD_REQUEST', 'NOT_FOUND'],
@@ -181,7 +188,7 @@ export class PromiseController {
     @AuthUser() user: User,
     @Param('pid', DecodePromisePID) id: number,
     @Body() input: InputLocationDTO
-  ) {
+  ): Promise<LocationDTO> {
     return this.promiseService
       .updateStartLocation(id, user.id, input)
       .then((location) => LocationDTO.from(location))
@@ -203,7 +210,7 @@ export class PromiseController {
   async deleteStartLocation<User extends Pick<UserModel, 'id'>>(
     @AuthUser() user: User,
     @Param('pid', DecodePromisePID) id: number
-  ): Promise<{ id: number }> {
+  ): Promise<IdentifiableDTO> {
     return this.promiseService.deleteStartLocation(id, user.id).catch((error) => {
       switch (error) {
         case PromiseServiceError.NotFoundPromise:
@@ -255,26 +262,31 @@ export class PromiseController {
     return this.promiseService.getThemes().then((themes) => themes.map((theme) => ThemeDTO.from(theme)));
   }
 
-  @Get('queue', { description: '약속 대기열을 확인합니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
+  @Post('queue', { description: '약속 대기열에 추가합니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
+  async enqueuePromise(@Query('pid', DecodePromisePID) id: number, @Query('deviceId') deviceId: string): Promise<void> {
+    if (!deviceId) throw HttpException.new('기기 ID를 입력해주세요.', 'BAD_REQUEST');
+    const exists = await this.promiseService.exists({ id, status: PromiseStatus.AVAILABLE });
+    if (!exists) throw HttpException.new('약속을 찾을 수 없습니다.', 'NOT_FOUND');
+    const key = this.#makeDeviceKey(deviceId);
+    await this.cache.set(key, id, 60 * 10 * 1000);
+  }
+
+  @Get('queue', {
+    description: '약속 대기열을 확인합니다.',
+    response: PromiseIdentifiableDTO,
+    exceptions: ['BAD_REQUEST', 'NOT_FOUND'],
+  })
   @UseInterceptors(EncodePromiseID)
   async dequeuePromise(@Query('deviceId') deviceId: string): Promise<{ id: number }> {
     const key = this.#makeDeviceKey(deviceId);
-    const value = await this.cache.get(key);
-    if (!!value && typeof +value === 'number') {
-      await this.cache.del(key);
-      return { id: +value };
+    const id = await this.cache.get(key);
+    if (!R.isNumber(id)) {
+      throw HttpException.new('약속 대기열을 찾을 수 없습니다.', 'NOT_FOUND');
     }
-    throw HttpException.new('약속 대기열을 찾을 수 없습니다.', 'NOT_FOUND');
-  }
-
-  @Post('queue', { description: '약속 대기열에 추가합니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
-  async enqueuePromise(@Query('pid', DecodePromisePID) id: number, @Query('deviceId') deviceId: string): Promise<void> {
     const exists = await this.promiseService.exists({ id, status: PromiseStatus.AVAILABLE });
-    if (!exists) {
-      throw HttpException.new('약속을 찾을 수 없습니다.', 'NOT_FOUND');
-    }
-    const key = this.#makeDeviceKey(deviceId);
-    await this.cache.set(key, id, 60 * 10 * 1000);
+    if (!exists) throw HttpException.new('약속을 찾을 수 없습니다.', 'NOT_FOUND');
+    await this.cache.del(key);
+    return { id: +id };
   }
 
   #makeDeviceKey(deviceId: string) {

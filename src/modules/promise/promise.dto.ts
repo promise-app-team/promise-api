@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional, PickType } from '@nestjs/swagger';
+import { Prisma } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -90,14 +91,14 @@ export class InputLocationDTO {
 
   @IsLatitude({ message: '위도 값을 입력해주세요.' })
   @ApiProperty({ example: 37.123456 })
-  latitude!: number | string;
+  latitude!: number | string | Prisma.Decimal;
 
   @IsLongitude({ message: '경도 값을 입력해주세요.' })
   @ApiProperty({ example: 127.123456 })
-  longitude!: number | string;
+  longitude!: number | string | Prisma.Decimal;
 }
 
-export class InputCreatePromiseDTO {
+export class InputPromiseDTO {
   @IsString({ message: '약속 제목을 입력해주세요.' })
   @MaxLength(50, { message: '약속 제목은 최대 50자까지 입력 가능합니다.' })
   @IsNotEmpty({ message: '약속 제목을 입력해주세요.' })
@@ -144,4 +145,12 @@ export class InputCreatePromiseDTO {
   locationShareEndValue!: number;
 }
 
-export class InputUpdatePromiseDTO extends InputCreatePromiseDTO {}
+export class IdentifiableDTO {
+  @ApiProperty({ example: 1 })
+  id!: number;
+}
+
+export class PromiseIdentifiableDTO {
+  @ApiProperty({ example: '1' })
+  pid!: string;
+}

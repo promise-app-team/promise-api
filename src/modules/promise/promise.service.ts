@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as R from 'remeda';
 
-import { InputCreatePromiseDTO, InputLocationDTO } from './promise.dto';
+import { InputPromiseDTO, InputLocationDTO } from './promise.dto';
 import { PromiseStatus, PromiseUserRole } from './promise.enum';
 
 import { PrismaClientError } from '@/prisma/error-handler';
@@ -82,7 +82,7 @@ export class PromiseService {
     return user;
   }
 
-  async create(userId: number, input: InputCreatePromiseDTO): Promise<PromiseResult> {
+  async create(userId: number, input: InputPromiseDTO): Promise<PromiseResult> {
     return this.prisma.promise.create({
       data: {
         ...R.pick(input, [
@@ -123,7 +123,7 @@ export class PromiseService {
    *
    * @throws {PromiseServiceError.NotFoundPromise}
    */
-  async update(id: number, hostId: number, input: InputCreatePromiseDTO): Promise<PromiseResult> {
+  async update(id: number, hostId: number, input: InputPromiseDTO): Promise<PromiseResult> {
     const promise = await this.prisma.promise.findUnique({
       where: { id },
       select: { id: true, hostId: true, destinationId: true },
@@ -217,22 +217,27 @@ export class PromiseService {
    * @throws {PromiseServiceError.NotFoundPromise}
    */
   async updateStartLocation(id: number, attendeeId: number, input: InputLocationDTO): Promise<LocationModel> {
-    const promise = await this.findOne({ id, role: PromiseUserRole.HOST, status: PromiseStatus.AVAILABLE });
+    try {
+      const promise = await this.findOne({ id, role: PromiseUserRole.HOST, status: PromiseStatus.AVAILABLE });
 
-    const promiseUser = await this.prisma.promiseUser.findFirst({
-      where: { userId: attendeeId, promiseId: promise.id },
-      select: { startLocationId: true },
-    });
+      const promiseUser = await this.prisma.promiseUser.findFirstOrThrow({
+        where: { userId: attendeeId, promiseId: promise.id },
+        select: { startLocationId: true },
+      });
 
-    if (!promiseUser) {
-      throw PromiseServiceError.NotFoundPromise;
+      return this.prisma.location.upsert({
+        where: { id: promiseUser.startLocationId ?? 0 },
+        create: input,
+        update: input,
+      });
+    } catch (error) {
+      switch (PrismaClientError.from(error)?.code) {
+        case 'P2025':
+          throw PromiseServiceError.NotFoundPromise;
+        default:
+          throw error;
+      }
     }
-
-    return this.prisma.location.upsert({
-      where: { id: promiseUser.startLocationId ?? 0 },
-      create: input,
-      update: input,
-    });
   }
 
   /**
@@ -342,7 +347,7 @@ export class PromiseService {
   }
 
   #makeUniqueFilter<F extends FilterOptions>(filter: F): Prisma.PromiseWhereUniqueInput {
-    return this.#makeFilter(filter).AND[0] as Prisma.PromiseWhereUniqueInput;
+    return R.mergeAll(this.#makeFilter(filter).AND) as Prisma.PromiseWhereUniqueInput;
   }
 
   #makeFilter(filter: FilterOptions) {
