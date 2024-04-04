@@ -27,7 +27,8 @@ type ExpectValidArgs<FUNC extends (...args: any[]) => any, ARGS extends any[]> =
 
 type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 
-type Literal<T> = T extends object ? { [K in keyof T]: Literal<T[K]> } : T;
+type Builtins = string | number | boolean | undefined | null | Function | Date | Error | RegExp;
+type Literal<T> = T extends Builtins ? T : T extends object ? { [K in keyof T]: Literal<T[K]> } : T;
 
 // eslint-disable-next-line prettier/prettier
 type And<A extends boolean, B extends boolean, C extends boolean = true, D extends boolean = true> =

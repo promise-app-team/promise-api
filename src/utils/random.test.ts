@@ -3,12 +3,12 @@ import { random } from './random';
 describe(random, () => {
   test('should return random boolean', () => {
     const result = random();
-    expect(typeof result).toBeBoolean();
+    expect(result).toBeBoolean();
   });
 
   test('should return random number', () => {
     const result = random(1, 10);
-    expect(typeof result).toBe('number');
+    expect(result).toBeNumber();
     expect(result).toBeGreaterThanOrEqual(1);
     expect(result).toBeLessThanOrEqual(10);
   });
@@ -17,7 +17,7 @@ describe(random, () => {
     const start = new Date('2021-01-01');
     const end = new Date('2021-12-31');
     const result = random(start, end);
-    expect(result).toBeInstanceOf(Date);
+    expect(result).toBeValidDate();
     expect(result.getTime()).toBeGreaterThanOrEqual(start.getTime());
     expect(result.getTime()).toBeLessThanOrEqual(end.getTime());
   });

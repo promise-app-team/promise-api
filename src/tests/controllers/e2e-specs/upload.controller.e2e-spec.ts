@@ -1,31 +1,34 @@
 import path from 'node:path';
 
 import { JwtService } from '@nestjs/jwt';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 
 import { AppModule } from '@/app/app.module';
+import { configure } from '@/main';
 import { FileUploadController } from '@/modules/upload/upload.controller';
 import { createHttpRequest } from '@/tests/controllers/utils/http-request';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/prisma';
 
 describe(FileUploadController, () => {
-  const prisma = createPrismaClient();
+  const prisma = createPrismaClient({ logging: false });
   const fixture = createTestFixture(prisma, { from: 3e7, to: 4e7 });
   const http = createHttpRequest<FileUploadController>('upload', {
     uploadImageFile: 'image',
   });
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    const app = module.createNestApplication();
-    http.prepare(await app.init());
+    const app = module.createNestApplication<NestExpressApplication>();
+    http.prepare(await configure(app).init());
 
-    const { output: authUser } = await fixture.write.user();
+    const authUser = await fixture.write.user.output();
     http.request.authorize(authUser, { jwt: module.get(JwtService) });
+    fixture.configure({ authUser });
   });
 
   describe(http.request.uploadImageFile, () => {
@@ -40,6 +43,7 @@ describe(FileUploadController, () => {
   });
 
   afterAll(async () => {
+    await prisma.$disconnect();
     await http.request.close();
   });
 });

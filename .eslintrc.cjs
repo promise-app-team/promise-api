@@ -30,12 +30,21 @@ module.exports = {
     'prettier/prettier': ['warn'],
 
     'prefer-const': 'warn',
+    'object-shorthand': 'warn',
 
     '@typescript-eslint/interface-name-prefix': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    '@typescript-eslint/ban-types': [
+      'error',
+      {
+        types: {
+          Function: false,
+        },
+      },
+    ],
 
     'jsdoc/no-undefined-types': 'warn',
     'no-restricted-imports': [
@@ -74,6 +83,12 @@ module.exports = {
       rules: {
         'jest/valid-title': 'off',
         'jest/no-conditional-expect': 'off',
+        'jest/expect-expect': [
+          'warn',
+          {
+            assertFunctionNames: ['expect', 'request.**.expect', 'http.request.**.expect'],
+          },
+        ],
       },
     },
   ],

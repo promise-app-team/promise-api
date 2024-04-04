@@ -3,7 +3,7 @@ import { Prisma, Promise as PromiseModel, User as UserModel } from '@prisma/clie
 import { formatISO } from 'date-fns';
 import * as R from 'remeda';
 
-import { InputCreatePromiseDTO, InputLocationDTO, InputUpdatePromiseDTO } from '@/modules/promise/promise.dto';
+import { InputPromiseDTO, InputLocationDTO } from '@/modules/promise/promise.dto';
 import { PromiseStatus, PromiseUserRole } from '@/modules/promise/promise.enum';
 import { PromiseService, PromiseServiceError } from '@/modules/promise/promise.service';
 import { DestinationType } from '@/prisma/prisma.entity';
@@ -572,7 +572,7 @@ describe(PromiseService, () => {
         themeIds: [],
         destination: null,
         promisedAt: formatISO(tomorrow),
-      } satisfies InputCreatePromiseDTO;
+      } satisfies InputPromiseDTO;
       const result = await promiseService.create(host.id, promiseInput);
 
       expect(result).toMatchObject({
@@ -591,7 +591,7 @@ describe(PromiseService, () => {
         themeIds: themes.map((theme) => theme.id),
         destination: null,
         promisedAt: tomorrow,
-      } satisfies InputCreatePromiseDTO;
+      } satisfies InputPromiseDTO;
       const result = await promiseService.create(host.id, promiseInput);
 
       expect(result).toMatchObject({
@@ -617,7 +617,7 @@ describe(PromiseService, () => {
         themeIds: [],
         destination,
         promisedAt: tomorrow,
-      } satisfies InputCreatePromiseDTO;
+      } satisfies InputPromiseDTO;
       const result = await promiseService.create(host.id, promiseInput);
 
       expect(result).toMatchObject({
@@ -646,7 +646,7 @@ describe(PromiseService, () => {
         themeIds: [],
         destination: null,
         promisedAt: tomorrow,
-      } satisfies InputUpdatePromiseDTO;
+      } satisfies InputPromiseDTO;
 
       const result = await promiseService.update(promise.input.id, host.input.id, updatedPromiseInput);
 
@@ -670,7 +670,7 @@ describe(PromiseService, () => {
         themeIds: updatedThemes.map((theme) => theme.id),
         destination: null,
         promisedAt: tomorrow,
-      } satisfies InputUpdatePromiseDTO;
+      } satisfies InputPromiseDTO;
 
       const result = await promiseService.update(promise.input.id, host.input.id, updatedPromiseInput);
 
@@ -698,7 +698,7 @@ describe(PromiseService, () => {
         themeIds: [],
         destination: updatedDestination,
         promisedAt: tomorrow,
-      } satisfies InputUpdatePromiseDTO;
+      } satisfies InputPromiseDTO;
 
       const result = await promiseService.update(promise.input.id, host.input.id, updatedPromiseInput);
 
@@ -846,6 +846,18 @@ describe(PromiseService, () => {
       await expect(promiseService.attend(promise.id, attendee.id)).rejects.toEqual(PromiseServiceError.AlreadyAttended);
     });
 
+    test('should throw an error if the promise is unavailable', async () => {
+      const { promise } = await fixture.write.promise.output({ partial: { promisedAt: new Date(yesterday) } });
+      const attendee = await fixture.write.user.output();
+      await expect(promiseService.attend(promise.id, attendee.id)).rejects.toEqual(PromiseServiceError.NotFoundPromise);
+    });
+
+    test('should throw an error if the promise is completed', async () => {
+      const { promise } = await fixture.write.promise.output({ partial: { completedAt: new Date() } });
+      const attendee = await fixture.write.user.output();
+      await expect(promiseService.attend(promise.id, attendee.id)).rejects.toEqual(PromiseServiceError.NotFoundPromise);
+    });
+
     test('should throw an error when occurred an unexpected error', async () => {
       await expect(promiseService.attend(undefined as any, undefined as any)).rejects.toThrow();
     });
@@ -876,6 +888,22 @@ describe(PromiseService, () => {
     test('should throw an error if the user is the host of the promise', async () => {
       const { host, promise } = await fixture.write.promise.output();
       await expect(promiseService.leave(promise.id, host.id)).rejects.toEqual(PromiseServiceError.HostCannotLeave);
+    });
+
+    test('should throw an error if the promise is unavailable', async () => {
+      const { promise, attendee } = await fixture.write.promise.output({
+        attendee: true,
+        partial: { promisedAt: new Date(yesterday) },
+      });
+      await expect(promiseService.leave(promise.id, attendee.id)).rejects.toEqual(PromiseServiceError.NotFoundPromise);
+    });
+
+    test('should throw an error if the promise is completed', async () => {
+      const { promise, attendee } = await fixture.write.promise.output({
+        attendee: true,
+        partial: { completedAt: new Date() },
+      });
+      await expect(promiseService.leave(promise.id, attendee.id)).rejects.toEqual(PromiseServiceError.NotFoundPromise);
     });
 
     test('should throw an error when occurred an unexpected error', async () => {

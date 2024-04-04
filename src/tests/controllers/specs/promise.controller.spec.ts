@@ -10,7 +10,7 @@ import * as R from 'remeda';
 import { TypedConfigService } from '@/config/env';
 import { InthashService } from '@/customs/inthash/inthash.service';
 import { PromiseController } from '@/modules/promise/promise.controller';
-import { InputCreatePromiseDTO, InputLocationDTO, InputUpdatePromiseDTO } from '@/modules/promise/promise.dto';
+import { InputPromiseDTO, InputLocationDTO } from '@/modules/promise/promise.dto';
 import { PromiseStatus, PromiseUserRole } from '@/modules/promise/promise.enum';
 import { EncodePromiseID } from '@/modules/promise/promise.interceptor';
 import { PromiseService } from '@/modules/promise/promise.service';
@@ -315,7 +315,7 @@ describe(PromiseController, () => {
           latitude: 37.1234,
           longitude: 127.5678,
         },
-      } satisfies InputCreatePromiseDTO;
+      } satisfies InputPromiseDTO;
 
       const result = await promiseController.createPromise(host, input);
 
@@ -350,7 +350,7 @@ describe(PromiseController, () => {
           latitude: 37.1234,
           longitude: 127.5678,
         },
-      } satisfies InputUpdatePromiseDTO;
+      } satisfies InputPromiseDTO;
 
       const result = await promiseController.updatePromise(host, promise.id, input);
 
@@ -376,7 +376,7 @@ describe(PromiseController, () => {
     test('should throw an error if the user is not the host of the promise', async () => {
       const { promise } = await fixture.write.promise.output();
       await expect(promiseController.updatePromise({ id: 0 }, promise.id, {} as any)).rejects.toMatchObject({
-        status: HttpStatus.BAD_REQUEST,
+        status: HttpStatus.FORBIDDEN,
       });
     });
 
@@ -668,6 +668,15 @@ describe(PromiseController, () => {
 
     test('should throw an error if the device id is not found', async () => {
       await expect(promiseController.dequeuePromise('unknown')).rejects.toMatchObject({
+        status: HttpStatus.NOT_FOUND,
+      });
+    });
+
+    test('should throw an error if promise not found', async () => {
+      const { promise } = await fixture.write.promise.output();
+      await promiseController.enqueuePromise(promise.id, deviceId);
+      await prisma.promise.update({ where: { id: promise.id }, data: { promisedAt: yesterday } });
+      await expect(promiseController.dequeuePromise(deviceId)).rejects.toMatchObject({
         status: HttpStatus.NOT_FOUND,
       });
     });

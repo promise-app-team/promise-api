@@ -1,20 +1,22 @@
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 
 import { createHttpRequest } from '../utils/http-request';
 
 import { AppController } from '@/app/app.controller';
 import { AppModule } from '@/app/app.module';
+import { configure } from '@/main';
 
 describe(AppController, () => {
   const http = createHttpRequest<AppController>('/', { ping: '' });
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    const app = module.createNestApplication();
-    http.prepare(await app.init());
+    const app = module.createNestApplication<NestExpressApplication>();
+    http.prepare(await configure(app).init());
   });
 
   describe(http.request.ping, () => {

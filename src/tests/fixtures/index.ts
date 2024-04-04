@@ -4,11 +4,10 @@ import {
   Location as PrismaLocation,
   Theme as PrismaTheme,
   Promise as PrismaPromise,
+  User,
 } from '@prisma/client';
 import { addDays, formatISO, subDays } from 'date-fns';
 import * as R from 'remeda';
-
-import { deleteMany } from '../prisma';
 
 import { Result, isResult } from './builder';
 import { createLocationBuilder } from './locations';
@@ -87,7 +86,7 @@ export function createTestFixture(
   }
 
   async function writeUsers(num: number = 3) {
-    const n = Math.max(0, num);
+    const n = Math.max(1, num);
     log(`Creating ${n} users`);
     return Promise.all(R.times(n, () => createInputUser((user) => prisma.user.create({ data: user }))));
   }
@@ -98,7 +97,7 @@ export function createTestFixture(
   }
 
   async function writeLocations(num: number = 3) {
-    const n = Math.max(0, num);
+    const n = Math.max(1, num);
     log(`Creating ${n} locations`);
     return Promise.all(R.times(n, () => createInputLocation((location) => prisma.location.create({ data: location }))));
   }
@@ -109,7 +108,7 @@ export function createTestFixture(
   }
 
   async function writeThemes(num: number = 3) {
-    const n = Math.max(0, num);
+    const n = Math.max(1, num);
     log(`Creating ${n} themes`);
     return Promise.all(R.times(n, () => createInputTheme((theme) => prisma.theme.create({ data: theme }))));
   }
@@ -289,12 +288,29 @@ export function createTestFixture(
     return createOutputFunction(writePromise)(options) as any;
   };
 
-  async function clear() {
-    await deleteMany(prisma, range.from, range.to);
+  let authUser: User | null = null;
+  async function configure(options: { authUser?: User }) {
+    authUser = options.authUser ?? null;
   }
 
-  beforeEach(async () => clear());
-  afterAll(async () => clear());
+  async function resetData() {
+    const { from: gte, to: lt } = range;
+    await prisma.$transaction([
+      prisma.location.deleteMany({ where: { id: { gte, lt } } }),
+      prisma.theme.deleteMany({ where: { id: { gte, lt } } }),
+      prisma.user.deleteMany({ where: { id: { gte, lt, not: authUser?.id } } }),
+      prisma.promise.deleteMany({ where: { id: { gte, lt } } }),
+    ]);
+  }
+
+  afterEach(async () => {
+    await resetData();
+  });
+
+  afterAll(async () => {
+    authUser = null;
+    await resetData();
+  });
 
   return {
     input: {
@@ -321,9 +337,8 @@ export function createTestFixture(
       tomorrow,
     },
 
-    db: {
-      clear,
-    },
+    configure,
+    resetData,
   };
 
   function log(...messages: any[]) {

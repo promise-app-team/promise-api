@@ -1,10 +1,12 @@
 import { JwtService } from '@nestjs/jwt';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 
 import { createHttpRequest } from '../utils/http-request';
 
 import { AppModule } from '@/app/app.module';
 import { HttpException } from '@/common/exceptions/http.exception';
+import { configure } from '@/main';
 import { AuthController } from '@/modules/auth/auth.controller';
 import { AuthServiceError } from '@/modules/auth/auth.service';
 import { createTestFixture } from '@/tests/fixtures';
@@ -20,19 +22,19 @@ describe(AuthController, () => {
 
   let jwt: JwtService;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    const app = module.createNestApplication();
-    http.prepare(await app.init());
+    const app = module.createNestApplication<NestExpressApplication>();
+    http.prepare(await configure(app).init());
 
     jwt = module.get(JwtService);
   });
 
   describe(http.request.login, () => {
-    test('should return access token and refresh token', async () => {
+    test('should return access token and refresh token when user is already registered', async () => {
       const { input: user } = await fixture.write.user();
       const res1 = await http.request.login().post.send(user).expect(201);
 
@@ -41,17 +43,38 @@ describe(AuthController, () => {
         refreshToken: expect.any(String),
       });
     });
+
+    test('should return access token and refresh token when user is not registered', async () => {
+      const user = fixture.input.user();
+      const res1 = await http.request.login().post.send(user).expect(201);
+
+      expect(res1.body).toEqual({
+        accessToken: expect.any(String),
+        refreshToken: expect.any(String),
+      });
+    });
+
+    test('should return 400 error if username is not provided', async () => {
+      await http.request.login().post.send({}).expect(400);
+    });
+
+    test('should return 400 error if username is too long', async () => {
+      await http.request
+        .login()
+        .post.send({ username: 'username'.repeat(100) })
+        .expect(400);
+    });
   });
 
   describe(http.request.refreshTokens, () => {
     beforeEach(async () => {
-      const user = await fixture.write.user.output();
-      http.request.authorize(user, { jwt });
+      const authUser = await fixture.write.user.output();
+      http.request.authorize(authUser, { jwt });
     });
 
     test('should return new access token and refresh token', async () => {
       const refreshToken = jwt.sign({ id: http.request.auth.user.id }, { expiresIn: '1d' });
-      const res2 = await http.request.refreshTokens().post.send({ refreshToken: refreshToken }).expect(201);
+      const res2 = await http.request.refreshTokens().post.send({ refreshToken }).expect(201);
 
       expect(res2.body).toEqual({
         accessToken: expect.any(String),
@@ -129,6 +152,7 @@ describe(AuthController, () => {
   });
 
   afterAll(async () => {
+    await prisma.$disconnect();
     await http.request.close();
   });
 });

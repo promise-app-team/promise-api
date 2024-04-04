@@ -1,10 +1,12 @@
 import { JwtService } from '@nestjs/jwt';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import { pick } from 'remeda';
 
 import { createHttpRequest } from '../utils/http-request';
 
 import { AppModule } from '@/app/app.module';
+import { configure } from '@/main';
 import { UserController } from '@/modules/user/user.controller';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/prisma';
@@ -20,16 +22,19 @@ describe(UserController, () => {
 
   let jwt: JwtService;
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     const module = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    const app = module.createNestApplication();
-    http.prepare(await app.init());
+    const app = module.createNestApplication<NestExpressApplication>();
+    http.prepare(await configure(app).init());
 
     jwt = module.get(JwtService);
-    const { output: authUser } = await fixture.write.user();
+  });
+
+  beforeEach(async () => {
+    const authUser = await fixture.write.user.output();
     http.request.authorize(authUser, { jwt });
   });
 
@@ -55,26 +60,19 @@ describe(UserController, () => {
 
   describe(http.request.updateMyProfile, () => {
     test('should update user profile', async () => {
-      const res = await http.request
-        .updateMyProfile()
-        .put.send({ username: 'new username', profileUrl: 'new profileUrl' })
-        .expect(200);
+      const input = { username: 'new username', profileUrl: 'https://profile-url.png' };
+      const res = await http.request.updateMyProfile().put.send(input).expect(200);
 
       expect(res.body).toEqual({
         ...pick(http.request.auth.user, ['id', 'provider']),
-        username: 'new username',
-        profileUrl: 'new profileUrl',
+        ...input,
         createdAt: expect.any(String),
       });
     });
 
     test('should return 401 if user is not found', async () => {
       const accessToken = jwt.sign({ id: 0 }, { expiresIn: '1h' });
-      const res = await http.request
-        .updateMyProfile()
-        .put.auth(accessToken, { type: 'bearer' })
-        .send({ username: 'new username', profileUrl: 'new profileUrl' })
-        .expect(401);
+      const res = await http.request.updateMyProfile().put.auth(accessToken, { type: 'bearer' }).send({}).expect(401);
 
       expect(res.body).toMatchObject({
         error: 'Unauthorized',
@@ -85,11 +83,25 @@ describe(UserController, () => {
 
   describe(http.request.deleteMyProfile, () => {
     test('should delete user profile', async () => {
-      const res = await http.request.deleteMyProfile().delete.send({ reason: 'test' }).expect(200);
+      const res = await http.request
+        .deleteMyProfile()
+        .delete.send({ reason: 'test'.repeat(10) })
+        .expect(200);
 
       expect(res.body).toEqual({
         id: http.request.auth.user.id,
       });
+    });
+
+    test('should return 400 if reason is too short', async () => {
+      await http.request.deleteMyProfile().delete.send({ reason: 'test' }).expect(400);
+    });
+
+    test('should return 400 if reason is too long', async () => {
+      await http.request
+        .deleteMyProfile()
+        .delete.send({ reason: 'test'.repeat(100) })
+        .expect(400);
     });
 
     test('should return 401 if user is not found', async () => {
