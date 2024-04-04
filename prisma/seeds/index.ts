@@ -6,7 +6,7 @@ import { addHours, subHours } from 'date-fns';
 import { sample, times } from 'remeda';
 
 import { logger } from '../../scripts/utils';
-import { random, randomDate, randomPick } from '../../src/utils/random';
+import { random } from '../../src/utils/random';
 
 const environment = process.env.NODE_ENV || 'local';
 
@@ -81,7 +81,7 @@ async function mock(prisma: PrismaClient) {
     data: times(MAX_USERS, (num) => ({
       username: `user${num + 1}`,
       profileUrl: `${random(1, 9)}`,
-      provider: num === 0 ? Provider.KAKAO : randomPick(constant.providers),
+      provider: num === 0 ? Provider.KAKAO : random(constant.providers),
       providerId: `${num + 1}`,
     })),
   });
@@ -90,12 +90,12 @@ async function mock(prisma: PrismaClient) {
   const themes = await prisma.theme.findMany();
 
   const randomAttendeeMap = times(MAX_PROMISES, () => sample(users, random(0, 5)));
-  const randomDestinationTypeMap = times(MAX_PROMISES, () => randomPick(constant.destinationTypes));
+  const randomDestinationTypeMap = times(MAX_PROMISES, () => random(constant.destinationTypes));
   const randomStartLocationsMap = await Promise.all(
     randomAttendeeMap.map((attendees) =>
       Promise.all(
         attendees.map(async () => {
-          if (randomPick(constant.destinationTypes) === DestinationType.STATIC) return null;
+          if (random(constant.destinationTypes) === DestinationType.STATIC) return null;
 
           return prisma.location
             .create({
@@ -133,7 +133,7 @@ async function mock(prisma: PrismaClient) {
       return prisma.promise.create({
         data: {
           title: `promise ${num}`,
-          hostId: randomPick(users).id,
+          hostId: random(users).id,
           themes: {
             createMany: {
               data: sample(themes, random(1, 5)).map((theme) => ({ themeId: theme.id })),
@@ -149,11 +149,11 @@ async function mock(prisma: PrismaClient) {
           },
           destinationType: randomDestinationTypeMap[num],
           destinationId: randomDestinationMap[num]?.id,
-          locationShareStartType: randomPick(constant.locationShareTypes),
+          locationShareStartType: random(constant.locationShareTypes),
           locationShareStartValue: Math.floor(Math.random() * 100),
-          locationShareEndType: randomPick(constant.locationShareTypes),
+          locationShareEndType: random(constant.locationShareTypes),
           locationShareEndValue: Math.floor(Math.random() * 100),
-          promisedAt: randomDate(subHours(new Date(), 24 * 30), addHours(new Date(), 24 * 30)),
+          promisedAt: random(subHours(new Date(), 24 * 30), addHours(new Date(), 24 * 30)),
         },
       });
     })
