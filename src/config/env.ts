@@ -9,8 +9,8 @@ export const extraEnv = () => {
 
   return {
     tz: process.env.TZ || 'UTC',
-    stage: process.env.STAGE || 'local',
-    env: process.env.NODE_ENV || 'local',
+    stage: (process.env.STAGE || 'local') as 'local' | 'dev' | 'test' | 'prod',
+    env: (process.env.NODE_ENV || 'local') as 'local' | 'development' | 'test' | 'production',
     port: +(process.env.PORT || 8080),
     build: BUILD,
     deploy: formatISO(process.env.NOW || new Date()),

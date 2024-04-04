@@ -1,4 +1,5 @@
 import { PickType } from '@nestjs/mapped-types';
+import { ApiHideProperty } from '@nestjs/swagger';
 import {
   Prisma,
   Provider as ProviderEnum,
@@ -125,7 +126,9 @@ export class ThemeEntity implements ThemePayload {
 export class ThemeModel extends PickType(ThemeEntity, ['id', 'name']) {}
 
 export class PromiseEntity implements PromisePayload {
+  @ApiHideProperty()
   id!: number;
+
   pid!: string; // only for type
 
   title!: string;
