@@ -52,6 +52,8 @@ provider:
     binaryMediaTypes:
       - '*/*'
   environment:
+    SERVERLESS: true
+
     TZ: ${env:TZ}
     STAGE: ${self:provider.stage}
     NODE_ENV: ${env:NODE_ENV}

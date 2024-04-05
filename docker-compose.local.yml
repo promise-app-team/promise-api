@@ -7,7 +7,7 @@ services:
     ports:
       - ${DB_PORT}:3306
     networks:
-      - promise-api_mysql
+      - mysql
     volumes:
       - ./dockerdata/mysql.${STAGE}:/var/lib/mysql
       - ./mysql:/docker-entrypoint-initdb.d:ro
@@ -23,22 +23,11 @@ services:
       STAGE: ${STAGE}
       TZ: ${TZ}
     restart: always
-
-  https:
-    build:
-      context: https
-      args:
-        - PORT=${PORT}
-        - HTTPS=${HTTPS}
-    image: promise-api:https
-    container_name: promise-api.https
-    networks:
-      - promise-api_https
-    ports:
-      - 80:80
-      - 443:443
-    restart: always
+    healthcheck:
+      test: ['CMD-SHELL', 'mysql -uroot -p${DB_PASSWORD} ${DB_NAME}_${STAGE} -e "SELECT 1"']
+      interval: 3s
+      timeout: 5s
+      retries: 10
 
 networks:
-  promise-api_mysql:
-  promise-api_https:
+  mysql:

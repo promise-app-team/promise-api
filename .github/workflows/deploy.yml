@@ -61,6 +61,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
+          context: .
+          file: deploy.Dockerfile
           tags: ${{ steps.ecr.outputs.registry }}/promise-api-${{ env.STAGE }}:appimage
           cache-from: type=gha
           cache-to: type=gha,mode=max
