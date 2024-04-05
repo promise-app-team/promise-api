@@ -90,11 +90,11 @@ export class InputLocationDTO {
   address!: string | null;
 
   @IsLatitude({ message: '위도 값을 입력해주세요.' })
-  @ApiProperty({ example: 37.123456 })
+  @ApiProperty({ type: Number, example: 37.123456 })
   latitude!: number | string | Prisma.Decimal;
 
   @IsLongitude({ message: '경도 값을 입력해주세요.' })
-  @ApiProperty({ example: 127.123456 })
+  @ApiProperty({ type: Number, example: 127.123456 })
   longitude!: number | string | Prisma.Decimal;
 }
 
