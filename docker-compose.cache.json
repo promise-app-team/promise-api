@@ -1,14 +1,13 @@
 {
   "target": {
-    "service-name": {
-      "cache-from": [
-        "type=gha,scope=promise-app-team/promise-api/test",
-        "type=gha,scope=promise-app-team/promise-api/mysql"
-      ],
-      "cache-to": [
-        "type=gha,mode=max,scope=promise-app-team/promise-api/test",
-        "type=gha,mode=max,scope=promise-app-team/promise-api/mysql"
-      ],
+    "mysql": {
+      "cache-from": ["type=gha,scope=promise-app-team/promise-api/mysql"],
+      "cache-to": ["type=gha,mode=max,scope=promise-app-team/promise-api/mysql"],
+      "output": ["type=docker"]
+    },
+    "test": {
+      "cache-from": ["type=gha,scope=promise-app-team/promise-api/test"],
+      "cache-to": ["type=gha,mode=max,scope=promise-app-team/promise-api/test"],
       "output": ["type=docker"]
     }
   }
