@@ -11,6 +11,7 @@ import { execute, highlight, link, logger, prompt } from './utils';
 // Environment
 
 const envs = {
+  stage: process.env.STAGE,
   node: {
     env: process.env.NODE_ENV || 'unknown',
   },
@@ -25,7 +26,7 @@ const envs = {
   },
 } as const;
 
-const COMMAND = `npm run migration:${envs.node.env}`;
+const COMMAND = `npm run migration:${envs.stage}`;
 const SCHEMA_FILE = path.resolve(process.cwd(), path.resolve(__dirname, '../prisma/schema.prisma'));
 const MIGRATION_DIR = path.resolve(process.cwd(), path.resolve(__dirname, '../prisma/migrations'));
 

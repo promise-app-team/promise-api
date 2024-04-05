@@ -26,12 +26,12 @@ export const extraEnv = () => {
     jwt: {
       secret: process.env.JWT_SECRET_KEY,
       expires: {
-        access: process.env.JWT_ACCESS_EXPIRES_IN,
-        refresh: process.env.JWT_REFRESH_EXPIRES_IN,
+        access: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
+        refresh: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
       },
     },
     aws: {
-      region: process.env.AWS_DEFAULT_REGION,
+      region: process.env.AWS_DEFAULT_REGION || 'ap-southeast-2',
       bucket: process.env.AWS_S3_BUCKET_NAME,
     },
     inthash: {
