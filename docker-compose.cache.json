@@ -1,8 +1,14 @@
 {
   "target": {
     "service-name": {
-      "cache-from": ["type=gha,scope=<GH_ORG>/<REPO>/<SERVICE>"],
-      "cache-to": ["type=gha,mode=max,scope=<GH_ORG>/<REPO>/<SERVICE>"],
+      "cache-from": [
+        "type=gha,scope=promise-app-team/promise-api/test",
+        "type=gha,scope=promise-app-team/promise-api/mysql"
+      ],
+      "cache-to": [
+        "type=gha,mode=max,scope=promise-app-team/promise-api/test",
+        "type=gha,mode=max,scope=promise-app-team/promise-api/mysql"
+      ],
       "output": ["type=docker"]
     }
   }
