@@ -1,0 +1,9 @@
+{
+  "target": {
+    "service-name": {
+      "cache-from": ["type=gha,scope=<GH_ORG>/<REPO>/<SERVICE>"],
+      "cache-to": ["type=gha,mode=max,scope=<GH_ORG>/<REPO>/<SERVICE>"],
+      "output": ["type=docker"]
+    }
+  }
+}
