@@ -90,10 +90,10 @@ async function startServerless() {
 
 let bootstrap: Promise<Handler>;
 
-if (process.env.NODE_ENV === 'local') {
-  startLocalServer();
-} else {
+if (process.env.SERVERLESS) {
   bootstrap = startServerless();
+} else if (process.env.STAGE === 'local') {
+  startLocalServer();
 }
 
 export const handler: Handler = async (event, context, callback) => {

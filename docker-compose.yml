@@ -1,13 +1,45 @@
 version: '3'
 
 services:
+  server:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    ports:
+      - 8002:8002
+    image: promise-api:server
+    container_name: promise-api.server
+    networks:
+      - test
+      - mysql
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: >
+      sh -c "npx prisma migrate deploy && npx jest"
+    environment:
+      TZ: ${TZ}
+      PORT: 8002
+      STAGE: ${STAGE}
+      NODE_ENV: ${NODE_ENV}
+
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      INTHASH_KEY: ${INTHASH_KEY}
+
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_HOST: mysql
+      DB_PORT: ${DB_PORT}
+      DB_NAME: ${DB_NAME}
+      DB_URL: mysql://${DB_USER}:${DB_PASSWORD}@mysql:${DB_PORT}/${DB_NAME}_${STAGE}
+
   mysql:
     image: mysql:8.3
     container_name: promise-api.mysql
     ports:
       - ${DB_PORT}:3306
     networks:
-      - promise-api_mysql
+      - mysql
     volumes:
       - ./dockerdata/mysql.${STAGE}:/var/lib/mysql
       - ./mysql:/docker-entrypoint-initdb.d:ro
@@ -23,6 +55,11 @@ services:
       STAGE: ${STAGE}
       TZ: ${TZ}
     restart: always
+    healthcheck:
+      test: ['CMD-SHELL', 'mysql -uroot -p${DB_PASSWORD} ${DB_NAME}_${STAGE} -e "SELECT 1"']
+      interval: 3s
+      timeout: 5s
+      retries: 10
 
   https:
     build:
@@ -33,12 +70,13 @@ services:
     image: promise-api:https
     container_name: promise-api.https
     networks:
-      - promise-api_https
+      - https
     ports:
       - 80:80
       - 443:443
     restart: always
 
 networks:
-  promise-api_mysql:
-  promise-api_https:
+  test:
+  mysql:
+  https:
