@@ -30,13 +30,17 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Cache MySQL Docker image
-        uses: actions/cache@v4
+      - name: Restore Docker Cache
+        uses: actions/cache/restore@v4
         with:
           path: /var/lib/docker
-          key: mysql-docker-image-${{ runner.os }}-${{ hashFiles('**/docker-compose.test.yml') }}
-          restore-keys: |
-            mysql-docker-image-${{ runner.os }}-
+          key: docker-${{ runner.os }}-${{ hashFiles('**/docker-compose.test.yml') }}
 
       - name: Setup Environment and Run Tests
         run: docker compose -f docker-compose.test.yml up --exit-code-from=test mysql test
+
+      - name: Save Docker Cache
+        uses: actions/cache/save@v4
+        with:
+          path: /var/lib/docker
+          key: docker-${{ runner.os }}-${{ hashFiles('**/docker-compose.test.yml') }}

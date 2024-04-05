@@ -5,8 +5,6 @@ services:
     build:
       context: .
       dockerfile: dev.Dockerfile
-      cache_from: [type=gha]
-      cache_to: [type=gha]
     ports:
       - ${PORT}:${PORT}
     image: promise-api:test
