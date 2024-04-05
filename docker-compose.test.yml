@@ -5,8 +5,8 @@ services:
     build:
       context: .
       dockerfile: dev.Dockerfile
-      cache_from: type=gha,scope=promise-app-team/promise-api/test
-      cache_to: type=gha,mode=max,scope=promise-app-team/promise-api/test
+      cache_from: [type=gha, scope=promise-app-team/promise-api/test]
+      cache_to: [type=gha, mode=max, scope=promise-app-team/promise-api/test]
     ports:
       - ${PORT}:${PORT}
     image: promise-api:test
