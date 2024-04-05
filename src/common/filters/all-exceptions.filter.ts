@@ -2,6 +2,8 @@ import { ArgumentsHost, Catch, ExceptionFilter, HttpServer, InternalServerErrorE
 
 import { HttpException } from '../exceptions/http.exception';
 
+import { TypedConfigService } from '@/config/env';
+
 function isHttpException(exception: any): exception is HttpException {
   try {
     return ['message', 'error', 'statusCode'].every((key) => key in exception.response);
@@ -12,7 +14,10 @@ function isHttpException(exception: any): exception is HttpException {
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
-  constructor(private readonly httpAdapter: HttpServer) {}
+  constructor(
+    private readonly httpAdapter: HttpServer,
+    private readonly config: TypedConfigService
+  ) {}
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
@@ -21,7 +26,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
       ? exception
       : HttpException.new('알 수 없는 오류가 발생했습니다.', 'INTERNAL_SERVER_ERROR', exception);
 
-    if (typeof exception === 'string') {
+    if (this.config.get('env') === 'test') {
+    } else if (typeof exception === 'string') {
       console.error('UnhandledException:', exception);
       console.trace();
     } else if (httpException.name === InternalServerErrorException.name) {

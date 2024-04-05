@@ -11,10 +11,12 @@ export class EncodePromiseID implements NestInterceptor {
     if (Array.isArray(data)) {
       return data.map((item) => this.#transform(item));
     }
+
     if (data && 'id' in data) {
-      data = { id: data.id, pid: this.hasher.encode(data.id), ...data };
-      // delete data.id;
+      data = { pid: this.hasher.encode(data.id), ...data };
+      delete data.id;
     }
+
     return data;
   }
 

@@ -1,14 +1,16 @@
+import { createModelBuilder } from './builder';
+
 import { Provider, UserModel } from '@/prisma/prisma.entity';
 
-export const userBuilder =
-  (TEST_ID: number) =>
-  (id = TEST_ID++): UserModel => ({
+export function createUserBuilder(initialId: number) {
+  return createModelBuilder<UserModel>(initialId, (id) => ({
     id,
-    username: 'username',
+    username: `username ${id}`,
     profileUrl: 'http://profile.url',
     provider: Provider.KAKAO,
-    providerId: `${id}`,
+    providerId: `providerId ${id}`,
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedAt: new Date(),
-  });
+  }));
+}

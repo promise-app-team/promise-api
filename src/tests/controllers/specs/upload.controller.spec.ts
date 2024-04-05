@@ -5,7 +5,6 @@ import { Test } from '@nestjs/testing';
 import { FileUploadController } from '@/modules/upload/upload.controller';
 import { FileUploadService } from '@/modules/upload/upload.service';
 import { UserService } from '@/modules/user/user.service';
-import { sleep } from '@/tests/utils/async';
 import { mock } from '@/tests/utils/mock';
 
 describe(FileUploadController, () => {
@@ -13,7 +12,6 @@ describe(FileUploadController, () => {
 
   const mockFileUploadService = mock<FileUploadService>({
     async upload(file: Express.Multer.File): Promise<string> {
-      await sleep(200);
       switch (file.originalname) {
         case 'valid.png':
           return 'https://s3.ap-northeast-2.amazonaws.com/bucket/2021-01-01/uuid.txt';

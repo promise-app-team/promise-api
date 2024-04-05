@@ -5,7 +5,7 @@ import chalk from 'chalk';
 import { formatISO, parse } from 'date-fns';
 import * as R from 'remeda';
 
-import { execute, link, logger, prompt } from './utils';
+import { execute, highlight, link, logger, prompt } from './utils';
 
 ///////////////////////////////////////////////////////////////////////////////
 // Environment
@@ -26,7 +26,7 @@ const envs = {
 } as const;
 
 const COMMAND = `npm run migration:${envs.node.env}`;
-const SCHEMA_DIR = path.resolve(process.cwd(), path.resolve(__dirname, '../prisma/schema.prisma'));
+const SCHEMA_FILE = path.resolve(process.cwd(), path.resolve(__dirname, '../prisma/schema.prisma'));
 const MIGRATION_DIR = path.resolve(process.cwd(), path.resolve(__dirname, '../prisma/migrations'));
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -54,54 +54,74 @@ async function executeHelp() {
 async function executeUp() {
   await checkHealth();
 
-  logger.info('Applying pending migrations...');
-  const result = await command.prisma('migrate deploy');
+  const { migrations } = await getMigrationStatus();
+  const pendingMigrations = R.filter(migrations, (m) => !m.appliedAt);
 
-  const migrations = result.match(/\d{14}_[a-z0-9_]+/g);
-  if (!migrations) return logger.warn('No pending migrations found.\n');
+  if (!pendingMigrations.length) return logger.warn('No pending migrations found.');
+  logger.info(`${pendingMigrations.length} pending migrations found.`);
+  for (const { dirname } of pendingMigrations) {
+    logger.log(`· ${chalk.magenta(dirname)} [${formatMigrationLink(dirname)}]`);
+  }
+
+  logger.newline();
+  logger.info('Applying pending migrations...');
+  const ok = await requestContinue();
+  if (!ok) return logger.warn('Aborted.');
+
+  const schema = pendingMigrations.slice(-1)[0].filepath.schema;
+  const result = await command.prisma(`migrate deploy`);
+  await command.prisma(`generate --schema ${schema}`);
 
   const appliedMigrations = R.pipe(
-    migrations,
-    R.uniq(),
+    result.match(/\d{14}_[a-z0-9_]+/g) ?? [],
+    R.unique(),
     R.map((migration) => transformMigration(migration)),
     R.sortBy((migration) => migration.createdAt)
   );
 
-  appliedMigrations.forEach(({ filename }) => logger.info(`Applied migration: ${chalk.bold.blue(filename)}`));
   logger.success('Migrations applied successfully.');
+  appliedMigrations.forEach(({ dirname }) => logger.log(`· ${chalk.blue(dirname)}`));
 }
 
 async function executeDown(count = 1) {
   await checkHealth();
 
   const { migrations, appliedCount } = await getMigrationStatus();
-  if (appliedCount === 0) return logger.warn('No applied migrations found.');
+  if (appliedCount === 0) {
+    return logger.warn('No applied migrations found.');
+  }
 
-  const n = +count;
-  if (n < 1) return logger.error('Invalid count');
-
+  const n = R.clamp(+count, { min: 1, max: appliedCount - 1 });
   const toRevert = R.pipe(
     migrations,
-    R.filter((m) => !!m.appliedAt && !m.filename.match(/^\d{14}_init$/)),
+    R.filter((m) => !!m.appliedAt),
     R.reverse(),
     R.take(n)
   );
-  if (toRevert.length === 0) return logger.warn('No migrations to revert.');
+  if (toRevert.length === 0) {
+    return logger.warn('No migrations to revert.');
+  }
 
-  logger.info(`Reverting ${n} migration(s)...`);
-  for (const { filename, filepath } of toRevert) {
-    if (!filepath.down) return logger.error(`Migration file not found: ${filename}`);
-    logger.info(`Reverting migration: ${chalk.bold.blue(filename)}`);
-    const ok = await requestContinue();
-    if (!ok) return logger.warn('Aborted.');
+  logger.info(`${toRevert.length} migration(s) to revert:`);
+  for (const { dirname } of toRevert) {
+    logger.log(`· ${chalk.magenta(dirname)} [${formatMigrationLink(dirname)}]`);
+  }
 
+  logger.newline();
+  logger.info(`Reverting ${toRevert.length} migration(s)...`);
+  const ok = await requestContinue();
+  if (!ok) return logger.warn('Aborted.');
+
+  for (const [i, { dirname, filepath }] of toRevert.entries()) {
     const result = await command.prisma(`db execute --file ${filepath.down}`);
     if (result.includes('Error')) return logger.error(result);
-
-    await command.mysql(`DELETE FROM _prisma_migrations WHERE migration_name = "${filename}"`);
-    logger.success(`Migration reverted: ${chalk.bold.blue(filename)}\n`);
+    await command.mysql(`DELETE FROM _prisma_migrations WHERE migration_name = "${dirname}"`);
+    const schema = migrations.slice(-i - 2)[0].filepath.schema;
+    await command.prisma(`generate --schema ${schema}`);
   }
+
   logger.success('Migrations reverted successfully.');
+  toRevert.forEach(({ dirname }) => logger.log(`· ${chalk.blue(dirname)}`));
 }
 
 async function executeList() {
@@ -122,10 +142,10 @@ async function executeList() {
   const columns = (gap: number, messages: string[]) => messages.join(' '.repeat(gap));
 
   logger.info(`${migrations.length} migrations found:`);
-  const nameLength = R.maxBy(migrations, (m) => m.filename.length)?.filename.length ?? 10;
+  const nameLength = R.firstBy(migrations, [(m) => m.dirname.length, 'desc'])?.dirname.length ?? 10;
   const sqlLength = 'UP / DOWN'.length;
-  const createdLength = R.maxBy(migrations, (m) => m.createdAt.length)?.createdAt.length ?? 21;
-  const appliedLength = R.maxBy(migrations, (m) => m.appliedAt?.length ?? 21)?.appliedAt?.length ?? 21;
+  const createdLength = R.firstBy(migrations, [(m) => m.createdAt.length, 'desc'])?.createdAt.length ?? 21;
+  const appliedLength = R.firstBy(migrations, [(m) => m.appliedAt?.length ?? 21, 'desc'])?.appliedAt?.length ?? 21;
 
   logger.log(
     columns(2, [
@@ -136,10 +156,10 @@ async function executeList() {
       `${chalk.underline('Applied At'.padEnd(appliedLength))}`,
     ])
   );
-  for (const { filename, createdAt, appliedAt } of migrations) {
+  for (const { dirname, createdAt, appliedAt } of migrations) {
     const icon = chalk.bold.gray(`[${appliedAt ? appliedIcon : pendingIcon}]`);
-    const name = chalk.bold.cyanBright(filename.padEnd(nameLength));
-    const filelink = formatMigrationLink(filename);
+    const name = chalk.bold.cyanBright(dirname.padEnd(nameLength));
+    const filelink = formatMigrationLink(dirname);
     const createdDate = chalk.grey(createdAt);
     const appliedDate = appliedAt ? chalk.grey(appliedAt) : chalk.red('N/A');
     logger.log(columns(2, [`${icon}`, `${name}`, filelink, createdDate, appliedDate]));
@@ -160,31 +180,47 @@ async function executeList() {
 
 async function executeNew() {
   await checkMigrationNotLatest();
+  const [upSql, downSql] = await Promise.all([
+    command.prisma(
+      ['migrate diff', `--to-schema-datamodel "${SCHEMA_FILE}"`, `--from-url "${envs.database.url}"`, `--script`].join(
+        ' '
+      )
+    ),
+    command.prisma(
+      [
+        'migrate diff',
+        `--from-schema-datamodel "${SCHEMA_FILE}"`,
+        `--to-migrations "${MIGRATION_DIR}"`,
+        `--shadow-database-url "${envs.database.shadowUrl}"`,
+        `--script`,
+      ].join(' ')
+    ),
+  ]);
 
-  const downSql = await command.prisma(
-    [
-      'migrate diff',
-      `--from-schema-datamodel "${SCHEMA_DIR}"`,
-      `--to-migrations "${MIGRATION_DIR}"`,
-      `--shadow-database-url "${envs.database.shadowUrl}"`,
-      `--script`,
-    ].join(' ')
-  );
-
-  if (downSql.includes('This is an empty migration')) {
-    return logger.warn('No changes detected. Update your schema and try again.\n');
+  if (!upSql.trim() || upSql.includes('This is an empty migration')) {
+    logger.warn('No changes detected. Are you sure you want to create a empty migration?');
+    const ok = await requestContinue();
+    if (!ok) return logger.warn('Aborted.');
+  } else {
+    logger.info('Changes detected. Check the SQL scripts below:');
+    logger.newline();
+    logger.log(chalk.bold('UP SQL:'));
+    logger.log(highlight(upSql, { language: 'sql' }));
+    logger.log(chalk.bold('DOWN SQL:'));
+    logger.log(highlight(downSql, { language: 'sql' }));
   }
 
-  const response = await prompt('Changes detected. Enter a name for the migration: ');
-  const name = response
-    .toLowerCase()
-    .replace(/(\s|\-)/g, '_')
-    .replace(/[^a-z0-9_\s]/g, '');
+  const name = await prompt('Enter a name for the migration:').then((res) =>
+    res
+      .toLowerCase()
+      .replace(/(\s|\-)/g, '_')
+      .replace(/[^a-z0-9_\s]/g, '')
+  );
 
   const filtered = name.replace(/[^a-z]/g, '');
   if (filtered.length < 1) return logger.error('Invalid name. Must contain at least one letter.');
 
-  const ok = await requestContinue(`Create migration file: ${chalk.bold.blue(name)}? (y|n)`);
+  const ok = await requestContinue(`Create migration file: ${chalk.bold.blue(name)}?`);
   if (!ok) return logger.warn('Aborted.');
 
   logger.info('Generating migration file...');
@@ -192,7 +228,8 @@ async function executeNew() {
   const [directory] = result.match(`\\d{14}_${name}`) ?? [];
   if (!directory) throw new Error('Failed to create migration file');
 
-  await fs.writeFile(`${MIGRATION_DIR}/${directory}/migration_down.sql`, downSql);
+  await fs.writeFile(`${MIGRATION_DIR}/${directory}/migration_down.sql`, `${downSql}\n`);
+  await fs.copyFile(`${SCHEMA_FILE}`, `${MIGRATION_DIR}/${directory}/schema.prisma`);
   const filelink = formatMigrationLink(directory, {
     up: `${directory}/migration.sql`,
     down: `${directory}/migration_down.sql`,
@@ -236,10 +273,10 @@ async function main() {
 ///////////////////////////////////////////////////////////////////////////////
 // Helpers
 
-async function requestContinue(message = `Continue? ${chalk.dim('(y|n)')}`): Promise<boolean> {
+async function requestContinue(message = 'Continue?'): Promise<boolean> {
   while (true) {
-    const response = await prompt(message);
-    if (['y', 'yes'].includes(response.toLowerCase())) return true;
+    const response = await prompt(`${message} ${chalk.dim('[Y|n]')}`);
+    if (['', 'y', 'yes'].includes(response.toLowerCase())) return true;
     if (['n', 'no'].includes(response.toLowerCase())) return false;
     process.stdout.write('\x1b[1A\x1b[2K');
   }
@@ -250,7 +287,7 @@ const command = {
     return execute(command, { whitelists: [/password.+?insecure/], echo: false });
   },
   async prisma(args: string): Promise<string> {
-    return this.exec(`npm run prisma ${args}`);
+    return this.exec(`npx prisma ${args}`);
   },
   async mysql(...queries: string[]): Promise<string> {
     const { host, port, name, user, password } = envs.database;
@@ -305,7 +342,7 @@ async function getMigrationStatus() {
   const appliedMigrations = await getAppliedMigrations();
   const migrations = R.map(await getAllMigrations(), (migration) => ({
     ...migration,
-    appliedAt: appliedMigrations[migration.filename],
+    appliedAt: (appliedMigrations[migration.dirname] ?? null) as Date | null,
   }));
 
   const appliedCount = R.filter(migrations, (m) => !!m.appliedAt).length;
@@ -320,7 +357,7 @@ async function getMigrationStatus() {
 
 function parseTSV(data: string): Record<string, string>[] {
   const [header, ...rows] = data.split('\n').map((row) => row.split('\t'));
-  return rows.map((row) => R.zipObj(header, row));
+  return rows.map((row) => R.fromEntries.strict(R.zip(header, row)));
 }
 
 function transformMigration(migration: string) {
@@ -328,10 +365,10 @@ function transformMigration(migration: string) {
   const sanitizedName = name.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
   const up = `${MIGRATION_DIR}/${migration}/migration.sql`;
   const down = sanitizedName !== 'Init' ? `${MIGRATION_DIR}/${migration}/migration_down.sql` : null;
+  const schema = `${MIGRATION_DIR}/${migration}/schema.prisma`;
   return {
-    filename: migration,
-    filepath: { up, down },
-    // link: { up: `file://${up}`, down: down ? `file://${down}` : null },
+    dirname: migration,
+    filepath: { up, down, schema },
     name: sanitizedName,
     createdAt: parse(date, 'yyyyMMddHHmmss', new Date()),
   };

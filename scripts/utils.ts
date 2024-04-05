@@ -2,10 +2,13 @@ import { exec } from 'node:child_process';
 import readline from 'node:readline';
 
 import chalk from 'chalk';
+import { HighlightOptions, highlight as cliHighlight } from 'cli-highlight';
+import { mergeDeep } from 'remeda';
 
 export const logger = {
   log: (...msg: string[]) => console.log(...msg),
   dim: (...msg: string[]) => console.log(chalk.dim(...msg)),
+  newline: () => console.log(),
   info: (...msg: string[]) => console.log(chalk.blue.bold('>>>'), ...msg),
   warn: (...msg: string[]) => console.log(chalk.yellow.bold('>>>'), ...msg),
   error: (...msg: string[]) => console.log(chalk.red.bold('>>>'), ...msg),
@@ -38,14 +41,18 @@ interface ExecuteOptions {
 }
 
 export async function execute(command: string, options: ExecuteOptions = {}) {
-  if (options.echo) {
-    const cmd = command.replace(/([\r\n]|\s{2,})+/g, ' ').trim();
-    logger.dim(`[echo] $ ${cmd}`);
-  }
-
   const whitelists = (options.whitelists || []).map((w) => (w instanceof RegExp ? w : new RegExp(w)));
   return new Promise<string>((resolve, reject) => {
     exec(command, (error, stdout, stderr) => {
+      if (options.echo) {
+        const cmd = command.replace(/([\r\n]|\s{2,})+/g, ' ').trim();
+        logger.dim(`[echo] $ ${cmd}`);
+
+        if (stdout) logger.dim(`[stdout] ${stdout}`);
+        if (stderr) logger.dim(`[stderr] ${stderr}`);
+        logger.newline();
+      }
+
       if (error && !whitelists.some((regex) => regex.test(stderr))) {
         reject(error);
       } else {
@@ -53,4 +60,22 @@ export async function execute(command: string, options: ExecuteOptions = {}) {
       }
     });
   });
+}
+
+export function highlight(code: string, options: HighlightOptions = {}) {
+  return cliHighlight(
+    code,
+    mergeDeep(
+      {
+        language: 'sql',
+        ignoreIllegals: true,
+        theme: {
+          literal: chalk.blueBright,
+          type: chalk.magentaBright,
+          built_in: chalk.magenta,
+        },
+      },
+      options as Record<string, unknown>
+    )
+  );
 }

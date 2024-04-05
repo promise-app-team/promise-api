@@ -15,7 +15,7 @@ export class InputCreateUserDTO {
   username!: string | null;
 
   @IsOptional()
-  @IsProfileUrl({ message: '프로필 이미지 URL을 입력해주세요.' })
+  @IsProfileUrl({ message: '프로필 이미지 URL 형식이 올바르지 않습니다.' })
   @ApiPropertyOptional({ example: 'https://profile-url.png' })
   profileUrl!: string | null;
 

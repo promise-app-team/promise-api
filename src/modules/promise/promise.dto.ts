@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional, PickType } from '@nestjs/swagger';
+import { Prisma } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsArray,
@@ -22,18 +23,6 @@ import { IsAfter } from '@/common/decorators/is-after.decorator';
 import { ApplyDTO } from '@/common/mixins/dto.mixin';
 import { LocationDTO } from '@/modules/promise/location.dto';
 import { DestinationType, LocationShareType, PromiseEntity, UserEntity } from '@/prisma/prisma.entity';
-
-export enum PromiseStatus {
-  ALL = 'all',
-  AVAILABLE = 'available',
-  UNAVAILABLE = 'unavailable',
-}
-
-export enum PromiseUserRole {
-  ALL = 'all',
-  HOST = 'host',
-  ATTENDEE = 'attendee',
-}
 
 export class HostDTO extends PickType(UserEntity, ['id', 'username', 'profileUrl']) {}
 export class AttendeeDTO extends PickType(UserEntity, ['id', 'username', 'profileUrl']) {
@@ -98,18 +87,18 @@ export class InputLocationDTO {
   @IsString({ message: '상세 주소를 입력해주세요.' })
   @MaxLength(100, { message: '상세 주소는 최대 100자까지 입력 가능합니다.' })
   @ApiPropertyOptional({ example: '강남대로 123' })
-  address?: string;
+  address!: string | null;
 
   @IsLatitude({ message: '위도 값을 입력해주세요.' })
   @ApiProperty({ example: 37.123456 })
-  latitude!: number;
+  latitude!: number | string | Prisma.Decimal;
 
   @IsLongitude({ message: '경도 값을 입력해주세요.' })
   @ApiProperty({ example: 127.123456 })
-  longitude!: number;
+  longitude!: number | string | Prisma.Decimal;
 }
 
-export class InputCreatePromiseDTO {
+export class InputPromiseDTO {
   @IsString({ message: '약속 제목을 입력해주세요.' })
   @MaxLength(50, { message: '약속 제목은 최대 50자까지 입력 가능합니다.' })
   @IsNotEmpty({ message: '약속 제목을 입력해주세요.' })
@@ -156,4 +145,12 @@ export class InputCreatePromiseDTO {
   locationShareEndValue!: number;
 }
 
-export class InputUpdatePromiseDTO extends InputCreatePromiseDTO {}
+export class IdentifiableDTO {
+  @ApiProperty({ example: 1 })
+  id!: number;
+}
+
+export class PromiseIdentifiableDTO {
+  @ApiProperty({ example: '1' })
+  pid!: string;
+}

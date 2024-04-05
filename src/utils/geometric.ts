@@ -50,6 +50,8 @@ export function findGeometricMedian(points: Point[], options?: { precision?: num
       totalWeight += 1 / distance;
     }
 
+    if (!totalWeight) break;
+
     const newPoint = {
       lat: sumX / totalWeight,
       lng: sumY / totalWeight,

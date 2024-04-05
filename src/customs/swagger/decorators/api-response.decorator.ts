@@ -1,10 +1,10 @@
 import { HttpStatus, Type } from '@nestjs/common';
 import { ApiResponse as BaseApiResponse } from '@nestjs/swagger';
-import { uniq } from 'remeda';
+import { unique } from 'remeda';
 
 import { HttpException, isExceptionStatus } from '@/common/exceptions/http.exception';
 
-type Status = Extract<
+export type UsableStatus = Extract<
   keyof typeof HttpStatus,
   | /* 200 */ 'OK'
   | /* 201 */ 'CREATED'
@@ -17,11 +17,11 @@ type Status = Extract<
   | /* 500 */ 'INTERNAL_SERVER_ERROR'
 >;
 
-type StatusArgs = [Status, Type<unknown> | [Type<unknown>]] | Status;
+type StatusArgs = [UsableStatus, Type<unknown> | [Type<unknown>]] | UsableStatus;
 
 export function ApiResponse(...args: StatusArgs[]): MethodDecorator {
   return (target, propertyKey, descriptor) => {
-    for (const argument of uniq(args)) {
+    for (const argument of unique(args)) {
       const [status, type] = Array.isArray(argument) ? argument : [argument, undefined];
       BaseApiResponse({
         status: HttpStatus[status],

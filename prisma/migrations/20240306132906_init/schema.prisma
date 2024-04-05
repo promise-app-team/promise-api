@@ -1,0 +1,224 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
+}
+
+datasource db {
+  provider          = "mysql"
+  url               = env("DB_URL")
+  shadowDatabaseUrl = env("DB_SHADOW_URL")
+}
+
+enum Provider {
+  KAKAO
+  GOOGLE
+  APPLE
+}
+
+enum DestinationType {
+  STATIC
+  DYNAMIC
+}
+
+enum LocationShareType {
+  DISTANCE
+  TIME
+}
+
+model User {
+  id Int @id @default(autoincrement()) @db.UnsignedInt
+
+  /// 사용자 이름
+  username String? @map("username") @db.VarChar(80)
+
+  /// 프로필 이미지 URL
+  profileUrl String? @map("profile_url") @db.Text
+
+  /// OAuth 공급자
+  provider Provider @map("provider")
+
+  /// OAuth 공급자에서 제공하는 사용자 ID
+  providerId String? @map("provider_id") @db.VarChar(100)
+
+  /// 탈퇴 시간
+  deletedAt DateTime? @map("deleted_at") @db.Timestamp(0)
+
+  /// 탈퇴 사유
+  leaveReason String? @map("leave_reason") @db.VarChar(255)
+
+  /// 마지막 로그인 시간
+  lastSignedAt DateTime @default(now()) @map("last_signed_at") @db.Timestamp(0)
+
+  /// 생성일
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+
+  /// 수정일
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  /// 내가 약속장인 약속 목록
+  myPromises Promise[] @relation(name: "Promise.host")
+
+  /// 내가 참여한 약속 목록
+  promises PromiseUser[] @relation(name: "PromiseUser.user")
+
+  @@unique(name: "identifier", fields: [provider, providerId], map: "ix_provider")
+  @@map("pm_users")
+}
+
+model Promise {
+  id Int @id @default(autoincrement()) @db.UnsignedInt
+
+  /// 약속장 ID
+  hostId Int @map("host_id") @db.UnsignedInt
+
+  /// 약속장
+  host User @relation(name: "Promise.host", fields: [hostId], references: [id], onDelete: Cascade)
+
+  /// 약속 제목
+  title String @map("title") @db.VarChar(50)
+
+  /// 목적지 유형
+  destinationType DestinationType @map("destination_type")
+
+  /// 목적지 ID
+  destinationId Int? @map("destination_id") @db.UnsignedInt
+
+  /// 목적지
+  destination Location? @relation(name: "Promise.destination", fields: [destinationId], references: [id], onDelete: SetNull)
+
+  /// 위치 공유 시작 유형
+  locationShareStartType LocationShareType @map("location_share_start_type")
+
+  /// 위치 공유 시작 값
+  locationShareStartValue Int @map("location_share_start_value") @db.UnsignedInt
+
+  /// 위치 공유 종료 유형
+  locationShareEndType LocationShareType @map("location_share_end_type")
+
+  /// 위치 공유 종료 값
+  locationShareEndValue Int @map("location_share_end_value") @db.UnsignedInt
+
+  /// 약속 시간
+  promisedAt DateTime @map("promised_at") @db.Timestamp(0)
+
+  /// 약속 완료 시간
+  completedAt DateTime? @map("completed_at") @db.Timestamp(0)
+
+  /// 생성일
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+
+  /// 수정일
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  /// 참여자 목록
+  users PromiseUser[] @relation(name: "PromiseUser.promise")
+
+  /// 테마 목록
+  themes PromiseTheme[] @relation(name: "PromiseTheme.promise")
+
+  @@unique(fields: [destinationId], map: "ix_destination_id")
+  @@index(fields: [hostId], map: "ix_host_id")
+  @@map("pm_promises")
+}
+
+model PromiseUser {
+  /// 약속 참여자 ID
+  userId Int @map("user_id") @db.UnsignedInt
+
+  /// 약속 참여자
+  user User @relation(name: "PromiseUser.user", fields: [userId], references: [id], onDelete: Cascade)
+
+  /// 약속 ID
+  promiseId Int @map("promise_id") @db.UnsignedInt
+
+  /// 약속
+  promise Promise @relation(name: "PromiseUser.promise", fields: [promiseId], references: [id], onDelete: Cascade)
+
+  /// 약속 참여자 출발지 ID
+  startLocationId Int? @map("start_location_id") @db.UnsignedInt
+
+  /// 약속 참여자 출발지
+  startLocation Location? @relation(name: "PromiseUser.startLocation", fields: [startLocationId], references: [id], onDelete: SetNull)
+
+  /// 생성일
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+
+  /// 수정일
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  @@id(name: "identifier", fields: [promiseId, userId])
+  @@unique(fields: [startLocationId], map: "ix_start_location_id")
+  @@index(fields: [userId], map: "ix_user_id")
+  @@index(fields: [promiseId], map: "ix_promise_id")
+  @@map("pm_promise_users")
+}
+
+model Theme {
+  id Int @id @default(autoincrement()) @db.UnsignedInt
+
+  /// 테마 이름
+  name String @map("name") @db.VarChar(10)
+
+  /// 약속 목록
+  promises PromiseTheme[] @relation(name: "PromiseTheme.theme")
+
+  @@map("pm_themes")
+}
+
+model PromiseTheme {
+  /// 약속 ID
+  promiseId Int @map("promise_id") @db.UnsignedInt
+
+  /// 약속
+  promise Promise @relation(name: "PromiseTheme.promise", fields: [promiseId], references: [id], onDelete: Cascade)
+
+  /// 테마 ID
+  themeId Int @map("theme_id") @db.UnsignedInt
+
+  /// 테마
+  theme Theme @relation(name: "PromiseTheme.theme", fields: [themeId], references: [id], onDelete: Cascade)
+
+  @@id(name: "identifier", fields: [promiseId, themeId])
+  @@index(fields: [themeId], map: "ix_theme_id")
+  @@index(fields: [promiseId], map: "ix_promise_id")
+  @@map("pm_promise_themes")
+}
+
+model Location {
+  id Int @id @default(autoincrement()) @db.UnsignedInt
+
+  /// 시/도
+  city String? @map("city") @db.VarChar(50)
+
+  /// 구/군
+  district String? @map("district") @db.VarChar(50)
+
+  /// 동/읍/면 (상세주소)
+  address String? @map("address") @db.VarChar(100)
+
+  /// 위도 (-90 ~ 90)
+  latitude Decimal @map("latitude") @db.Decimal(10, 8)
+
+  /// 경도 (-180 ~ 180)
+  longitude Decimal @map("longitude") @db.Decimal(11, 8)
+
+  /// 생성일
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+
+  /// 수정일
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamp(0)
+
+  /// 약속 목록
+  promises Promise[] @relation(name: "Promise.destination")
+
+  /// 약속 참여 목록
+  promiseUsers PromiseUser[] @relation(name: "PromiseUser.startLocation")
+
+  @@map("pm_locations")
+}

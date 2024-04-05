@@ -36,7 +36,7 @@
     "package.json": "package-lock.json, yarn.lock, bun.lockb",
     ".env.example": ".env, .env.*",
     ".env-cmdrc.example.js": ".env-cmdrc, .env-cmdrc.*",
-    "*.ts": "${capture}.js, ${capture}.d.ts, ${capture}.mock.ts, ${capture}.spec.ts"
+    "*.ts": "${capture}.js, ${capture}.d.ts, ${capture}.mock.ts, ${capture}.spec.ts, ${capture}.test.ts"
   },
 
   "material-icon-theme.activeIconPack": "nest",
@@ -47,10 +47,15 @@
     "*.enum.ts": "nest-filter",
     "*.interface.ts": "nest-filter",
     "*.interceptor.ts": "nest-gateway",
+    "*.exception.ts": "nest-filter",
     "*.strategy.ts": "nest-decorator",
     "*.type.ts": "nest-filter",
     "*.schema.ts": "nest-pipe",
     "*.mock.ts": "test-ts"
+  },
+
+  "material-icon-theme.folders.associations": {
+    "e2e-specs": "test"
   },
 
   "[json]": {
@@ -63,11 +68,5 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
 
-  "typescript.inlayHints.enumMemberValues.enabled": false,
-  "typescript.inlayHints.functionLikeReturnTypes.enabled": false,
-  "typescript.inlayHints.parameterNames.enabled": "all",
-  "typescript.inlayHints.parameterTypes.enabled": false,
-  "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
-  "typescript.inlayHints.variableTypes.enabled": false,
   "typescript.tsdk": "node_modules/typescript/lib"
 }

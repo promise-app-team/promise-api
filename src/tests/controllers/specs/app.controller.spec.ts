@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { AppController } from '@/app/app.controller';
 import { TypedConfigService } from '@/config/env';
 
-describe('AppController', () => {
+describe(AppController, () => {
   let appController: AppController;
 
   beforeEach(async () => {
@@ -16,10 +16,10 @@ describe('AppController', () => {
   });
 
   test('should be defined', () => {
-    expect(appController).toBeDefined();
+    expect(appController).toBeInstanceOf(AppController);
   });
 
-  describe('root', () => {
+  describe(AppController.prototype.ping, () => {
     const result = {
       message: 'pong',
       version: 'version',
@@ -29,7 +29,7 @@ describe('AppController', () => {
       tz: 'tz',
     };
 
-    it('should return pong object', () => {
+    test('should return pong object', () => {
       expect(appController.ping()).toEqual(result);
     });
   });

@@ -218,6 +218,7 @@ $ npm run test
 ```bash
 $ npm run test auth.controller # auth.controller.spec.ts 파일을 테스트합니다.
 $ npm run test service         # 모든 *.service.spec.ts 파일을 테스트합니다.
+$ npm run test e2e             # 모든 *.e2e-spec.ts 파일을 테스트합니다.
 ```
 
 커버리지를 확인하기 위해 다음 명령어를 실행합니다.

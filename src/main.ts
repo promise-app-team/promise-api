@@ -16,14 +16,10 @@ import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
 import { TypedConfigService } from './config/env';
 import { LoggerService } from './customs/logger/logger.service';
 
-async function initializeApp<App extends NestExpressApplication>() {
-  const app = await NestFactory.create<App>(AppModule, {
-    bufferLogs: true,
-  });
-
+export function configure(app: NestExpressApplication) {
   app.useLogger(app.get(LoggerService));
-  const config = app.get(TypedConfigService);
   const { httpAdapter } = app.get(HttpAdapterHost);
+  const config = app.get(TypedConfigService);
 
   app
     .useStaticAssets(join(__dirname, 'assets'), { prefix: '/' })
@@ -38,7 +34,7 @@ async function initializeApp<App extends NestExpressApplication>() {
         },
       })
     )
-    .useGlobalFilters(new AllExceptionsFilter(httpAdapter))
+    .useGlobalFilters(new AllExceptionsFilter(httpAdapter, config))
     .useGlobalInterceptors(
       new ClassSerializerInterceptor(app.get(Reflector)),
       new StringifyDateInterceptor(),
@@ -49,6 +45,15 @@ async function initializeApp<App extends NestExpressApplication>() {
     .useBodyParser('json', { limit: '5mb' })
     .enableCors();
 
+  return app;
+}
+
+async function initializeApp<App extends NestExpressApplication>() {
+  const app = await NestFactory.create<App>(AppModule, {
+    bufferLogs: true,
+  }).then(configure);
+
+  const config = app.get(TypedConfigService);
   const openApiConfig = new DocumentBuilder()
     .setTitle('Promise API')
     .setVersion(`${config.get('version')}`)

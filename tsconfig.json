@@ -20,5 +20,6 @@
     "strict": true
   },
   "exclude": ["node_modules", "dist"],
-  "include": ["./src/**/*.ts", ".eslintrc.cjs"]
+  "include": ["./src/**/*.ts", ".eslintrc.cjs"],
+  "files": ["./src/types/global.d.ts"]
 }
