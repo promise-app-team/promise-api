@@ -1,10 +1,7 @@
 .*
 _*
-*.config.*
 Makefile
 Dockerfile
-!prisma/schema.prisma
-tsconfig.test.json
 docker-compose.yml
 serverless.yml
 node_modules

@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  https:
+    build:
+      context: https
+      args:
+        - PORT=${PORT}
+        - HTTPS=${HTTPS}
+    image: promise-api:https
+    container_name: promise-api.https
+    networks:
+      - https
+    ports:
+      - 80:80
+      - 443:443
+    restart: always
+
+networks:
+  https:
