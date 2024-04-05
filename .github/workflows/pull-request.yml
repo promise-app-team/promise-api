@@ -25,8 +25,6 @@ jobs:
       DB_HOST: ${{ vars.DB_HOST }}
       DB_PORT: ${{ vars.DB_PORT }}
       DB_NAME: ${{ vars.DB_NAME }}
-      DB_URL: ${{ env.DB_URL }}
-
       DB_URL: mysql://${{ vars.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ vars.DB_HOST }}:${{ vars.DB_PORT }}/${{ vars.DB_NAME }}_${{ vars.STAGE }}
     steps:
       - name: Checkout Repository
