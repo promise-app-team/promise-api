@@ -8,7 +8,12 @@ import { AppModule } from '@/app/app.module';
 import { InthashService } from '@/customs/inthash/inthash.service';
 import { configure } from '@/main';
 import { PromiseController } from '@/modules/promise/promise.controller';
-import { InputPromiseDTO, InputLocationDTO, PromiseDTO } from '@/modules/promise/promise.dto';
+import {
+  InputCreatePromiseDTO,
+  InputLocationDTO,
+  InputUpdatePromiseDTO,
+  PromiseDTO,
+} from '@/modules/promise/promise.dto';
 import { DestinationType, LocationShareType } from '@/prisma/prisma.entity';
 import { createHttpRequest } from '@/tests/controllers/utils/http-request';
 import { createTestFixture } from '@/tests/fixtures';
@@ -169,7 +174,7 @@ describe(PromiseController, () => {
         destination,
         promisedAt: tomorrow,
         themeIds: themes.map((theme) => theme.id),
-      } satisfies InputPromiseDTO;
+      } satisfies InputCreatePromiseDTO;
 
       const res = await http.request.createPromise().post.send(input).expect(201);
 
@@ -202,7 +207,7 @@ describe(PromiseController, () => {
         destination,
         promisedAt: yesterday,
         themeIds: themes.map((theme) => theme.id),
-      } satisfies InputPromiseDTO;
+      } satisfies InputCreatePromiseDTO;
 
       await http.request.createPromise().post.send(input).expect(400);
     });
@@ -225,7 +230,7 @@ describe(PromiseController, () => {
       },
       themeIds: [],
       promisedAt: tomorrow,
-    } satisfies InputPromiseDTO;
+    } satisfies InputUpdatePromiseDTO;
 
     test('should update a promise', async () => {
       const themes = await fixture.write.themes.output(3);

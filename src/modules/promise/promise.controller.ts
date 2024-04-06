@@ -14,8 +14,9 @@ import { AuthUser } from '@/modules/auth/auth.decorator';
 import { LocationDTO, PointDTO } from '@/modules/promise/location.dto';
 import {
   IdentifiableDTO,
-  InputPromiseDTO,
+  InputCreatePromiseDTO,
   InputLocationDTO,
+  InputUpdatePromiseDTO,
   PromiseDTO,
   PromiseIdentifiableDTO,
   PublicPromiseDTO,
@@ -75,7 +76,7 @@ export class PromiseController {
   @UseInterceptors(EncodePromiseID)
   async createPromise<User extends Pick<UserModel, 'id'>>(
     @AuthUser() user: User,
-    @Body() input: InputPromiseDTO
+    @Body() input: InputCreatePromiseDTO
   ): Promise<PublicPromiseDTO> {
     return this.promiseService.create(user.id, input).then((promise) => PublicPromiseDTO.from(promise));
   }
@@ -89,7 +90,7 @@ export class PromiseController {
   async updatePromise<User extends Pick<UserModel, 'id'>>(
     @AuthUser() user: User,
     @Param('pid', DecodePromisePID) id: number,
-    @Body() input: InputPromiseDTO
+    @Body() input: InputUpdatePromiseDTO
   ): Promise<PublicPromiseDTO> {
     return this.promiseService
       .update(id, user.id, input)

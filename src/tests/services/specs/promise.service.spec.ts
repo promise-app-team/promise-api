@@ -3,7 +3,7 @@ import { Prisma, Promise as PromiseModel, User as UserModel } from '@prisma/clie
 import { formatISO } from 'date-fns';
 import * as R from 'remeda';
 
-import { InputPromiseDTO, InputLocationDTO } from '@/modules/promise/promise.dto';
+import { InputCreatePromiseDTO, InputLocationDTO, InputUpdatePromiseDTO } from '@/modules/promise/promise.dto';
 import { PromiseStatus, PromiseUserRole } from '@/modules/promise/promise.enum';
 import { PromiseService, PromiseServiceError } from '@/modules/promise/promise.service';
 import { DestinationType } from '@/prisma/prisma.entity';
@@ -572,7 +572,7 @@ describe(PromiseService, () => {
         themeIds: [],
         destination: null,
         promisedAt: formatISO(tomorrow),
-      } satisfies InputPromiseDTO;
+      } satisfies InputCreatePromiseDTO;
       const result = await promiseService.create(host.id, promiseInput);
 
       expect(result).toMatchObject({
@@ -591,7 +591,7 @@ describe(PromiseService, () => {
         themeIds: themes.map((theme) => theme.id),
         destination: null,
         promisedAt: tomorrow,
-      } satisfies InputPromiseDTO;
+      } satisfies InputCreatePromiseDTO;
       const result = await promiseService.create(host.id, promiseInput);
 
       expect(result).toMatchObject({
@@ -617,7 +617,7 @@ describe(PromiseService, () => {
         themeIds: [],
         destination,
         promisedAt: tomorrow,
-      } satisfies InputPromiseDTO;
+      } satisfies InputCreatePromiseDTO;
       const result = await promiseService.create(host.id, promiseInput);
 
       expect(result).toMatchObject({
@@ -646,7 +646,7 @@ describe(PromiseService, () => {
         themeIds: [],
         destination: null,
         promisedAt: tomorrow,
-      } satisfies InputPromiseDTO;
+      } satisfies InputUpdatePromiseDTO;
 
       const result = await promiseService.update(promise.input.id, host.input.id, updatedPromiseInput);
 
@@ -670,7 +670,7 @@ describe(PromiseService, () => {
         themeIds: updatedThemes.map((theme) => theme.id),
         destination: null,
         promisedAt: tomorrow,
-      } satisfies InputPromiseDTO;
+      } satisfies InputUpdatePromiseDTO;
 
       const result = await promiseService.update(promise.input.id, host.input.id, updatedPromiseInput);
 
@@ -698,7 +698,7 @@ describe(PromiseService, () => {
         themeIds: [],
         destination: updatedDestination,
         promisedAt: tomorrow,
-      } satisfies InputPromiseDTO;
+      } satisfies InputUpdatePromiseDTO;
 
       const result = await promiseService.update(promise.input.id, host.input.id, updatedPromiseInput);
 
