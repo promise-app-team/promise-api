@@ -98,7 +98,7 @@ export class InputLocationDTO {
   longitude!: number | string | Prisma.Decimal;
 }
 
-export class InputPromiseDTO {
+export class InputCreatePromiseDTO {
   @IsString({ message: '약속 제목을 입력해주세요.' })
   @MaxLength(50, { message: '약속 제목은 최대 50자까지 입력 가능합니다.' })
   @IsNotEmpty({ message: '약속 제목을 입력해주세요.' })
@@ -144,6 +144,8 @@ export class InputPromiseDTO {
   @ApiProperty({ example: 5 })
   locationShareEndValue!: number;
 }
+
+export class InputUpdatePromiseDTO extends InputCreatePromiseDTO {}
 
 export class IdentifiableDTO {
   @ApiProperty({ example: 1 })

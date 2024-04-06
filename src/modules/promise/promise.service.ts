@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as R from 'remeda';
 
-import { InputPromiseDTO, InputLocationDTO } from './promise.dto';
+import { InputCreatePromiseDTO, InputLocationDTO, InputUpdatePromiseDTO } from './promise.dto';
 import { PromiseStatus, PromiseUserRole } from './promise.enum';
 
 import { PrismaClientError } from '@/prisma/error-handler';
@@ -82,7 +82,7 @@ export class PromiseService {
     return user;
   }
 
-  async create(userId: number, input: InputPromiseDTO): Promise<PromiseResult> {
+  async create(userId: number, input: InputCreatePromiseDTO): Promise<PromiseResult> {
     return this.prisma.promise.create({
       data: {
         ...R.pick(input, [
@@ -123,7 +123,7 @@ export class PromiseService {
    *
    * @throws {PromiseServiceError.NotFoundPromise}
    */
-  async update(id: number, hostId: number, input: InputPromiseDTO): Promise<PromiseResult> {
+  async update(id: number, hostId: number, input: InputUpdatePromiseDTO): Promise<PromiseResult> {
     const promise = await this.prisma.promise.findUnique({
       where: { id },
       select: { id: true, hostId: true, destinationId: true },
