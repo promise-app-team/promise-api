@@ -67,55 +67,14 @@ describe(AuthController, () => {
   });
 
   describe(http.request.refreshTokens, () => {
-    beforeEach(async () => {
-      const authUser = await fixture.write.user.output();
-      http.request.authorize(authUser, { jwt });
-    });
-
     test('should return new access token and refresh token', async () => {
-      const refreshToken = jwt.sign({ id: http.request.auth.user.id }, { expiresIn: '1d' });
-      const res2 = await http.request.refreshTokens().post.send({ refreshToken }).expect(201);
+      const user = await fixture.write.user.output();
+      const res = await http.request.login().post.send(user).expect(201);
+      const res2 = await http.request.refreshTokens().post.send({ refreshToken: res.body.refreshToken }).expect(201);
 
       expect(res2.body).toEqual({
         accessToken: expect.any(String),
         refreshToken: expect.any(String),
-      });
-    });
-
-    test('should throw 401 error when token is not provided', async () => {
-      http.request.unauthorize();
-      const res = await http.request.refreshTokens().post.send({ refreshToken: 'any-token' }).expect(401);
-
-      expect(res.body).toMatchObject({
-        statusCode: 401,
-        error: 'Unauthorized',
-      });
-    });
-
-    test('should throw 401 error when user is not found from auth token', async () => {
-      const authToken = jwt.sign({ id: 0 }, { expiresIn: '1h' });
-      const res = await http.request
-        .refreshTokens()
-        .post.auth(authToken, { type: 'bearer' })
-        .send({ refreshToken: 'any-token' })
-        .expect(401);
-
-      expect(res.body).toMatchObject({
-        statusCode: 401,
-        error: 'Unauthorized',
-      });
-    });
-
-    test('should throw 401 error when auth token is invalid', async () => {
-      const res = await http.request
-        .refreshTokens()
-        .post.auth('invalid-auth-token', { type: 'bearer' })
-        .send({ refreshToken: 'any-token' })
-        .expect(401);
-
-      expect(res.body).toMatchObject({
-        statusCode: 401,
-        error: 'Unauthorized',
       });
     });
 

@@ -23,7 +23,7 @@ export class AuthController {
     return this.authService.authenticate(user).catch((error) => HttpException.throw(error));
   }
 
-  @Post('refresh', { auth: true, description: '인증 토큰을 갱신합니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
+  @Post('refresh', { description: '인증 토큰을 갱신합니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
   async refreshTokens(@Body() { refreshToken }: InputRefreshTokenDTO): Promise<AuthTokenDTO> {
     return this.authService.refresh(refreshToken).catch((error) => {
       switch (error) {
