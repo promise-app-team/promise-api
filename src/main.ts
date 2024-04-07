@@ -98,9 +98,10 @@ if (process.env.SERVERLESS) {
 
 function adaptWebSocketEvent(event: APIGatewayEvent) {
   const { requestContext } = event;
-  const { eventType } = requestContext;
-  event.path = eventType ? `/event/${eventType.toLowerCase()}` : '/event/message';
-  event.httpMethod = 'GET';
+  const { connectionId, httpMethod, eventType } = requestContext;
+  event.path = `/event/${(eventType ?? 'message').toLowerCase()}`;
+  event.multiValueQueryStringParameters = { connectionId: [connectionId ?? ''] };
+  event.httpMethod ??= httpMethod ?? 'GET';
 }
 
 export const handler: Handler = async (event, context, callback) => {
