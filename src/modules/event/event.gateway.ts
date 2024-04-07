@@ -8,6 +8,9 @@ import {
   OnGatewayDisconnect,
   WebSocketServer,
   SubscribeMessage,
+  ConnectedSocket,
+  MessageBody,
+  WsResponse,
 } from '@nestjs/websockets';
 import { v4 as uuid } from 'uuid';
 import { WebSocket } from 'ws';
@@ -30,7 +33,7 @@ export class EventGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
     this.logger.log('WebSocket server initialized');
   }
 
-  handleConnection(client: Client, incoming: IncomingMessage) {
+  handleConnection(@ConnectedSocket() client: Client, incoming: IncomingMessage) {
     const params = new URLSearchParams(incoming.url?.replace('/?', ''));
     client.id = uuid();
     client.to = params.get('to') || 'self';
@@ -41,14 +44,14 @@ export class EventGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
     client.send(`Successfully Connected! Client ID: ${client['id']}`);
   }
 
-  handleDisconnect(client: Client) {
+  handleDisconnect(@ConnectedSocket() client: Client) {
     this.clients = this.clients.filter((c) => c !== client);
     this.logger.log(`Client disconnected: ${client['id']}`);
     this.logger.log(`Total clients: ${this.clients.length}`);
   }
 
   @SubscribeMessage('ping')
-  handlePing(client: Client, data: any) {
+  handlePing(client: Client, data: any): WsResponse<any> {
     if (client.to === 'broadcast') {
       const toClients = this.clients.filter((c) => c.id !== client.id);
       toClients.forEach((c) => c.send(this.#payload(client, data)));
@@ -62,6 +65,7 @@ export class EventGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
         client.send(this.#payload(client, `Client with ID ${client.to} not found`));
       }
     }
+    return { event: 'pong', data };
   }
 
   #payload(client: Client, data?: any) {

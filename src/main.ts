@@ -6,7 +6,7 @@ import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { Handler } from 'aws-lambda';
+import { APIGatewayEvent, Handler } from 'aws-lambda';
 
 import { AppModule } from './app/app.module';
 import { HttpException } from './common/exceptions/http.exception';
@@ -96,7 +96,15 @@ if (process.env.SERVERLESS) {
   startLocalServer();
 }
 
+function adaptWebSocketEvent(event: APIGatewayEvent) {
+  const { requestContext } = event;
+  const { eventType } = requestContext;
+  event.path = eventType ? `/event/${eventType.toLowerCase()}` : '/event/message';
+  event.httpMethod = 'GET';
+}
+
 export const handler: Handler = async (event, context, callback) => {
   context.callbackWaitsForEmptyEventLoop = false;
+  if (event.requestContext?.eventType) adaptWebSocketEvent(event);
   return (await bootstrap)(event, context, callback);
 };
