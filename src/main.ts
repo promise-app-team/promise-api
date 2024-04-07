@@ -85,7 +85,7 @@ async function startLocalServer() {
 async function startServerless() {
   const app = await initializeApp().then((app) => app.init());
   Logger.log(`🚀 Serverless app initialized`, 'Bootstrap');
-  return serverlessExpress({ app: app.getHttpAdapter().getInstance() });
+  return serverlessExpress({ app: app.getHttpAdapter().getInstance(), logSettings: { level: 'debug' } });
 }
 
 let bootstrap: Promise<Handler>;
