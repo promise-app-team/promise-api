@@ -5,7 +5,9 @@ on:
     branches:
       # - main
       - develop
+      - deploy/*
     paths:
+      - 'serverless.yml'
       - 'package.json'
       - 'src/**'
 
@@ -14,9 +16,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-    environment:
-      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+    environment: development
     env:
       TZ: ${{ vars.TZ }}
       STAGE: ${{ vars.STAGE }}
@@ -68,6 +68,12 @@ jobs:
           cache-to: type=gha,mode=max
           provenance: false
           build-args: NOW=${{ env.NOW }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: 'npm'
 
       - name: Install Serverless Framework and Plugins
         run: |
