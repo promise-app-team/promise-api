@@ -784,7 +784,8 @@ describe(PromiseService, () => {
 
     test('should throw an error if the user is not attending the promise', async () => {
       const { promise } = await fixture.write.promise.output();
-      await expect(promiseService.updateStartLocation(promise.id, -1, {} as any)).rejects.toEqual(
+      const input = fixture.input.location();
+      await expect(promiseService.updateStartLocation(promise.id, -1, input)).rejects.toEqual(
         PromiseServiceError.NotFoundPromise
       );
     });

@@ -438,10 +438,7 @@ describe(PromiseController, () => {
 
       const pid = hasher.encode(promise.id);
       const res = await http.request.updateStartLocation({ pid }).put.send(input);
-      expect(res.body).toEqual({
-        ...input,
-        id: expect.toBeNumber(),
-      });
+      expect(res.body).toEqual({ ...input, id: expect.toBeNumber() });
     });
 
     test('should create start location if not exists', async () => {
@@ -450,12 +447,11 @@ describe(PromiseController, () => {
       });
 
       const pid = hasher.encode(asset.promise.id);
-      const res = await http.request.updateStartLocation({ pid }).put.send(input).expect(200);
+      const res1 = await http.request.updateStartLocation({ pid }).put.send(input).expect(200);
+      expect(res1.body).toEqual({ ...input, id: expect.toBeNumber() });
 
-      expect(res.body).toEqual({
-        ...input,
-        id: expect.toBeNumber(),
-      });
+      const res2 = await http.request.getStartLocation({ pid }).get.expect(200);
+      expect(res2.body).toEqual({ ...input, id: expect.toBeNumber() });
     });
 
     test('should throw an error if promise not found', async () => {
