@@ -220,16 +220,20 @@ export class PromiseService {
     try {
       const promise = await this.findOne({ id, role: PromiseUserRole.HOST, status: PromiseStatus.AVAILABLE });
 
-      const promiseUser = await this.prisma.promiseUser.findFirstOrThrow({
-        where: { userId: attendeeId, promiseId: promise.id },
-        select: { startLocationId: true },
+      const promiseUser = await this.prisma.promiseUser.update({
+        where: { identifier: { userId: attendeeId, promiseId: promise.id } },
+        data: {
+          startLocation: {
+            upsert: {
+              create: input,
+              update: input,
+            },
+          },
+        },
+        select: { startLocation: true },
       });
 
-      return this.prisma.location.upsert({
-        where: { id: promiseUser.startLocationId ?? 0 },
-        create: input,
-        update: input,
-      });
+      return promiseUser.startLocation!;
     } catch (error) {
       switch (PrismaClientError.from(error)?.code) {
         case 'P2025':
