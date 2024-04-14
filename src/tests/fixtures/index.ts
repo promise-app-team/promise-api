@@ -37,8 +37,11 @@ type PromiseCompleteOptions = {
 
 type IsNotExist<T> = Or<IsFalse<T>, IsUnknown<T>, IsUndefined<T>>;
 type RequiredStrictResult<T, U> = T extends U ? Result<U, T> : Result<U>;
-type OptionalStrictResult<T, U> = IsNotExist<T> extends true ? null : T extends U ? Result<U, T> : Result<U>;
+type OptionalStrictResult<T, U> = IsNotExist<T> extends true ? never : T extends U ? Result<U, T> : Result<U>;
 type ArrayStrictResult<T, U> = T extends U[] ? Result<U, T[number]>[] : Result<U, U>[];
+type Normalize<T extends Record<string, any>> = {
+  [K in keyof T as T[K] extends never ? never : K]: T[K];
+};
 
 interface PromiseComplete<Options extends PromiseCompleteOptions> {
   host: RequiredStrictResult<Options['host'], UserModel>;
@@ -59,7 +62,7 @@ type ExtractResultOutput<T> =
       ? { [K in keyof T]: ExtractResultOutput<T[K]> }
       : T;
 
-type PromiseCompleteOutput<Options extends PromiseCompleteOptions> = PromiseComplete<Options>;
+type PromiseCompleteOutput<Options extends PromiseCompleteOptions> = Normalize<PromiseComplete<Options>>;
 
 interface TestFixtureOptions {
   logging?: boolean;
