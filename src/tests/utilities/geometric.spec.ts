@@ -1,4 +1,4 @@
-import { findGeometricMedian } from './geometric';
+import { findGeometricMedian } from '../../utils/geometric';
 
 describe(findGeometricMedian, () => {
   const randomLatitude = () => Math.random() * 180 - 90;

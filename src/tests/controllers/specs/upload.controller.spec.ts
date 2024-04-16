@@ -5,12 +5,11 @@ import { Test } from '@nestjs/testing';
 import { FileUploadController } from '@/modules/upload/upload.controller';
 import { FileUploadService } from '@/modules/upload/upload.service';
 import { UserService } from '@/modules/user/user.service';
-import { mock } from '@/tests/utils/mock';
 
 describe(FileUploadController, () => {
   let uploadController: FileUploadController;
 
-  const mockFileUploadService = mock<FileUploadService>({
+  const mockFileUploadService = {
     async upload(file: Express.Multer.File): Promise<string> {
       switch (file.originalname) {
         case 'valid.png':
@@ -20,7 +19,7 @@ describe(FileUploadController, () => {
           throw new Error();
       }
     },
-  });
+  };
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({

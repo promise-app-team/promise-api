@@ -1,4 +1,4 @@
-import { random } from './random';
+import { random } from '../../utils/random';
 
 describe(random, () => {
   test('should return random boolean', () => {

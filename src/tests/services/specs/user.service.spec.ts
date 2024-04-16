@@ -5,7 +5,7 @@ import { UserService, UserServiceError } from '@/modules/user/user.service';
 import { Provider } from '@/prisma/prisma.entity';
 import { PrismaService } from '@/prisma/prisma.service';
 import { createTestFixture } from '@/tests/fixtures';
-import { createPrismaClient } from '@/tests/prisma';
+import { createPrismaClient } from '@/tests/setups/prisma';
 
 describe(UserService, () => {
   let userService: UserService;

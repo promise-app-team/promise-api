@@ -17,7 +17,7 @@ import {
 import { DestinationType, LocationShareType } from '@/prisma/prisma.entity';
 import { createHttpRequest } from '@/tests/controllers/utils/http-request';
 import { createTestFixture } from '@/tests/fixtures';
-import { createPrismaClient } from '@/tests/prisma';
+import { createPrismaClient } from '@/tests/setups/prisma';
 
 describe(PromiseController, () => {
   const prisma = createPrismaClient({ logging: false });

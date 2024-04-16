@@ -9,7 +9,7 @@ import { PromiseService, PromiseServiceError } from '@/modules/promise/promise.s
 import { DestinationType } from '@/prisma/prisma.entity';
 import { PrismaService } from '@/prisma/prisma.service';
 import { createTestFixture } from '@/tests/fixtures';
-import { createPrismaClient } from '@/tests/prisma';
+import { createPrismaClient } from '@/tests/setups/prisma';
 
 describe(PromiseService, () => {
   let promiseService: PromiseService;

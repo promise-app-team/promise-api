@@ -77,7 +77,7 @@ module.exports = {
   overrides: [
     {
       env: { jest: true },
-      files: ['**/*.test.ts', '**/*.spec.ts', '**/*.e2e-spec.ts'],
+      files: ['**/*.spec.ts', '**/*.e2e-spec.ts'],
       extends: ['plugin:jest/style', 'plugin:jest/recommended', 'plugin:jest-extended/all'],
       plugins: ['jest', 'jest-extended'],
       rules: {
