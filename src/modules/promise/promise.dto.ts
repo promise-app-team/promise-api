@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional, PickType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Prisma } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
@@ -24,8 +24,10 @@ import { ApplyDTO } from '@/common/mixins/dto.mixin';
 import { LocationDTO } from '@/modules/promise/location.dto';
 import { DestinationType, LocationShareType, PromiseEntity, UserEntity } from '@/prisma/prisma.entity';
 
-export class HostDTO extends PickType(UserEntity, ['id', 'username', 'profileUrl']) {}
-export class AttendeeDTO extends PickType(UserEntity, ['id', 'username', 'profileUrl']) {
+export class HostDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl']) {}
+export class AttendeeDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl'], (obj) => ({
+  hasStartLocation: Boolean(obj.hasStartLocation),
+})) {
   hasStartLocation!: boolean;
 }
 
@@ -36,6 +38,7 @@ export class PromiseDTO extends ApplyDTO(
     'pid',
     'title',
     'destinationType',
+    'isLatestDestination',
     'locationShareStartType',
     'locationShareStartValue',
     'locationShareEndType',
@@ -45,21 +48,14 @@ export class PromiseDTO extends ApplyDTO(
     'createdAt',
   ],
   (obj) => ({
-    host: {
-      id: obj.host.id,
-      username: obj.host.username,
-      profileUrl: obj.host.profileUrl,
-    },
+    host: HostDTO.from(obj.host),
     themes: map(obj.themes, ({ theme }) => theme.name),
     destination: obj.destination ? LocationDTO.from(obj.destination) : null,
     attendees: pipe(
       obj.users,
       filter(({ user }) => user.id !== obj.host.id),
       map(({ user, startLocationId }) => ({
-        id: user.id,
-        username: user.username,
-        profileUrl: user.profileUrl,
-        hasStartLocation: typeof startLocationId === 'number',
+        ...AttendeeDTO.from({ ...user, hasStartLocation: typeof startLocationId === 'number' }),
       }))
     ),
   })
