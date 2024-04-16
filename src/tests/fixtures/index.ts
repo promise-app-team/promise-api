@@ -32,6 +32,7 @@ type PromiseCompleteOptions = {
   attendees?: ArrayOption<UserModel, PrismaUser>;
   startLocation?: OptionalOption<LocationModel, PrismaLocation>;
   startLocations?: ArrayOption<LocationModel, PrismaLocation>;
+  hostStartLocation?: OptionalOption<LocationModel, PrismaLocation>;
   partial?: Partial<Omit<PromiseModel, 'pid'>>;
 };
 
@@ -48,10 +49,11 @@ interface PromiseComplete<Options extends PromiseCompleteOptions> {
   destination: OptionalStrictResult<Options['destination'], LocationModel>;
   theme: OptionalStrictResult<Options['theme'], ThemeModel>;
   themes: ArrayStrictResult<Options['themes'], ThemeModel>;
-  startLocation: OptionalStrictResult<Options['startLocation'], LocationModel>;
-  startLocations: ArrayStrictResult<Options['startLocations'], LocationModel>;
   attendee: OptionalStrictResult<Options['attendee'], UserModel>;
   attendees: ArrayStrictResult<Options['attendees'], UserModel>;
+  startLocation: OptionalStrictResult<Options['startLocation'], LocationModel>;
+  startLocations: ArrayStrictResult<Options['startLocations'], LocationModel>;
+  hostStartLocation: OptionalStrictResult<Options['hostStartLocation'], LocationModel>;
   promise: Result<Omit<PromiseModel, 'pid'>, PrismaPromise>;
 }
 
@@ -192,6 +194,15 @@ export function createTestFixture(
       R.conditional.defaultCase(() => [])
     )) as any;
 
+    result.hostStartLocation = await R.conditional(
+      options.hostStartLocation,
+      [R.isNullish, () => null],
+      [isResult, (result) => result as any],
+      [R.isPlainObject, (input) => new Result(input)],
+      [R.isTruthy, () => writeLocation()],
+      R.conditional.defaultCase(() => null)
+    );
+
     result.theme = await R.conditional(
       options.theme,
       [R.isNullish, () => null],
@@ -218,18 +229,19 @@ export function createTestFixture(
       R.conditional.defaultCase(() => [])
     )) as any;
 
-    const { host, destination, startLocation, attendee, attendees, startLocations, theme, themes } = result;
+    const { host, destination, attendee, attendees, startLocation, startLocations, hostStartLocation, theme, themes } =
+      result;
     startLocations.length = attendees.length;
 
-    const users = [host, attendee, ...attendees] as (Result<UserModel, PrismaUser> | null)[];
-    const locations = [null, startLocation, ...startLocations] as (Result<LocationModel, PrismaLocation> | null)[];
+    const users = [host, attendee, ...attendees];
+    const locations = [hostStartLocation, startLocation, ...startLocations];
 
     const attendeeIds = R.pipe(
       users,
       R.zip.strict(locations),
       R.filter(([attendee]) => R.isTruthy(attendee)),
       R.map(([attendee, startLocation]) => ({
-        userId: attendee!.output.id,
+        userId: attendee.output.id,
         startLocationId: startLocation?.output.id ?? null,
       }))
     );

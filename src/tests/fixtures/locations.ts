@@ -10,9 +10,13 @@ export function createLocationBuilder(initialId: number) {
     city: `city ${id}`,
     district: `district ${id}`,
     address: `address ${id}`,
-    latitude: new Prisma.Decimal(37.123456),
-    longitude: new Prisma.Decimal(127.123456),
+    latitude: randomDecimal(-90, 90),
+    longitude: randomDecimal(-180, 180),
     createdAt: new Date(),
     updatedAt: new Date(),
   }));
+}
+
+function randomDecimal(min: number, max: number) {
+  return new Prisma.Decimal(Math.random() * (max - min) + min);
 }
