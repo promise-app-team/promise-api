@@ -11,6 +11,7 @@ export function createPromiseBuilder(initialId: number) {
     hostId: 0,
     destinationType: DestinationType.STATIC,
     destinationId: null,
+    isLatestDestination: false,
     locationShareStartType: LocationShareType.TIME,
     locationShareStartValue: id,
     locationShareEndType: LocationShareType.TIME,

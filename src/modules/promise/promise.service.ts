@@ -157,6 +157,7 @@ export class PromiseService {
           'locationShareEndValue',
           'promisedAt',
         ]),
+        isLatestDestination: !!input.destination,
         themes: {
           deleteMany: {
             themeId: {
@@ -218,11 +219,23 @@ export class PromiseService {
    */
   async updateStartLocation(id: number, attendeeId: number, input: InputLocationDTO): Promise<LocationModel> {
     try {
-      const promise = await this.findOne({ id, role: PromiseUserRole.HOST, status: PromiseStatus.AVAILABLE });
+      const promise = await this.prisma.promise.findUniqueOrThrow({
+        where: this.#makeUniqueFilter({ id, status: PromiseStatus.AVAILABLE }),
+      });
+
+      const { startLocation } = await this.prisma.promiseUser.findUniqueOrThrow({
+        where: { identifier: { userId: attendeeId, promiseId: promise.id } },
+        select: { startLocation: true },
+      });
 
       const promiseUser = await this.prisma.promiseUser.update({
         where: { identifier: { userId: attendeeId, promiseId: promise.id } },
         data: {
+          promise: {
+            update: {
+              isLatestDestination: promise.isLatestDestination && this.#isEqualLocation(startLocation, input),
+            },
+          },
           startLocation: {
             upsert: {
               create: input,
@@ -394,5 +407,25 @@ export class PromiseService {
     }
 
     return qb.build();
+  }
+
+  #isEqualLocation<Location extends InputLocationDTO>(loc1: Location | null, loc2: Location | null): boolean {
+    if (!loc1 || !loc2) return false;
+
+    const [l1, l2] = R.map(
+      [loc1, loc2],
+      R.piped(
+        (loc) => R.set(loc, 'latitude', new Prisma.Decimal(loc.latitude).toFixed(6)),
+        (loc) => R.set(loc, 'longitude', new Prisma.Decimal(loc.longitude).toFixed(6))
+      )
+    );
+
+    return (
+      l1.city === l2.city &&
+      l1.district === l2.district &&
+      l1.address === l2.address &&
+      l1.latitude === l2.latitude &&
+      l1.longitude === l2.longitude
+    );
   }
 }

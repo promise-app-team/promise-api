@@ -13,13 +13,13 @@
     "esModuleInterop": true,
     "sourceMap": false,
     "outDir": "dist",
-    "types": ["jest", "@types/multer"],
+    "types": ["@types/multer"],
+    "noImplicitAny": true,
     "strictPropertyInitialization": false,
     "incremental": true,
     "skipLibCheck": true,
     "strict": true
   },
   "exclude": ["node_modules", "dist"],
-  "include": ["./src/**/*.ts", ".eslintrc.cjs"],
-  "files": ["./src/types/global.d.ts"]
+  "include": ["./src/**/*.ts", ".eslintrc.cjs"]
 }

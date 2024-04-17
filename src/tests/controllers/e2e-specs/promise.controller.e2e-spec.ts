@@ -8,16 +8,11 @@ import { AppModule } from '@/app/app.module';
 import { InthashService } from '@/customs/inthash/inthash.service';
 import { configure } from '@/main';
 import { PromiseController } from '@/modules/promise/promise.controller';
-import {
-  InputCreatePromiseDTO,
-  InputLocationDTO,
-  InputUpdatePromiseDTO,
-  PromiseDTO,
-} from '@/modules/promise/promise.dto';
+import { InputCreatePromiseDTO, InputLocationDTO, InputUpdatePromiseDTO } from '@/modules/promise/promise.dto';
 import { DestinationType, LocationShareType } from '@/prisma/prisma.entity';
 import { createHttpRequest } from '@/tests/controllers/utils/http-request';
 import { createTestFixture } from '@/tests/fixtures';
-import { createPrismaClient } from '@/tests/prisma';
+import { createPrismaClient } from '@/tests/setups/prisma';
 
 describe(PromiseController, () => {
   const prisma = createPrismaClient({ logging: false });
@@ -73,6 +68,7 @@ describe(PromiseController, () => {
       pid: expect.toBeString(),
       title: promise.title,
       destinationType: promise.destinationType,
+      isLatestDestination: promise.isLatestDestination,
       locationShareStartType: promise.locationShareStartType,
       locationShareStartValue: promise.locationShareStartValue,
       locationShareEndType: promise.locationShareEndType,
@@ -92,8 +88,8 @@ describe(PromiseController, () => {
             city: destination.city,
             district: destination.district,
             address: destination.address,
-            latitude: parseFloat(destination.latitude),
-            longitude: parseFloat(destination.longitude),
+            latitude: expect.toBeDecimalLike(destination.latitude),
+            longitude: expect.toBeDecimalLike(destination.longitude),
           }
         : null,
       attendees: expect.toIncludeSameMembers(
@@ -104,7 +100,8 @@ describe(PromiseController, () => {
           hasStartLocation: i === 0,
         }))
       ),
-    } satisfies Omit<PromiseDTO, 'id'>;
+    };
+    // satisfies Omit<PromiseDTO, 'id'>;
   }
 
   describe(http.request.getMyPromises, () => {
@@ -253,7 +250,40 @@ describe(PromiseController, () => {
 
       Object.assign(asset.promise, input);
       Object.assign(asset.destination, input.destination);
+      asset.promise.isLatestDestination = true;
       expect(res.body).toEqual(toPromiseDTO({ ...asset, themes }));
+    });
+
+    test('should update is_latest_destination if destination is updated', async () => {
+      const asset = await fixture.write.promise.output({
+        host: http.request.auth.user,
+        attendees: 3,
+        startLocations: 3,
+        partial: {
+          destinationType: DestinationType.DYNAMIC,
+          isLatestDestination: false,
+        },
+      });
+
+      const pid = hasher.encode(asset.promise.id);
+
+      {
+        const res = await http.request
+          .updatePromise({ pid })
+          .put.send({ ...input })
+          .expect(200);
+
+        expect(res.body.isLatestDestination).toBeTrue();
+      }
+
+      {
+        const res = await http.request
+          .updatePromise({ pid })
+          .put.send({ ...input, destination: null })
+          .expect(200);
+
+        expect(res.body.isLatestDestination).toBeFalse();
+      }
     });
 
     test('should throw an error if promise not found', async () => {
@@ -447,11 +477,116 @@ describe(PromiseController, () => {
       });
 
       const pid = hasher.encode(asset.promise.id);
-      const res1 = await http.request.updateStartLocation({ pid }).put.send(input).expect(200);
-      expect(res1.body).toEqual({ ...input, id: expect.toBeNumber() });
 
-      const res2 = await http.request.getStartLocation({ pid }).get.expect(200);
-      expect(res2.body).toEqual({ ...input, id: expect.toBeNumber() });
+      {
+        const res = await http.request
+          .updateStartLocation({ pid })
+          .put.send({ ...input })
+          .expect(200);
+
+        expect(res.body).toEqual({ ...input, id: expect.toBeNumber() });
+      }
+
+      {
+        const res = await http.request.getStartLocation({ pid }).get.expect(200);
+        expect(res.body).toEqual({ ...input, id: expect.toBeNumber() });
+      }
+    });
+
+    test('should update is_latest_destination if start location is created', async () => {
+      const asset = await fixture.write.promise.output({
+        host: http.request.auth.user,
+        destination: true,
+        attendees: 2,
+        startLocations: 2,
+        partial: {
+          destinationType: DestinationType.DYNAMIC,
+          isLatestDestination: true,
+        },
+      });
+
+      expect(asset.promise.isLatestDestination).toBeTrue();
+
+      const pid = hasher.encode(asset.promise.id);
+
+      await http.request.getStartLocation({ pid }).get.expect(404);
+      await http.request.updateStartLocation({ pid }).put.send(input).expect(200);
+      const res = await http.request.getPromise({ pid }).get.expect(200);
+      expect(res.body.isLatestDestination).toBeFalse();
+    });
+
+    test('should update is_latest_destination if start location is updated', async () => {
+      const asset = await fixture.write.promise.output({
+        host: http.request.auth.user,
+        destination: true,
+        hostStartLocation: true,
+        attendees: 2,
+        startLocations: 2,
+        partial: {
+          destinationType: DestinationType.DYNAMIC,
+          isLatestDestination: true,
+        },
+      });
+
+      expect(asset.promise.isLatestDestination).toBeTrue();
+
+      const pid = hasher.encode(asset.promise.id);
+
+      await http.request.getStartLocation({ pid }).get.expect(200);
+      await http.request.updateStartLocation({ pid }).put.send(input).expect(200);
+      const res = await http.request.getPromise({ pid }).get.expect(200);
+      expect(res.body.isLatestDestination).toBeFalse();
+    });
+
+    test('should not update is_latest_destination if destination not exists', async () => {
+      const asset = await fixture.write.promise.output({
+        host: http.request.auth.user,
+        destination: false,
+        attendees: 2,
+        startLocations: 1,
+        hostStartLocation: false,
+        partial: {
+          destinationType: DestinationType.DYNAMIC,
+          isLatestDestination: false,
+        },
+      });
+
+      expect(asset.promise.isLatestDestination).toBeFalse();
+
+      const pid = hasher.encode(asset.promise.id);
+
+      await http.request.getStartLocation({ pid }).get.expect(404);
+      await http.request.updateStartLocation({ pid }).put.send(input).expect(200);
+      const res = await http.request.getPromise({ pid }).get.expect(200);
+      expect(res.body.isLatestDestination).toBeFalse();
+    });
+
+    test('should not update is_latest_destination if start location is updated', async () => {
+      const attendees = await Promise.all([
+        http.request.auth.user,
+        fixture.write.user.output(),
+        fixture.write.user.output(),
+      ]);
+
+      const asset = await fixture.write.promise.output({
+        destination: true,
+        attendees,
+        startLocations: attendees.length,
+        partial: {
+          destinationType: DestinationType.DYNAMIC,
+          isLatestDestination: true,
+        },
+      });
+
+      expect(asset.promise.isLatestDestination).toBeTrue();
+
+      const pid = hasher.encode(asset.promise.id);
+
+      const res = await http.request.getStartLocation({ pid }).get.expect(200);
+      await http.request.updateStartLocation({ pid }).put.send(res.body).expect(200);
+
+      const updatedRes = await http.request.getPromise({ pid }).get.expect(200);
+      expect(updatedRes.body.isLatestDestination).toBeTrue();
     });
 
     test('should throw an error if promise not found', async () => {

@@ -8,8 +8,8 @@ import { AuthService } from '@/modules/auth/auth.service';
 import { UserService } from '@/modules/user/user.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { createTestFixture } from '@/tests/fixtures';
-import { createPrismaClient } from '@/tests/prisma';
 import { mockJwtService } from '@/tests/services/mocks/jwt.service.mock';
+import { createPrismaClient } from '@/tests/setups/prisma';
 
 describe(AuthController, () => {
   let authController: AuthController;

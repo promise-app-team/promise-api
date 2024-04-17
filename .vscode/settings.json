@@ -37,7 +37,7 @@
     "package.json": "package-lock.json, yarn.lock, bun.lockb",
     ".env.example": ".env, .env.*",
     ".env-cmdrc.example.js": ".env-cmdrc, .env-cmdrc.*",
-    "*.ts": "${capture}.js, ${capture}.d.ts, ${capture}.mock.ts, ${capture}.spec.ts, ${capture}.test.ts"
+    "*.ts": "${capture}.js, ${capture}.d.ts, ${capture}.mock.ts, ${capture}.spec.ts"
   },
 
   "material-icon-theme.activeIconPack": "nest",

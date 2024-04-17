@@ -17,7 +17,7 @@ import { PromiseService } from '@/modules/promise/promise.service';
 import { UserService } from '@/modules/user/user.service';
 import { PrismaService } from '@/prisma/prisma.service';
 import { createTestFixture } from '@/tests/fixtures';
-import { createPrismaClient } from '@/tests/prisma';
+import { createPrismaClient } from '@/tests/setups/prisma';
 
 describe(PromiseController, () => {
   let promiseController: PromiseController;
@@ -363,6 +363,7 @@ describe(PromiseController, () => {
           latitude: parseFloat(input.destination.latitude.toString()),
           longitude: parseFloat(input.destination.longitude.toString()),
         },
+        isLatestDestination: true,
         themes: updatedThemes.map((theme) => theme.name),
       });
     });

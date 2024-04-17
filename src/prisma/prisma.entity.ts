@@ -140,6 +140,8 @@ export class PromiseEntity implements PromisePayload {
   destinationId!: number | null;
   destination!: LocationEntity | null;
 
+  isLatestDestination: boolean;
+
   locationShareStartType!: LocationShareType;
   locationShareStartValue!: number;
   locationShareEndType!: LocationShareType;
@@ -168,6 +170,7 @@ export class PromiseModel extends PickType(PromiseEntity, [
   'title',
   'hostId',
   'destinationType',
+  'isLatestDestination',
   'destinationId',
   'locationShareStartType',
   'locationShareStartValue',

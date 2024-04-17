@@ -1,5 +1,5 @@
 import { Test } from '@nestjs/testing';
-import { Prisma, Promise as PromiseModel, User as UserModel } from '@prisma/client';
+import { Promise as PromiseModel, User as UserModel } from '@prisma/client';
 import { formatISO } from 'date-fns';
 import * as R from 'remeda';
 
@@ -9,7 +9,7 @@ import { PromiseService, PromiseServiceError } from '@/modules/promise/promise.s
 import { DestinationType } from '@/prisma/prisma.entity';
 import { PrismaService } from '@/prisma/prisma.service';
 import { createTestFixture } from '@/tests/fixtures';
-import { createPrismaClient } from '@/tests/prisma';
+import { createPrismaClient } from '@/tests/setups/prisma';
 
 describe(PromiseService, () => {
   let promiseService: PromiseService;
@@ -624,8 +624,8 @@ describe(PromiseService, () => {
         ...R.omit(promiseInput, ['id', 'themeIds', 'destination']),
         destination: {
           ...destination,
-          latitude: new Prisma.Decimal(destination.latitude),
-          longitude: new Prisma.Decimal(destination.longitude),
+          latitude: expect.toBeDecimalLike(destination.latitude),
+          longitude: expect.toBeDecimalLike(destination.longitude),
         },
         destinationId: expect.any(Number),
         promisedAt: new Date(promiseInput.promisedAt),
@@ -706,11 +706,12 @@ describe(PromiseService, () => {
         ...R.omit(updatedPromiseInput, ['themeIds', 'destination']),
         destination: {
           ...updatedDestination,
-          latitude: new Prisma.Decimal(updatedDestination.latitude),
-          longitude: new Prisma.Decimal(updatedDestination.longitude),
+          latitude: expect.toBeDecimalLike(updatedDestination.latitude),
+          longitude: expect.toBeDecimalLike(updatedDestination.longitude),
           updatedAt: expect.any(Date),
         },
         destinationId: expect.any(Number),
+        isLatestDestination: true,
         promisedAt: new Date(updatedPromiseInput.promisedAt),
         updatedAt: expect.any(Date),
       });
@@ -729,7 +730,12 @@ describe(PromiseService, () => {
   });
 
   describe(PromiseService.prototype.getStartLocation, () => {
-    test('should return a start location by the promise id', async () => {
+    test('should return a start location by the promise id (host)', async () => {
+      const { promise, host, hostStartLocation } = await fixture.write.promise.output({ hostStartLocation: true });
+      await expect(promiseService.getStartLocation(promise.id, host.id)).resolves.toMatchObject(hostStartLocation);
+    });
+
+    test('should return a start location by the promise id (attendee)', async () => {
       const { promise, attendee, startLocation } = await fixture.write.promise.output({
         attendee: true,
         startLocation: true,
@@ -758,21 +764,58 @@ describe(PromiseService, () => {
   });
 
   describe(PromiseService.prototype.updateStartLocation, () => {
-    test('should update a start location by the promise id', async () => {
-      const { host, promise } = await fixture.write.promise.output({});
+    test('should create a start location by the promise id (host)', async () => {
+      const { host, promise } = await fixture.write.promise.output();
 
-      const updatedStartLocation = {
-        ...fixture.input.location(),
-        latitude: 37.0,
-        longitude: 127.0,
-      } satisfies InputLocationDTO;
+      await expect(promiseService.getStartLocation(promise.id, host.id)).rejects.toEqual(
+        PromiseServiceError.NotFoundStartLocation
+      );
 
-      await expect(
-        promiseService.updateStartLocation(promise.id, host.id, updatedStartLocation)
-      ).resolves.toMatchObject({
-        ...updatedStartLocation,
-        latitude: new Prisma.Decimal(updatedStartLocation.latitude),
-        longitude: new Prisma.Decimal(updatedStartLocation.longitude),
+      const startLocation = fixture.input.location();
+      const result = await promiseService.updateStartLocation(promise.id, host.id, startLocation);
+      expect(result).toMatchObject({
+        ...R.pick(startLocation, ['city', 'district', 'address']),
+        latitude: expect.toBeDecimalLike(startLocation.latitude),
+        longitude: expect.toBeDecimalLike(startLocation.longitude),
+      });
+    });
+
+    test('should create a start location by the promise id (attendee)', async () => {
+      const { promise, attendee } = await fixture.write.promise.output({ attendee: true });
+
+      await expect(promiseService.getStartLocation(promise.id, attendee.id)).rejects.toEqual(
+        PromiseServiceError.NotFoundStartLocation
+      );
+
+      const startLocation = fixture.input.location();
+      const result = await promiseService.updateStartLocation(promise.id, attendee.id, startLocation);
+      expect(result).toMatchObject({
+        ...R.pick(startLocation, ['city', 'district', 'address']),
+        latitude: expect.toBeDecimalLike(startLocation.latitude),
+        longitude: expect.toBeDecimalLike(startLocation.longitude),
+      });
+    });
+
+    test('should update a start location by the promise id (host)', async () => {
+      const { host, promise } = await fixture.write.promise.output();
+      const startLocation = fixture.input.location();
+      await expect(promiseService.updateStartLocation(promise.id, host.id, startLocation)).resolves.toMatchObject({
+        ...R.pick(startLocation, ['city', 'district', 'address']),
+        latitude: expect.toBeDecimalLike(startLocation.latitude),
+        longitude: expect.toBeDecimalLike(startLocation.longitude),
+      });
+    });
+
+    test('should update a start location by the promise id (attendee)', async () => {
+      const { promise, attendee } = await fixture.write.promise.output({
+        attendee: true,
+        startLocation: true,
+      });
+      const input = fixture.input.location();
+      await expect(promiseService.updateStartLocation(promise.id, attendee.id, input)).resolves.toMatchObject({
+        ...R.pick(input, ['city', 'district', 'address']),
+        latitude: expect.toBeDecimalLike(input.latitude),
+        longitude: expect.toBeDecimalLike(input.longitude),
       });
     });
 

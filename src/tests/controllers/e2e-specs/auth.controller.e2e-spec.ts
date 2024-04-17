@@ -10,7 +10,7 @@ import { configure } from '@/main';
 import { AuthController } from '@/modules/auth/auth.controller';
 import { AuthServiceError } from '@/modules/auth/auth.service';
 import { createTestFixture } from '@/tests/fixtures';
-import { createPrismaClient } from '@/tests/prisma';
+import { createPrismaClient } from '@/tests/setups/prisma';
 
 describe(AuthController, () => {
   const prisma = createPrismaClient();

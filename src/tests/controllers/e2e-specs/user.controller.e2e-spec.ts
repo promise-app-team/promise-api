@@ -9,7 +9,7 @@ import { AppModule } from '@/app/app.module';
 import { configure } from '@/main';
 import { UserController } from '@/modules/user/user.controller';
 import { createTestFixture } from '@/tests/fixtures';
-import { createPrismaClient } from '@/tests/prisma';
+import { createPrismaClient } from '@/tests/setups/prisma';
 
 describe(UserController, () => {
   const prisma = createPrismaClient();

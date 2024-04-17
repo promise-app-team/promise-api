@@ -9,7 +9,7 @@ import { configure } from '@/main';
 import { FileUploadController } from '@/modules/upload/upload.controller';
 import { createHttpRequest } from '@/tests/controllers/utils/http-request';
 import { createTestFixture } from '@/tests/fixtures';
-import { createPrismaClient } from '@/tests/prisma';
+import { createPrismaClient } from '@/tests/setups/prisma';
 
 describe(FileUploadController, () => {
   const prisma = createPrismaClient({ logging: false });
