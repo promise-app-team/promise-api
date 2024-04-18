@@ -3,10 +3,9 @@ import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 
 import { TypedConfigService } from '@/config/env';
-import { AuthController } from '@/modules/auth/auth.controller';
-import { AuthService } from '@/modules/auth/auth.service';
-import { UserService } from '@/modules/user/user.service';
-import { PrismaService } from '@/prisma/prisma.service';
+import { AuthController, AuthService } from '@/modules/auth';
+import { UserService } from '@/modules/user';
+import { PrismaService } from '@/prisma';
 import { createTestFixture } from '@/tests/fixtures';
 import { mockJwtService } from '@/tests/services/mocks/jwt.service.mock';
 import { createPrismaClient } from '@/tests/setups/prisma';

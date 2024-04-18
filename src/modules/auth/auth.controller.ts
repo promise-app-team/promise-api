@@ -5,8 +5,7 @@ import { HttpException } from '@/common/exceptions/http.exception';
 import { Post } from '@/customs/nest/decorators/http-api.decorator';
 import { AuthTokenDTO, InputRefreshTokenDTO } from '@/modules/auth/auth.dto';
 import { AuthService, AuthServiceError } from '@/modules/auth/auth.service';
-import { InputCreateUserDTO } from '@/modules/user/user.dto';
-import { UserService } from '@/modules/user/user.service';
+import { InputCreateUserDTO, UserService } from '@/modules/user';
 
 @ApiTags('Auth')
 @ApiBearerAuth()

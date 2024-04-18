@@ -1,3 +1,3 @@
-export { CacheService, CacheServiceOptions } from './cache.service';
-export { InMemoryCacheService } from './in-memory.service';
-export { RedisCacheService } from './redis.service';
+export * from './cache.service';
+export * from './in-memory.service';
+export * from './redis.service';

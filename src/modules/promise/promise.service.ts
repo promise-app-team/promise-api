@@ -5,9 +5,9 @@ import * as R from 'remeda';
 import { InputCreatePromiseDTO, InputLocationDTO, InputUpdatePromiseDTO } from './promise.dto';
 import { PromiseStatus, PromiseUserRole } from './promise.enum';
 
+import { PrismaService } from '@/prisma';
 import { PrismaClientError } from '@/prisma/error-handler';
 import { LocationModel, ThemeModel } from '@/prisma/prisma.entity';
-import { PrismaService } from '@/prisma/prisma.service';
 import { createQueryBuilder } from '@/prisma/utils/query-builder';
 
 export enum PromiseServiceError {

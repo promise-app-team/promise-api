@@ -1,6 +1,6 @@
 import { formatISO } from 'date-fns';
 
-import { TypedConfigServiceBuilder } from '@/customs/typed-config/typed-config.service';
+import { TypedConfigServiceBuilder } from '@/customs/typed-config';
 
 const BUILD = formatISO(new Date());
 

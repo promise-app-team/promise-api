@@ -6,15 +6,14 @@ import { CommonModule } from '@/common/modules/common.module';
 import { TypedConfigService, extraEnv } from '@/config/env';
 import { schema } from '@/config/validation';
 import { CacheModule, InMemoryCacheService, RedisCacheService } from '@/customs/cache';
-import { LoggerModule } from '@/customs/logger/logger.module';
-import { LoggerService } from '@/customs/logger/logger.service';
-import { TypedConfigModule } from '@/customs/typed-config/typed-config.module';
-import { AuthModule } from '@/modules/auth/auth.module';
-import { EventModule } from '@/modules/event/event.module';
-import { PromiseModule } from '@/modules/promise/promise.module';
-import { FileUploadModule } from '@/modules/upload/upload.module';
-import { UserModule } from '@/modules/user/user.module';
-import { PrismaModule } from '@/prisma/prisma.module';
+import { LoggerModule, LoggerService } from '@/customs/logger';
+import { TypedConfigModule } from '@/customs/typed-config';
+import { AuthModule } from '@/modules/auth';
+import { EventModule } from '@/modules/event';
+import { PromiseModule } from '@/modules/promise';
+import { FileUploadModule } from '@/modules/upload';
+import { UserModule } from '@/modules/user';
+import { PrismaModule } from '@/prisma';
 
 @Module({
   imports: [

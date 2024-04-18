@@ -10,14 +10,19 @@ import { mockGlobalFn } from '../mocks';
 
 import { TypedConfigService } from '@/config/env';
 import { CacheModule, InMemoryCacheService } from '@/customs/cache';
-import { InthashService } from '@/customs/inthash/inthash.service';
-import { PromiseController } from '@/modules/promise/promise.controller';
-import { InputCreatePromiseDTO, InputLocationDTO, InputUpdatePromiseDTO } from '@/modules/promise/promise.dto';
-import { PromiseStatus, PromiseUserRole } from '@/modules/promise/promise.enum';
+import { InthashService } from '@/customs/inthash';
+import {
+  PromiseController,
+  InputCreatePromiseDTO,
+  InputLocationDTO,
+  InputUpdatePromiseDTO,
+  PromiseStatus,
+  PromiseUserRole,
+  PromiseService,
+} from '@/modules/promise';
 import { EncodePromiseID } from '@/modules/promise/promise.interceptor';
-import { PromiseService } from '@/modules/promise/promise.service';
-import { UserService } from '@/modules/user/user.service';
-import { PrismaService } from '@/prisma/prisma.service';
+import { UserService } from '@/modules/user';
+import { PrismaService } from '@/prisma';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';
 

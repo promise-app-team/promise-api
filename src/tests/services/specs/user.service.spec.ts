@@ -1,9 +1,8 @@
 import { Test } from '@nestjs/testing';
 import { pick } from 'remeda';
 
-import { UserService, UserServiceError } from '@/modules/user/user.service';
-import { Provider } from '@/prisma/prisma.entity';
-import { PrismaService } from '@/prisma/prisma.service';
+import { UserService, UserServiceError } from '@/modules/user';
+import { Provider, PrismaService } from '@/prisma';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';
 

@@ -8,7 +8,7 @@ import { WsAdapter } from '@nestjs/platform-ws';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { APIGatewayEvent, Handler } from 'aws-lambda';
 
-import { AppModule } from './app/app.module';
+import { AppModule } from './app';
 import { HttpException } from './common/exceptions/http.exception';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { StringifyDateInterceptor } from './common/interceptors/stringify-date.interceptor';

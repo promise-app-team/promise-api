@@ -1,6 +1,6 @@
 import { ArgumentMetadata, Injectable, PipeTransform } from '@nestjs/common';
 
-import { InthashService } from '@/customs/inthash/inthash.service';
+import { InthashService } from '@/customs/inthash';
 
 @Injectable()
 export class DecodePromisePID implements PipeTransform {

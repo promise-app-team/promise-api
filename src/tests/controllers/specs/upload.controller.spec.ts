@@ -2,9 +2,8 @@ import { HttpStatus } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 
-import { FileUploadController } from '@/modules/upload/upload.controller';
-import { FileUploadService } from '@/modules/upload/upload.service';
-import { UserService } from '@/modules/user/user.service';
+import { FileUploadController, FileUploadService } from '@/modules/upload';
+import { UserService } from '@/modules/user';
 
 describe(FileUploadController, () => {
   let uploadController: FileUploadController;

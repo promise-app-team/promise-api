@@ -3,9 +3,7 @@ import { User } from '@prisma/client';
 
 import { InputCreateUserDTO, InputUpdateUserDTO } from './user.dto';
 
-import { PrismaClientError } from '@/prisma/error-handler';
-import { UserModel } from '@/prisma/prisma.entity';
-import { PrismaService } from '@/prisma/prisma.service';
+import { PrismaService, UserModel, PrismaClientError } from '@/prisma';
 
 export enum UserServiceError {
   NotFoundUser = '사용자를 찾을 수 없습니다.',

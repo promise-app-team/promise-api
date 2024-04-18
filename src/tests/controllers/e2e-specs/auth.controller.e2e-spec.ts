@@ -4,11 +4,10 @@ import { Test } from '@nestjs/testing';
 
 import { createHttpRequest } from '../utils/http-request';
 
-import { AppModule } from '@/app/app.module';
+import { AppModule } from '@/app';
 import { HttpException } from '@/common/exceptions/http.exception';
 import { configure } from '@/main';
-import { AuthController } from '@/modules/auth/auth.controller';
-import { AuthServiceError } from '@/modules/auth/auth.service';
+import { AuthController, AuthServiceError } from '@/modules/auth';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';
 
