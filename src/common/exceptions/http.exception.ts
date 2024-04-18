@@ -40,13 +40,13 @@ export function isExceptionStatus(status: string): status is ExceptionStatus {
 }
 
 export class HttpException extends NestHttpException {
-  @ApiProperty({ example: 'Error message' })
+  @ApiProperty({ example: 'message' })
   message!: string;
 
-  @ApiProperty({ example: 'HTTP status message' })
+  @ApiProperty({ example: 'status message' })
   error!: string;
 
-  @ApiProperty({ example: 'HTTP status code' })
+  @ApiProperty({ example: 'status code' })
   statusCode!: number;
 
   constructor(message: string, status: ExceptionStatus, cause?: unknown);
