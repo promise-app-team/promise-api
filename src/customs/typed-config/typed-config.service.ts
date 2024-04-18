@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import { FlattenObjectKeys, InferType } from '@/types';
+import { FlattenObjectKeys, InferType } from './typed-config.type';
 
 @Injectable()
 export class TypedConfigServiceBuilder<EnvSchema extends Record<string, any>> {

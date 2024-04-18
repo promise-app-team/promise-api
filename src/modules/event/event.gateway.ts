@@ -9,7 +9,6 @@ import {
   WebSocketServer,
   SubscribeMessage,
   ConnectedSocket,
-  MessageBody,
   WsResponse,
 } from '@nestjs/websockets';
 import { v4 as uuid } from 'uuid';

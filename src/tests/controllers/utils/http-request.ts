@@ -7,13 +7,13 @@ import { compile } from 'path-to-regexp';
 import { mapValues } from 'remeda';
 import request from 'supertest';
 
+import { Methods } from '@/types';
+
 type HttpMethod = keyof Pick<request.SuperTest, 'get' | 'post' | 'put' | 'patch' | 'delete'>;
 type Param = string | number | boolean | null | undefined;
 type Route = string;
 
-type OperatorName<T> = {
-  [K in keyof T]: T[K] extends (...args: any[]) => any ? K : never;
-}[keyof T];
+type OperatorName<T> = Methods<T>;
 
 type RequestTestMap = Record<HttpMethod, request.Test>;
 
