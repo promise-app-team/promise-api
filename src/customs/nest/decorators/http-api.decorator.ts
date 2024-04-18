@@ -4,6 +4,7 @@ import {
   Put as NestPut,
   Patch as NestPatch,
   Delete as NestDelete,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiInternalServerErrorResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
 
@@ -21,7 +22,7 @@ function Template(
   options?: HttpAPIOptions
 ): MethodDecorator {
   return (...args) => {
-    const { auth, exceptions, response, ...rest } = options || {};
+    const { auth, exceptions, response, interceptors, ...rest } = options || {};
 
     if (auth) {
       AuthGuard()(...args);
@@ -40,6 +41,10 @@ function Template(
     ApiInternalServerErrorResponse({ type: HttpException })(...args);
 
     decorator(path)(...args);
+
+    if (interceptors) {
+      UseInterceptors(...interceptors)(...args);
+    }
   };
 }
 

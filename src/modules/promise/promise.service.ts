@@ -337,7 +337,7 @@ export class PromiseService {
     try {
       const promise = await this.prisma.promise.findUniqueOrThrow({
         where: this.#makeUniqueFilter({ id, status: PromiseStatus.AVAILABLE }),
-        select: { id: true, hostId: true, promisedAt: true, completedAt: true },
+        select: { id: true, hostId: true },
       });
 
       if (promise.hostId === userId) {
@@ -346,6 +346,32 @@ export class PromiseService {
 
       await this.prisma.promiseUser.delete({
         where: { identifier: { userId, promiseId: promise.id } },
+      });
+
+      return { id: promise.id };
+    } catch (error) {
+      switch (PrismaClientError.from(error)?.code) {
+        case 'P2025':
+          throw PromiseServiceError.NotFoundPromise;
+        default:
+          throw error;
+      }
+    }
+  }
+
+  /**
+   * @throws {PromiseServiceError.NotFoundPromise}
+   */
+  async delegate(id: number, hostId: number, attendeeId: number) {
+    try {
+      const promise = await this.prisma.promise.update({
+        where: {
+          ...this.#makeUniqueFilter({ id, status: PromiseStatus.AVAILABLE }),
+          ...this.#makeUniqueFilter({ userId: hostId, role: PromiseUserRole.HOST }),
+          ...this.#makeUniqueFilter({ userId: attendeeId, role: PromiseUserRole.ATTENDEE }),
+        },
+        data: { hostId: attendeeId },
+        select: { id: true },
       });
 
       return { id: promise.id };

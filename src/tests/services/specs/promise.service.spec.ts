@@ -955,6 +955,67 @@ describe(PromiseService, () => {
     });
   });
 
+  describe(PromiseService.prototype.delegate, () => {
+    test('should delegate a host of promise by the attendee', async () => {
+      const { host, promise, attendee } = await fixture.write.promise.output({ attendee: true });
+      await expect(promiseService.delegate(promise.id, host.id, attendee.id)).resolves.toEqual({
+        id: promise.id,
+      });
+      await expect(promiseService.findOne({ id: promise.id })).resolves.toMatchObject({
+        host: { id: attendee.id },
+      });
+    });
+
+    test('should throw an error if the promise does not exist', async () => {
+      await expect(promiseService.delegate(0, 0, 0)).rejects.toEqual(PromiseServiceError.NotFoundPromise);
+    });
+
+    test('should throw an error if the host is not the host of the promise', async () => {
+      const { promise, attendee } = await fixture.write.promise.output({ attendee: true });
+      await expect(promiseService.delegate(promise.id, -1, attendee.id)).rejects.toEqual(
+        PromiseServiceError.NotFoundPromise
+      );
+    });
+
+    test('should throw an error if the user is not attending the promise', async () => {
+      const { promise, host } = await fixture.write.promise.output();
+      await expect(promiseService.delegate(promise.id, host.id, -1)).rejects.toEqual(
+        PromiseServiceError.NotFoundPromise
+      );
+    });
+
+    test('should throw an error if the attendee tries to delegate the host', async () => {
+      const { host, promise, attendee } = await fixture.write.promise.output({ attendee: true });
+      await expect(promiseService.delegate(promise.id, attendee.id, host.id)).rejects.toEqual(
+        PromiseServiceError.NotFoundPromise
+      );
+    });
+
+    test('should throw an error if the promise is unavailable', async () => {
+      const { promise, attendee } = await fixture.write.promise.output({
+        attendee: true,
+        partial: { promisedAt: new Date(yesterday) },
+      });
+      await expect(promiseService.delegate(promise.id, attendee.id, attendee.id)).rejects.toEqual(
+        PromiseServiceError.NotFoundPromise
+      );
+    });
+
+    test('should throw an error if the promise is completed', async () => {
+      const { promise, attendee } = await fixture.write.promise.output({
+        attendee: true,
+        partial: { completedAt: new Date() },
+      });
+      await expect(promiseService.delegate(promise.id, attendee.id, attendee.id)).rejects.toEqual(
+        PromiseServiceError.NotFoundPromise
+      );
+    });
+
+    test('should throw an error when occurred an unexpected error', async () => {
+      await expect(promiseService.delegate('unknown' as any, 'unknown' as any, 'unknown' as any)).rejects.toThrow();
+    });
+  });
+
   describe(PromiseService.prototype.getAttendees, () => {
     test('should return attendees by the promise id', async () => {
       const { host, promise, attendees } = await fixture.write.promise.output({ attendees: 3 });

@@ -1,4 +1,4 @@
-import { Type } from '@nestjs/common';
+import { NestInterceptor, Type } from '@nestjs/common';
 
 import { ExceptionStatus } from '@/common/exceptions/http.exception';
 
@@ -10,4 +10,5 @@ export interface HttpAPIOptions {
   description?: string;
   response?: Type;
   exceptions?: ExceptionStatus[];
+  interceptors?: (NestInterceptor | Function)[];
 }

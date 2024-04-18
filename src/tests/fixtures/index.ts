@@ -323,8 +323,7 @@ export function createTestFixture(
   });
 
   afterAll(async () => {
-    authUser = null;
-    await resetData();
+    await prisma.user.deleteMany({ where: { id: authUser?.id } });
   });
 
   return {
