@@ -288,6 +288,27 @@ export class PromiseController {
     });
   }
 
+  @Put(':pid(\\d+)/complete', {
+    auth: true,
+    description: '약속을 완료합니다.',
+    exceptions: ['NOT_FOUND'],
+    interceptors: [EncodePromiseID],
+    response: PromiseIdentifiableDTO,
+  })
+  async completePromise<User extends Pick<UserModel, 'id'>>(
+    @AuthUser() user: User,
+    @Param('pid', DecodePromisePID) id: number
+  ): Promise<{ id: number }> {
+    return this.promiseService.complete(id, user.id).catch((error) => {
+      switch (error) {
+        case PromiseServiceError.NotFoundPromise:
+          throw HttpException.new(error, 'NOT_FOUND');
+        default:
+          throw HttpException.new(error);
+      }
+    });
+  }
+
   @Get('themes', { auth: true, description: '약속 테마 목록을 불러옵니다.' })
   async getThemes(): Promise<ThemeDTO[]> {
     return this.promiseService.getThemes().then((themes) => themes.map((theme) => ThemeDTO.from(theme)));

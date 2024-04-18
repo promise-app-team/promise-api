@@ -1016,6 +1016,43 @@ describe(PromiseService, () => {
     });
   });
 
+  describe(PromiseService.prototype.complete, () => {
+    test('should complete a promise by the host', async () => {
+      const { host, promise } = await fixture.write.promise.output();
+      await expect(promiseService.complete(promise.id, host.id)).resolves.toEqual({
+        id: promise.id,
+      });
+      await expect(promiseService.findOne({ id: promise.id })).resolves.toMatchObject({
+        completedAt: expect.any(Date),
+      });
+    });
+
+    test('should throw an error if the promise does not exist', async () => {
+      await expect(promiseService.complete(0, 0)).rejects.toEqual(PromiseServiceError.NotFoundPromise);
+    });
+
+    test('should throw an error if the user is not the host of the promise', async () => {
+      const { promise, attendee } = await fixture.write.promise.output({ attendee: true });
+      await expect(promiseService.complete(promise.id, attendee.id)).rejects.toEqual(
+        PromiseServiceError.NotFoundPromise
+      );
+    });
+
+    test('should throw an error if the promise is unavailable', async () => {
+      const { promise, host } = await fixture.write.promise.output({ partial: { promisedAt: new Date(yesterday) } });
+      await expect(promiseService.complete(promise.id, host.id)).rejects.toEqual(PromiseServiceError.NotFoundPromise);
+    });
+
+    test('should throw an error if the promise is already completed', async () => {
+      const { promise, host } = await fixture.write.promise.output({ partial: { completedAt: new Date() } });
+      await expect(promiseService.complete(promise.id, host.id)).rejects.toEqual(PromiseServiceError.NotFoundPromise);
+    });
+
+    test('should throw an error when occurred an unexpected error', async () => {
+      await expect(promiseService.complete('unknown' as any, 'unknown' as any)).rejects.toThrow();
+    });
+  });
+
   describe(PromiseService.prototype.getAttendees, () => {
     test('should return attendees by the promise id', async () => {
       const { host, promise, attendees } = await fixture.write.promise.output({ attendees: 3 });

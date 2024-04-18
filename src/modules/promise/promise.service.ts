@@ -362,9 +362,9 @@ export class PromiseService {
   /**
    * @throws {PromiseServiceError.NotFoundPromise}
    */
-  async delegate(id: number, hostId: number, attendeeId: number) {
+  async delegate(id: number, hostId: number, attendeeId: number): Promise<{ id: number }> {
     try {
-      const promise = await this.prisma.promise.update({
+      return await this.prisma.promise.update({
         where: {
           ...this.#makeUniqueFilter({ id, status: PromiseStatus.AVAILABLE }),
           ...this.#makeUniqueFilter({ userId: hostId, role: PromiseUserRole.HOST }),
@@ -373,8 +373,28 @@ export class PromiseService {
         data: { hostId: attendeeId },
         select: { id: true },
       });
+    } catch (error) {
+      switch (PrismaClientError.from(error)?.code) {
+        case 'P2025':
+          throw PromiseServiceError.NotFoundPromise;
+        default:
+          throw error;
+      }
+    }
+  }
 
-      return { id: promise.id };
+  async complete(id: number, hostId: number): Promise<{ id: number }> {
+    try {
+      return await this.prisma.promise.update({
+        where: this.#makeUniqueFilter({
+          id,
+          userId: hostId,
+          role: PromiseUserRole.HOST,
+          status: PromiseStatus.AVAILABLE,
+        }),
+        data: { completedAt: new Date() },
+        select: { id: true },
+      });
     } catch (error) {
       switch (PrismaClientError.from(error)?.code) {
         case 'P2025':

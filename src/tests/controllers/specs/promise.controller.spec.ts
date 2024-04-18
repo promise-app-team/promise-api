@@ -631,6 +631,24 @@ describe(PromiseController, () => {
     });
   });
 
+  describe(PromiseController.prototype.delegatePromise, () => {
+    test('should throw an error when unknown error occurs', async () => {
+      await expect(
+        promiseController.delegatePromise({ id: 'unknown' as any }, 'unknown' as any, 'unknown' as any)
+      ).rejects.toMatchObject({
+        status: HttpStatus.INTERNAL_SERVER_ERROR,
+      });
+    });
+  });
+
+  describe(PromiseController.prototype.completePromise, () => {
+    test('should throw an error when unknown error occurs', async () => {
+      await expect(promiseController.completePromise({ id: 'unknown' as any }, 'unknown' as any)).rejects.toMatchObject(
+        { status: HttpStatus.INTERNAL_SERVER_ERROR }
+      );
+    });
+  });
+
   describe(PromiseController.prototype.getThemes, () => {
     test('should return a list of themes', async () => {
       const themes = await Promise.all(R.times(3, () => fixture.write.theme.output()));
