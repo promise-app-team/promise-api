@@ -89,6 +89,7 @@ module.exports = {
             assertFunctionNames: ['expect', 'request.**.expect', 'http.request.**.expect'],
           },
         ],
+        'jest/no-focused-tests': 'warn',
       },
     },
   ],

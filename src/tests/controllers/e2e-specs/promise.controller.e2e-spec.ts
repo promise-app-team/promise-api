@@ -24,6 +24,8 @@ describe(PromiseController, () => {
     updatePromise: ':pid(\\d+)',
     attendPromise: ':pid(\\d+)/attendees',
     leavePromise: ':pid(\\d+)/attendees',
+    delegatePromise: ':pid(\\d+)/delegate',
+    completePromise: ':pid(\\d+)/complete',
     getStartLocation: ':pid(\\d+)/start-location',
     updateStartLocation: ':pid(\\d+)/start-location',
     deleteStartLocation: ':pid(\\d+)/start-location',
@@ -386,6 +388,118 @@ describe(PromiseController, () => {
     test('should throw an error if promise not found', async () => {
       const pid = hasher.encode(0);
       await http.request.leavePromise({ pid }).delete.expect(404);
+    });
+  });
+
+  describe(http.request.delegatePromise, () => {
+    test('should delegate a host to another attendee', async () => {
+      const { promise, attendee } = await fixture.write.promise.output({
+        host: http.request.auth.user,
+        attendee: true,
+      });
+
+      const pid = hasher.encode(promise.id);
+
+      {
+        const res = await http.request.delegatePromise({ pid }).put.query({ attendeeId: attendee.id }).expect(200);
+        expect(res.body).toEqual({ pid });
+      }
+
+      {
+        const res = await http.request.getPromise({ pid }).get.expect(200);
+        expect(res.body.host.id).toBe(attendee.id);
+      }
+    });
+
+    test('should throw an error if not host', async () => {
+      const { promise, attendee } = await fixture.write.promise.output({ attendee: true });
+
+      const pid = hasher.encode(promise.id);
+
+      {
+        const res = await http.request.getPromise({ pid }).get.expect(200);
+        expect(res.body.host.id).not.toBe(http.request.auth.user.id);
+      }
+
+      await http.request.delegatePromise({ pid }).put.query({ attendeeId: attendee.id }).expect(404);
+    });
+
+    test('should throw an error if attendee not found', async () => {
+      const { promise } = await fixture.write.promise.output({
+        host: http.request.auth.user,
+      });
+
+      const pid = hasher.encode(promise.id);
+      await http.request.delegatePromise({ pid }).put.query({ attendeeId: 0 }).expect(404);
+    });
+
+    test('should throw an error if attendee is host', async () => {
+      const { host, promise } = await fixture.write.promise.output({
+        host: http.request.auth.user,
+      });
+
+      const pid = hasher.encode(promise.id);
+      await http.request.delegatePromise({ pid }).put.query({ attendeeId: host.id }).expect(404);
+    });
+
+    test('should throw an error if promise not found', async () => {
+      await http.request
+        .delegatePromise({ pid: hasher.encode(0) })
+        .put.query({ attendeeId: 0 })
+        .expect(404);
+    });
+  });
+
+  describe(http.request.completePromise, () => {
+    test('should complete a promise', async () => {
+      const { promise } = await fixture.write.promise.output({
+        host: http.request.auth.user,
+      });
+
+      const pid = hasher.encode(promise.id);
+      const res = await http.request.completePromise({ pid }).put.expect(200);
+
+      expect(res.body).toEqual({ pid });
+    });
+
+    test('should throw an error if not host', async () => {
+      const { promise } = await fixture.write.promise.output();
+
+      const pid = hasher.encode(promise.id);
+      await http.request.completePromise({ pid }).put.expect(404);
+    });
+
+    test('should throw an error if promise not found', async () => {
+      await http.request.completePromise({ pid: hasher.encode(0) }).post.expect(404);
+    });
+
+    test('should throw an error if not attended', async () => {
+      const { promise } = await fixture.write.promise.output();
+
+      const pid = hasher.encode(promise.id);
+      await http.request.completePromise({ pid }).put.expect(404);
+    });
+
+    test('should throw an error if promisedAt is in the past', async () => {
+      const { promise } = await fixture.write.promise.output({
+        partial: {
+          promisedAt: new Date(yesterday),
+        },
+      });
+
+      const pid = hasher.encode(promise.id);
+      await http.request.completePromise({ pid }).put.expect(404);
+    });
+
+    test('should throw an error if already completed', async () => {
+      const { promise } = await fixture.write.promise.output({
+        partial: {
+          completedAt: new Date(yesterday),
+        },
+      });
+
+      const pid = hasher.encode(promise.id);
+      await http.request.completePromise({ pid }).put.expect(404);
     });
   });
 

@@ -1,5 +1,5 @@
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Body, Param, Query, Inject, Controller, UseInterceptors } from '@nestjs/common';
+import { Body, Param, Query, Inject, Controller } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Cache } from 'cache-manager';
 import * as R from 'remeda';
@@ -38,10 +38,14 @@ export class PromiseController {
     private readonly config: TypedConfigService
   ) {}
 
-  @Get('', { auth: true, description: '내가 참여한 약속 목록을 불러옵니다.', exceptions: ['BAD_REQUEST'] })
+  @Get('', {
+    auth: true,
+    description: '내가 참여한 약속 목록을 불러옵니다.',
+    exceptions: ['BAD_REQUEST'],
+    interceptors: [EncodePromiseID],
+  })
   @ApiQuery({ name: 'status', enum: PromiseStatus, required: false })
   @ApiQuery({ name: 'role', enum: PromiseUserRole, required: false })
-  @UseInterceptors(EncodePromiseID)
   async getMyPromises<User extends Pick<UserModel, 'id'>>(
     @AuthUser() user: User,
     @Query('status') status: PromiseStatus = PromiseStatus.ALL,
@@ -56,8 +60,8 @@ export class PromiseController {
     auth: true,
     description: '약속 상세 정보를 불러옵니다.',
     exceptions: ['BAD_REQUEST', 'NOT_FOUND'],
+    interceptors: [EncodePromiseID],
   })
-  @UseInterceptors(EncodePromiseID)
   async getPromise(@Param('pid', DecodePromisePID) id: number): Promise<PublicPromiseDTO> {
     return this.promiseService
       .findOne({ id })
@@ -72,8 +76,12 @@ export class PromiseController {
       });
   }
 
-  @Post('', { auth: true, description: '약속을 생성합니다.', exceptions: ['BAD_REQUEST'] })
-  @UseInterceptors(EncodePromiseID)
+  @Post('', {
+    auth: true,
+    description: '약속을 생성합니다.',
+    exceptions: ['BAD_REQUEST'],
+    interceptors: [EncodePromiseID],
+  })
   async createPromise<User extends Pick<UserModel, 'id'>>(
     @AuthUser() user: User,
     @Body() input: InputCreatePromiseDTO
@@ -85,8 +93,8 @@ export class PromiseController {
     auth: true,
     description: '약속을 수정합니다.',
     exceptions: ['BAD_REQUEST', 'NOT_FOUND', 'FORBIDDEN'],
+    interceptors: [EncodePromiseID],
   })
-  @UseInterceptors(EncodePromiseID)
   async updatePromise<User extends Pick<UserModel, 'id'>>(
     @AuthUser() user: User,
     @Param('pid', DecodePromisePID) id: number,
@@ -110,10 +118,10 @@ export class PromiseController {
   @Post(':pid(\\d+)/attendees', {
     auth: true,
     description: '약속에 참여합니다.',
-    response: PromiseIdentifiableDTO,
     exceptions: ['BAD_REQUEST', 'NOT_FOUND'],
+    interceptors: [EncodePromiseID],
+    response: PromiseIdentifiableDTO,
   })
-  @UseInterceptors(EncodePromiseID)
   async attendPromise<User extends Pick<UserModel, 'id'>>(
     @AuthUser() user: User,
     @Param('pid', DecodePromisePID) id: number
@@ -136,10 +144,10 @@ export class PromiseController {
   @Delete(':pid(\\d+)/attendees', {
     auth: true,
     description: '약속을 떠납니다.',
-    response: PromiseIdentifiableDTO,
     exceptions: ['BAD_REQUEST', 'NOT_FOUND'],
+    interceptors: [EncodePromiseID],
+    response: PromiseIdentifiableDTO,
   })
-  @UseInterceptors(EncodePromiseID)
   async leavePromise<User extends Pick<UserModel, 'id'>>(
     @AuthUser() user: User,
     @Param('pid', DecodePromisePID) id: number
@@ -258,6 +266,49 @@ export class PromiseController {
     return findGeometricMedian(startLocations);
   }
 
+  @Put(':pid(\\d+)/delegate', {
+    auth: true,
+    description: '약속을 위임합니다.',
+    exceptions: ['NOT_FOUND'],
+    interceptors: [EncodePromiseID],
+    response: PromiseIdentifiableDTO,
+  })
+  async delegatePromise<User extends Pick<UserModel, 'id'>>(
+    @AuthUser() user: User,
+    @Param('pid', DecodePromisePID) id: number,
+    @Query('attendeeId') attendeeId: number
+  ): Promise<{ id: number }> {
+    return this.promiseService.delegate(id, user.id, attendeeId).catch((error) => {
+      switch (error) {
+        case PromiseServiceError.NotFoundPromise:
+          throw HttpException.new(error, 'NOT_FOUND');
+        default:
+          throw HttpException.new(error);
+      }
+    });
+  }
+
+  @Put(':pid(\\d+)/complete', {
+    auth: true,
+    description: '약속을 완료합니다.',
+    exceptions: ['NOT_FOUND'],
+    interceptors: [EncodePromiseID],
+    response: PromiseIdentifiableDTO,
+  })
+  async completePromise<User extends Pick<UserModel, 'id'>>(
+    @AuthUser() user: User,
+    @Param('pid', DecodePromisePID) id: number
+  ): Promise<{ id: number }> {
+    return this.promiseService.complete(id, user.id).catch((error) => {
+      switch (error) {
+        case PromiseServiceError.NotFoundPromise:
+          throw HttpException.new(error, 'NOT_FOUND');
+        default:
+          throw HttpException.new(error);
+      }
+    });
+  }
+
   @Get('themes', { auth: true, description: '약속 테마 목록을 불러옵니다.' })
   async getThemes(): Promise<ThemeDTO[]> {
     return this.promiseService.getThemes().then((themes) => themes.map((theme) => ThemeDTO.from(theme)));
@@ -274,10 +325,10 @@ export class PromiseController {
 
   @Get('queue', {
     description: '약속 대기열을 확인합니다.',
-    response: PromiseIdentifiableDTO,
     exceptions: ['BAD_REQUEST', 'NOT_FOUND'],
+    interceptors: [EncodePromiseID],
+    response: PromiseIdentifiableDTO,
   })
-  @UseInterceptors(EncodePromiseID)
   async dequeuePromise(@Query('deviceId') deviceId: string): Promise<{ id: number }> {
     const key = this.#makeDeviceKey(deviceId);
     const id = await this.cache.get(key);
