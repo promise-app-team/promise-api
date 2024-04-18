@@ -5,7 +5,17 @@ export const schema = Joi.object({
   STAGE: Joi.string().valid('local', 'test', 'dev', 'prod').required(),
   NODE_ENV: Joi.string().valid('local', 'test', 'development', 'production').required(),
 
+  DB_HOST: Joi.string().required(),
+  DB_PORT: Joi.number().required(),
+  DB_NAME: Joi.string().required(),
+  DB_USER: Joi.string().required(),
+  DB_PASSWORD: Joi.string().allow(''),
+
   DB_URL: Joi.string().required(),
+
+  REDIS_HOST: Joi.string().required(),
+  REDIS_PORT: Joi.number().required(),
+  REDIS_PASSWORD: Joi.string().allow(''),
 
   JWT_SECRET_KEY: Joi.string().required(),
   INTHASH_KEY: Joi.string().required(),

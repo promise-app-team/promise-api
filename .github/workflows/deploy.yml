@@ -76,7 +76,7 @@ jobs:
           cache: 'npm'
 
       - name: Install Serverless Framework and Plugins
-        run: npm install --save-dev serverless serverless-domain-manager serverless-prune-plugin
+        run: npm install --loglevel notice --save-dev serverless serverless-domain-manager serverless-prune-plugin
 
       - name: Deploy to AWS Lambda
         run: npx serverless deploy --verbose

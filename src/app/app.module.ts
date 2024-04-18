@@ -1,4 +1,3 @@
-import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 
@@ -6,6 +5,7 @@ import { AppController } from '@/app/app.controller';
 import { CommonModule } from '@/common/modules/common.module';
 import { TypedConfigService, extraEnv } from '@/config/env';
 import { schema } from '@/config/validation';
+import { CacheModule, InMemoryCacheService, RedisCacheService } from '@/customs/cache';
 import { LoggerModule } from '@/customs/logger/logger.module';
 import { LoggerService } from '@/customs/logger/logger.service';
 import { TypedConfigModule } from '@/customs/typed-config/typed-config.module';
@@ -18,7 +18,6 @@ import { PrismaModule } from '@/prisma/prisma.module';
 
 @Module({
   imports: [
-    CacheModule.register({ isGlobal: true }),
     TypedConfigModule.register({
       isGlobal: true,
       load: [extraEnv],
@@ -107,6 +106,21 @@ import { PrismaModule } from '@/prisma/prisma.module';
             });
             return prisma;
           },
+        };
+      },
+    }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      inject: [TypedConfigService],
+      useFactory(config: TypedConfigService) {
+        return {
+          service: config.get('is.test')
+            ? new InMemoryCacheService()
+            : new RedisCacheService({
+                host: config.get('redis.host'),
+                port: config.get('redis.port'),
+                password: config.get('redis.password'),
+              }),
         };
       },
     }),
