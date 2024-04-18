@@ -1,7 +1,12 @@
+interface FilterArgs {
+  level: string;
+  message: string;
+  metadata: Record<string, any>;
+}
+
 export interface LoggerModuleOptions {
   isGlobal?: boolean;
-  blacklist?: string[];
-  disable?: boolean;
+  filter?: (args: FilterArgs) => boolean;
 }
 
 type MaybePromise<T> = T | Promise<T>;

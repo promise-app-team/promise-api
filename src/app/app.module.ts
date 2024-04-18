@@ -41,8 +41,33 @@ import { PrismaModule } from '@/prisma/prisma.module';
       inject: [TypedConfigService],
       useFactory(config: TypedConfigService) {
         return {
-          blacklist: ['NestFactory', 'InstanceLoader', 'RoutesResolver', 'RouterExplorer', 'WebSocketsController'],
-          disable: config.get('stage') === 'test',
+          filter({ metadata }) {
+            const label = metadata.label;
+
+            switch (config.get('stage')) {
+              case 'test':
+                return false;
+              case 'local':
+              // return true;
+              case 'dev':
+              case 'prod':
+                if (
+                  [
+                    'NestApplication',
+                    'EventGateway',
+                    'NestFactory',
+                    'InstanceLoader',
+                    'RoutesResolver',
+                    'RouterExplorer',
+                    'WebSocketsController',
+                  ].includes(label)
+                ) {
+                  return false;
+                }
+            }
+
+            return true;
+          },
         };
       },
     }),
