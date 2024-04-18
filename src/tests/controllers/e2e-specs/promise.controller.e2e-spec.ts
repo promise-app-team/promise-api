@@ -4,6 +4,8 @@ import { Test } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import * as R from 'remeda';
 
+import { mockGlobalFn } from '../mocks';
+
 import { AppModule } from '@/app/app.module';
 import { InthashService } from '@/customs/inthash/inthash.service';
 import { configure } from '@/main';
@@ -924,6 +926,8 @@ describe(PromiseController, () => {
   });
 
   describe(http.request.enqueuePromise, () => {
+    mockGlobalFn('setTimeout');
+
     const deviceId = 'test-device-id';
 
     test('should enqueue deviceId to promise queue', async () => {
@@ -947,6 +951,8 @@ describe(PromiseController, () => {
   });
 
   describe(http.request.dequeuePromise, () => {
+    mockGlobalFn('setTimeout');
+
     const deviceId = 'test-device-id';
 
     test('should dequeue deviceId from promise queue', async () => {
