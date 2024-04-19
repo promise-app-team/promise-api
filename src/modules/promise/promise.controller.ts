@@ -331,7 +331,7 @@ export class PromiseController {
   async dequeuePromise(@Query('deviceId') deviceId: string): Promise<{ id: number }> {
     const key = this.#makeDeviceKey(deviceId);
     const id = Number(await this.cache.get(key));
-    if (!R.isNumber(id)) {
+    if (!R.isNumber(id) || id <= 0) {
       throw HttpException.new('약속 대기열을 찾을 수 없습니다.', 'NOT_FOUND');
     }
     const exists = await this.promiseService.exists({ id, status: PromiseStatus.AVAILABLE });
