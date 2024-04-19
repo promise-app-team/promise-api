@@ -15,6 +15,8 @@ export const extraEnv = () => {
     build: BUILD,
     deploy: formatISO(process.env.NOW || new Date()),
     version: '0.0.0', // TODO: versioning
+
+    debug: !!process.env.DEBUG,
     colorize: !process.env.NO_COLOR,
 
     db: {
@@ -42,7 +44,9 @@ export const extraEnv = () => {
     aws: {
       region: process.env.AWS_DEFAULT_REGION || 'ap-southeast-2',
       bucket: process.env.AWS_S3_BUCKET_NAME,
-      websocket_endpoint: process.env.AWS_GW_WEBSOCKET_ENDPOINT,
+      websocket: {
+        endpoint: process.env.AWS_GW_WEBSOCKET_ENDPOINT,
+      },
     },
 
     inthash: {

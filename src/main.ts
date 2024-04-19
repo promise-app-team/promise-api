@@ -84,8 +84,13 @@ async function startLocalServer() {
 
 async function startServerless() {
   const app = await initializeApp().then((app) => app.init());
+  const config = app.get(TypedConfigService);
+  const handler = serverlessExpress({
+    app: app.getHttpAdapter().getInstance(),
+    logSettings: config.get('debug') ? { level: 'debug' } : undefined,
+  });
   Logger.log(`🚀 Serverless app initialized`, 'Bootstrap');
-  return serverlessExpress({ app: app.getHttpAdapter().getInstance(), logSettings: { level: 'debug' } });
+  return handler;
 }
 
 let bootstrap: Promise<Handler>;
@@ -100,7 +105,8 @@ function adaptWebSocketEvent(event: APIGatewayEvent) {
   const { requestContext } = event;
   const { connectionId, httpMethod, eventType } = requestContext;
   event.path = `/event/${(eventType ?? 'message').toLowerCase()}`;
-  event.multiValueQueryStringParameters = { connectionId: [connectionId ?? ''] };
+  (event.queryStringParameters ??= {})['connectionId'] = connectionId ?? '';
+  (event.multiValueQueryStringParameters ??= {})['connectionId'] = [connectionId ?? ''];
   event.httpMethod ??= httpMethod ?? 'GET';
 }
 

@@ -67,6 +67,10 @@ provider:
 
     DB_URL: ${env:DB_URL}
 
+    REDIS_HOST: ${env:REDIS_HOST}
+    REDIS_PORT: ${env:REDIS_PORT}
+    REDIS_PASSWORD: ${env:REDIS_PASSWORD}
+
     AWS_S3_BUCKET_NAME: ${env:AWS_S3_BUCKET_NAME}
     AWS_GW_WEBSOCKET_ENDPOINT: 
       Fn::Join:

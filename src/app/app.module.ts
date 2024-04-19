@@ -74,12 +74,17 @@ import { PrismaModule } from '@/prisma';
       inject: [LoggerService, TypedConfigService],
       useFactory(logger: LoggerService, config: TypedConfigService) {
         return {
-          log: [
-            { level: 'info', emit: 'event' },
-            { level: 'query', emit: 'event' },
-            { level: 'warn', emit: 'event' },
-            { level: 'error', emit: 'event' },
-          ],
+          log: config.get('debug')
+            ? [
+                { level: 'info', emit: 'event' },
+                { level: 'query', emit: 'event' },
+                { level: 'warn', emit: 'event' },
+                { level: 'error', emit: 'event' },
+              ]
+            : [
+                { level: 'warn', emit: 'event' },
+                { level: 'error', emit: 'event' },
+              ],
           errorFormat: config.get('colorize') ? 'pretty' : 'colorless',
           transform(prisma) {
             const tableName = config.get('db.name');

@@ -3,75 +3,57 @@ import { IncomingMessage } from 'http';
 import { Logger } from '@nestjs/common';
 import {
   WebSocketGateway,
-  OnGatewayInit,
   OnGatewayConnection,
   OnGatewayDisconnect,
-  WebSocketServer,
   SubscribeMessage,
   ConnectedSocket,
-  WsResponse,
 } from '@nestjs/websockets';
 import { v4 as uuid } from 'uuid';
 import { WebSocket } from 'ws';
 
-interface Client extends WebSocket {
-  id: string;
-  to: 'broadcast' | 'self' | string;
-}
+import { Connection, ConnectionTo } from './event.dto';
+import { EventService } from './event.service';
+
+import { TypedConfigService } from '@/config/env';
+
+type Client = WebSocket & Connection;
 
 @WebSocketGateway()
-export class EventGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  private readonly clients = new Map<string, Client>();
   private readonly logger = new Logger(EventGateway.name);
 
-  @WebSocketServer()
-  server!: typeof WebSocketServer;
+  constructor(
+    private readonly config: TypedConfigService,
+    private readonly eventService: EventService
+  ) {
+    if (!this.config.get('is.local')) return;
 
-  clients: Client[] = [];
-
-  afterInit(_server: typeof WebSocketServer) {
-    this.logger.log('WebSocket server initialized');
+    this.eventService.on('send', async (connection, data) => {
+      const client = this.clients.get(connection.id);
+      client?.send(JSON.stringify(data));
+    });
   }
 
-  handleConnection(@ConnectedSocket() client: Client, incoming: IncomingMessage) {
+  async handleConnection(@ConnectedSocket() client: Client, incoming: IncomingMessage) {
     const params = new URLSearchParams(incoming.url?.replace('/?', ''));
     client.id = uuid();
-    client.to = params.get('to') || 'self';
+    client.to = params.get('to') || ConnectionTo.Self;
 
-    this.clients.push(client);
-    this.logger.log(`Client connected: ${client['id']}`);
-    this.logger.log(`Total clients: ${this.clients.length}`);
-    client.send(`Successfully Connected! Client ID: ${client['id']}`);
+    this.clients.set(client.id, client);
+    await this.eventService.handleConnection(client.id, { to: client.to });
+    this.logger.log(`[CONNECT] Client connected: ${client.id} (total: ${this.clients.size})`);
   }
 
-  handleDisconnect(@ConnectedSocket() client: Client) {
-    this.clients = this.clients.filter((c) => c !== client);
-    this.logger.log(`Client disconnected: ${client['id']}`);
-    this.logger.log(`Total clients: ${this.clients.length}`);
+  async handleDisconnect(@ConnectedSocket() client: Client) {
+    this.clients.delete(client.id);
+    await this.eventService.handleDisconnect(client.id);
+    this.logger.log(`[DISCONNECT] Client disconnected: ${client.id} (total: ${this.clients.size})`);
   }
 
   @SubscribeMessage('ping')
-  handlePing(client: Client, data: any): WsResponse<any> {
-    if (client.to === 'broadcast') {
-      const toClients = this.clients.filter((c) => c.id !== client.id);
-      toClients.forEach((c) => c.send(this.#payload(client, data)));
-    } else if (client.to === 'self') {
-      client.send(this.#payload(client, data));
-    } else if (client.to) {
-      const toClient = this.clients.find((c) => c.id === client.to);
-      if (toClient) {
-        toClient.send(this.#payload(client, data));
-      } else {
-        client.send(this.#payload(client, `Client with ID ${client.to} not found`));
-      }
-    }
-    return { event: 'pong', data };
-  }
-
-  #payload(client: Client, data?: any) {
-    return JSON.stringify({
-      from: client.id,
-      timestamp: Date.now(),
-      data,
-    });
+  async handlePing(client: Client, data: any) {
+    await this.eventService.handlePing(client.id, data);
+    this.logger.log(`[MESSAGE] Client sent message: ${client.id} with ${JSON.stringify(data, null, 2)}`);
   }
 }

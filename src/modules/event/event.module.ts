@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
 
+import { ConnectionService } from './connection.service';
 import { EventController } from './event.controller';
 import { EventGateway } from './event.gateway';
+import { EventService } from './event.service';
 
-@ApiTags('Event')
 @Module({
   controllers: [EventController],
-  providers: [EventGateway],
+  providers: [EventGateway, EventService, ConnectionService],
 })
 export class EventModule {}

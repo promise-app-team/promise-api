@@ -25,7 +25,7 @@ import { DecodePromisePID } from '@/modules/promise/promise.pipe';
 import { PromiseService, PromiseServiceError } from '@/modules/promise/promise.service';
 import { ThemeDTO } from '@/modules/promise/theme.dto';
 import { UserModel } from '@/prisma/prisma.entity';
-import { Point, findGeometricMedian } from '@/utils/geometric';
+import { Point, findGeometricMedian } from '@/utils';
 
 @ApiTags('Promise')
 @ApiBearerAuth()
