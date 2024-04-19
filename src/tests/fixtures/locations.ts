@@ -2,7 +2,7 @@ import { Prisma } from '@prisma/client';
 
 import { createModelBuilder } from './builder';
 
-import { LocationModel } from '@/prisma/prisma.entity';
+import { LocationModel } from '@/prisma';
 
 export function createLocationBuilder(initialId: number) {
   return createModelBuilder<LocationModel>(initialId, (id) => ({

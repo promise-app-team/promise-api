@@ -5,8 +5,8 @@ import { ApiExcludeController, ApiQuery } from '@nestjs/swagger';
 import { ConnectionTo, EventBody } from './event.dto';
 import { EventService } from './event.service';
 
-import { ParsedBody } from '@/common/decorators/parsed-body.decorator';
-import { HttpException } from '@/common/exceptions/http.exception';
+import { ParsedBody } from '@/common/decorators';
+import { HttpException } from '@/common/exceptions';
 import { TypedConfigService } from '@/config/env';
 import { Get } from '@/customs/nest';
 

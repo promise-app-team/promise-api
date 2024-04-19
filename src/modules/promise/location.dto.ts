@@ -1,5 +1,5 @@
-import { ApplyDTO } from '@/common/mixins/dto.mixin';
-import { LocationEntity } from '@/prisma/prisma.entity';
+import { ApplyDTO } from '@/common/mixins';
+import { LocationEntity } from '@/prisma';
 
 export class PointDTO {
   latitude: number;

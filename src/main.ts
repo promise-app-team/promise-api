@@ -14,7 +14,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { StringifyDateInterceptor } from './common/interceptors/stringify-date.interceptor';
 import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
 import { TypedConfigService } from './config/env';
-import { LoggerService } from './customs/logger/logger.service';
+import { LoggerService } from './customs/logger';
 
 export function configure(app: NestExpressApplication) {
   app.useLogger(app.get(LoggerService));

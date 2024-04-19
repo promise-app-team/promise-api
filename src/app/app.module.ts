@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 
 import { AppController } from '@/app/app.controller';
-import { CommonModule } from '@/common/modules/common.module';
+import { CommonModule } from '@/common/modules';
 import { TypedConfigService, extraEnv } from '@/config/env';
 import { schema } from '@/config/validation';
 import { CacheModule, InMemoryCacheService, RedisCacheService } from '@/customs/cache';

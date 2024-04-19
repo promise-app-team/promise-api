@@ -10,9 +10,8 @@ import { ApiInternalServerErrorResponse, ApiUnauthorizedResponse } from '@nestjs
 
 import { Path, HttpAPIOptions } from '../types';
 
-import { HttpException } from '@/common/exceptions/http.exception';
-import { ApiOperation } from '@/customs/swagger/decorators/api-operation.decorator';
-import { ApiResponse, UsableStatus } from '@/customs/swagger/decorators/api-response.decorator';
+import { HttpException } from '@/common/exceptions';
+import { ApiOperation, ApiResponse, UsableStatus } from '@/customs/swagger';
 import { AuthGuard } from '@/modules/auth/auth.guard';
 
 function Template(

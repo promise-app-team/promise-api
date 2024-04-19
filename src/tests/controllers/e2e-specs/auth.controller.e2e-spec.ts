@@ -5,7 +5,7 @@ import { Test } from '@nestjs/testing';
 import { createHttpRequest } from '../utils/http-request';
 
 import { AppModule } from '@/app';
-import { HttpException } from '@/common/exceptions/http.exception';
+import { HttpException } from '@/common/exceptions';
 import { configure } from '@/main';
 import { AuthController, AuthServiceError } from '@/modules/auth';
 import { createTestFixture } from '@/tests/fixtures';

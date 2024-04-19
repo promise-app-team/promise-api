@@ -1,4 +1,4 @@
-import { ifs, guard } from '@/utils/guard';
+import { ifs, guard } from '@/utils';
 
 describe(ifs, () => {
   test('should return the value of the first condition that is true', () => {

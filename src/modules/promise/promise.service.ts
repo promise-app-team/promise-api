@@ -5,10 +5,8 @@ import * as R from 'remeda';
 import { InputCreatePromiseDTO, InputLocationDTO, InputUpdatePromiseDTO } from './promise.dto';
 import { PromiseStatus, PromiseUserRole } from './promise.enum';
 
-import { PrismaService } from '@/prisma';
-import { PrismaClientError } from '@/prisma/error-handler';
-import { LocationModel, ThemeModel } from '@/prisma/prisma.entity';
-import { createQueryBuilder } from '@/prisma/utils/query-builder';
+import { PrismaService, LocationModel, ThemeModel, PrismaClientError } from '@/prisma';
+import { createQueryBuilder } from '@/prisma/utils';
 
 export enum PromiseServiceError {
   NotFoundPromise = '약속을 찾을 수 없습니다.',

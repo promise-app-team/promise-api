@@ -1,6 +1,6 @@
 import { createModelBuilder } from './builder';
 
-import { Provider, UserModel } from '@/prisma/prisma.entity';
+import { Provider, UserModel } from '@/prisma';
 
 export function createUserBuilder(initialId: number) {
   return createModelBuilder<UserModel>(initialId, (id) => ({

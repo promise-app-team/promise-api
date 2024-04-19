@@ -2,15 +2,7 @@ import { Body, Param, Query, Controller } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import * as R from 'remeda';
 
-import { PromiseStatus, PromiseUserRole } from './promise.enum';
-
-import { HttpException } from '@/common/exceptions/http.exception';
-import { ToArrayOfPipe } from '@/common/pipes/to-array-of.pipe';
-import { TypedConfigService } from '@/config/env';
-import { CacheService } from '@/customs/cache';
-import { Delete, Get, Post, Put } from '@/customs/nest';
-import { AuthUser } from '@/modules/auth/auth.decorator';
-import { LocationDTO, PointDTO } from '@/modules/promise/location.dto';
+import { LocationDTO, PointDTO } from './location.dto';
 import {
   IdentifiableDTO,
   InputCreatePromiseDTO,
@@ -19,12 +11,20 @@ import {
   PromiseDTO,
   PromiseIdentifiableDTO,
   PublicPromiseDTO,
-} from '@/modules/promise/promise.dto';
-import { EncodePromiseID } from '@/modules/promise/promise.interceptor';
-import { DecodePromisePID } from '@/modules/promise/promise.pipe';
-import { PromiseService, PromiseServiceError } from '@/modules/promise/promise.service';
-import { ThemeDTO } from '@/modules/promise/theme.dto';
-import { UserModel } from '@/prisma/prisma.entity';
+} from './promise.dto';
+import { PromiseStatus, PromiseUserRole } from './promise.enum';
+import { EncodePromiseID } from './promise.interceptor';
+import { DecodePromisePID } from './promise.pipe';
+import { PromiseService, PromiseServiceError } from './promise.service';
+import { ThemeDTO } from './theme.dto';
+
+import { HttpException } from '@/common/exceptions';
+import { ToArrayOfPipe } from '@/common/pipes';
+import { TypedConfigService } from '@/config/env';
+import { CacheService } from '@/customs/cache';
+import { Delete, Get, Post, Put } from '@/customs/nest';
+import { AuthUser } from '@/modules/auth';
+import { UserModel } from '@/prisma';
 import { Point, findGeometricMedian } from '@/utils';
 
 @ApiTags('Promise')

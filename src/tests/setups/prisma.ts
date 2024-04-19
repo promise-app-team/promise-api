@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 
-import { memoize } from '@/utils/func';
+import { memoize } from '@/utils';
 
 interface PrismaClientOptions {
   logging?: boolean;

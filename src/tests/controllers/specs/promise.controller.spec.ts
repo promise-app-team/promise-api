@@ -19,8 +19,8 @@ import {
   PromiseStatus,
   PromiseUserRole,
   PromiseService,
+  EncodePromiseID,
 } from '@/modules/promise';
-import { EncodePromiseID } from '@/modules/promise/promise.interceptor';
 import { UserService } from '@/modules/user';
 import { PrismaService } from '@/prisma';
 import { createTestFixture } from '@/tests/fixtures';

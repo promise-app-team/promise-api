@@ -2,7 +2,7 @@ import { CanActivate, ExecutionContext, Injectable, UseGuards } from '@nestjs/co
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 
-import { HttpException } from '@/common/exceptions/http.exception';
+import { HttpException } from '@/common/exceptions';
 import { UserService } from '@/modules/user/user.service';
 
 @Injectable()

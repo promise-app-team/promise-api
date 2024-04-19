@@ -1,9 +1,9 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString, Length } from 'class-validator';
 
-import { IsProfileUrl } from '@/common/decorators/is-profile-url.decorator';
-import { ApplyDTO } from '@/common/mixins/dto.mixin';
-import { Provider, UserEntity } from '@/prisma/prisma.entity';
+import { IsProfileUrl } from '@/common/decorators';
+import { ApplyDTO } from '@/common/mixins';
+import { Provider, UserEntity } from '@/prisma';
 
 export class UserDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl', 'provider', 'createdAt']) {}
 

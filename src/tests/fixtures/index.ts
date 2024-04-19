@@ -17,7 +17,7 @@ import { createPromiseBuilder } from './promises';
 import { createThemeBuilder } from './themes';
 import { createUserBuilder } from './users';
 
-import { LocationModel, PromiseModel, ThemeModel, UserModel } from '@/prisma/prisma.entity';
+import { LocationModel, PromiseModel, ThemeModel, UserModel } from '@/prisma';
 
 type RequiredOption<I, O> = O | Result<I, O>;
 type OptionalOption<I, O> = O | Result<I, O> | boolean;
