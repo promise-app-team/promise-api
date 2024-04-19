@@ -4,7 +4,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { EntryDTO } from './app.dto';
 
 import { TypedConfigService } from '@/config/env';
-import { Get } from '@/customs/nest/decorators/http-api.decorator';
+import { Get } from '@/customs/nest';
 
 @ApiTags('App')
 @Controller()

@@ -8,7 +8,7 @@ import { HttpException } from '@/common/exceptions/http.exception';
 import { ToArrayOfPipe } from '@/common/pipes/to-array-of.pipe';
 import { TypedConfigService } from '@/config/env';
 import { CacheService } from '@/customs/cache';
-import { Delete, Get, Post, Put } from '@/customs/nest/decorators/http-api.decorator';
+import { Delete, Get, Post, Put } from '@/customs/nest';
 import { AuthUser } from '@/modules/auth/auth.decorator';
 import { LocationDTO, PointDTO } from '@/modules/promise/location.dto';
 import {

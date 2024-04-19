@@ -6,7 +6,7 @@ import { OutputUploadFileDTO } from './upload.dto';
 import { FileUploadService } from './upload.service';
 
 import { HttpException } from '@/common/exceptions/http.exception';
-import { Post } from '@/customs/nest/decorators/http-api.decorator';
+import { Post } from '@/customs/nest';
 
 @ApiTags('FileUpload')
 @ApiBearerAuth()

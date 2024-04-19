@@ -7,7 +7,7 @@ import { InputDeleteUserDTO, InputUpdateUserDTO, OutputDeleteUserDTO, UserDTO } 
 import { UserService, UserServiceError } from './user.service';
 
 import { HttpException } from '@/common/exceptions/http.exception';
-import { Delete, Get, Put } from '@/customs/nest/decorators/http-api.decorator';
+import { Delete, Get, Put } from '@/customs/nest';
 import { UserModel } from '@/prisma/prisma.entity';
 
 @ApiTags('User')
