@@ -1,25 +1,21 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
-export enum ConnectionTo {
-  Self = 'self',
-  Broadcast = 'broadcast',
+export class EventData<TParam = any, TBody = any> {
+  @ApiProperty()
+  param?: TParam;
+
+  @ApiProperty()
+  body: TBody;
 }
 
-export class Connection {
-  id!: string;
-  to!: ConnectionTo | string;
-}
-
-export class EventBody<T = any> {
-  @IsString({ message: '이벤트 이름을 전달해야 합니다.' })
+export class EventPayload<TParam = any, TBody = any> {
+  @ApiProperty()
   event: string;
 
-  @IsNotEmpty({ message: '데이터를 전달해야 합니다.' })
-  data: T;
+  @ApiProperty()
+  data: EventData<TParam, TBody>;
 }
 
-export class EventResponse<T = any> {
-  from: string;
-  timestamp: number;
-  data: T;
+export class EventResponse {
+  message: string;
 }

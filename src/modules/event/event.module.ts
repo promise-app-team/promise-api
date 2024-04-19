@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 
-import { ConnectionService } from './connection.service';
+import { ConnectionService } from './connection';
 import { EventController } from './event.controller';
 import { EventGateway } from './event.gateway';
-import { EventService } from './event.service';
+import { EventManager } from './events';
 
 @Module({
   controllers: [EventController],
-  providers: [EventGateway, EventService, ConnectionService],
+  providers: [EventGateway, EventManager, ConnectionService],
 })
 export class EventModule {}

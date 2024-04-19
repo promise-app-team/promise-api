@@ -52,7 +52,6 @@ import { PrismaModule } from '@/prisma';
                 if (
                   [
                     'NestApplication',
-                    'EventGateway',
                     'NestFactory',
                     'InstanceLoader',
                     'RoutesResolver',
@@ -74,7 +73,7 @@ import { PrismaModule } from '@/prisma';
       inject: [LoggerService, TypedConfigService],
       useFactory(logger: LoggerService, config: TypedConfigService) {
         return {
-          log: config.get('debug')
+          log: config.get('debug.prisma')
             ? [
                 { level: 'info', emit: 'event' },
                 { level: 'query', emit: 'event' },

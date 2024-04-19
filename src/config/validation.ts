@@ -7,10 +7,6 @@ export const schema = Joi.object({
 
   DB_URL: Joi.string().required(),
 
-  REDIS_HOST: Joi.string().required(),
-  REDIS_PORT: Joi.number().required(),
-  REDIS_PASSWORD: Joi.string().allow(''),
-
   JWT_SECRET_KEY: Joi.string().required(),
   INTHASH_KEY: Joi.string().required(),
 

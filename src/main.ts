@@ -87,7 +87,7 @@ async function startServerless() {
   const config = app.get(TypedConfigService);
   const handler = serverlessExpress({
     app: app.getHttpAdapter().getInstance(),
-    logSettings: config.get('debug') ? { level: 'debug' } : undefined,
+    logSettings: config.get('debug.lambda') ? { level: 'debug' } : undefined,
   });
   Logger.log(`🚀 Serverless app initialized`, 'Bootstrap');
   return handler;
@@ -101,17 +101,26 @@ if (process.env.SERVERLESS) {
   startLocalServer();
 }
 
-function adaptWebSocketEvent(event: APIGatewayEvent) {
+function configureWebSocketEvent(event: APIGatewayEvent) {
   const { requestContext } = event;
-  const { connectionId, httpMethod, eventType } = requestContext;
-  event.path = `/event/${(eventType ?? 'message').toLowerCase()}`;
+  const { connectionId, eventType } = requestContext ?? {};
+  if (!eventType) return;
+
+  if (eventType === 'MESSAGE') {
+    const body = JSON.parse(event.body ?? '{}');
+    event.path = `/event/${body.event ?? 'unknown'}`;
+    event.httpMethod = 'POST';
+  } else {
+    event.path = `/event/${eventType.toLowerCase()}`;
+    event.httpMethod = 'GET';
+  }
+
   (event.queryStringParameters ??= {})['connectionId'] = connectionId ?? '';
   (event.multiValueQueryStringParameters ??= {})['connectionId'] = [connectionId ?? ''];
-  event.httpMethod ??= httpMethod ?? 'GET';
 }
 
 export const handler: Handler = async (event, context, callback) => {
+  configureWebSocketEvent(event);
   context.callbackWaitsForEmptyEventLoop = false;
-  if (event.requestContext?.eventType) adaptWebSocketEvent(event);
   return (await bootstrap)(event, context, callback);
 };

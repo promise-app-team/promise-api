@@ -15,9 +15,12 @@ export const extraEnv = () => {
     build: BUILD,
     deploy: formatISO(process.env.NOW || new Date()),
     version: '0.0.0', // TODO: versioning
-
-    debug: !!process.env.DEBUG,
     colorize: !process.env.NO_COLOR,
+
+    debug: {
+      lambda: !!process.env.DEBUG_LAMBDA,
+      prisma: !!process.env.DEBUG_PRISMA,
+    },
 
     db: {
       host: process.env.DB_HOST,
