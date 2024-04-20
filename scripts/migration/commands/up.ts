@@ -31,8 +31,13 @@ export class UpCommand extends Command('up') {
     const ok = await requestContinue();
     if (!ok) return logger.warn('Aborted.');
 
+    const result = await command.prisma(`migrate deploy`).catch(async (reason) => {
+      logger.error(reason);
+      await command.mysql('DELETE FROM `_prisma_migrations` WHERE `logs` IS NOT NULL');
+      process.exit(1);
+    });
+
     const schema = pendingMigrations.slice(-1)[0].filepath.schema;
-    const result = await command.prisma(`migrate deploy`);
     await command.prisma(`generate --schema ${schema}`);
 
     const appliedMigrations = R.pipe(
