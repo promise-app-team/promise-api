@@ -5,9 +5,9 @@ import { pick } from 'remeda';
 
 import { createHttpRequest } from '../utils/http-request';
 
-import { AppModule } from '@/app/app.module';
+import { AppModule } from '@/app';
 import { configure } from '@/main';
-import { UserController } from '@/modules/user/user.controller';
+import { UserController } from '@/modules/user';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';
 

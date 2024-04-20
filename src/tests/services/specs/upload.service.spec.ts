@@ -1,8 +1,8 @@
 import { Test } from '@nestjs/testing';
 
 import { TypedConfigService } from '@/config/env';
-import { S3ClientService } from '@/customs/s3-client/s3-client.service';
-import { FileUploadService } from '@/modules/upload/upload.service';
+import { S3ClientService } from '@/customs/s3-client';
+import { FileUploadService } from '@/modules/upload';
 
 describe(FileUploadService, () => {
   let uploadService: FileUploadService;

@@ -6,15 +6,15 @@ import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { Handler } from 'aws-lambda';
+import { APIGatewayEvent, Handler } from 'aws-lambda';
 
-import { AppModule } from './app/app.module';
+import { AppModule } from './app';
 import { HttpException } from './common/exceptions/http.exception';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { StringifyDateInterceptor } from './common/interceptors/stringify-date.interceptor';
 import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
 import { TypedConfigService } from './config/env';
-import { LoggerService } from './customs/logger/logger.service';
+import { LoggerService } from './customs/logger';
 
 export function configure(app: NestExpressApplication) {
   app.useLogger(app.get(LoggerService));
@@ -84,8 +84,13 @@ async function startLocalServer() {
 
 async function startServerless() {
   const app = await initializeApp().then((app) => app.init());
+  const config = app.get(TypedConfigService);
+  const handler = serverlessExpress({
+    app: app.getHttpAdapter().getInstance(),
+    logSettings: config.get('debug.lambda') ? { level: 'debug' } : undefined,
+  });
   Logger.log(`🚀 Serverless app initialized`, 'Bootstrap');
-  return serverlessExpress({ app: app.getHttpAdapter().getInstance() });
+  return handler;
 }
 
 let bootstrap: Promise<Handler>;
@@ -96,7 +101,26 @@ if (process.env.SERVERLESS) {
   startLocalServer();
 }
 
+function configureWebSocketEvent(event: APIGatewayEvent) {
+  const { requestContext } = event;
+  const { connectionId, eventType } = requestContext ?? {};
+  if (!eventType) return;
+
+  if (eventType === 'MESSAGE') {
+    const body = JSON.parse(event.body ?? '{}');
+    event.path = `/event/${body.event ?? 'unknown'}`;
+    event.httpMethod = 'POST';
+  } else {
+    event.path = `/event/${eventType.toLowerCase()}`;
+    event.httpMethod = 'GET';
+  }
+
+  (event.queryStringParameters ??= {})['connectionId'] = connectionId ?? '';
+  (event.multiValueQueryStringParameters ??= {})['connectionId'] = [connectionId ?? ''];
+}
+
 export const handler: Handler = async (event, context, callback) => {
+  configureWebSocketEvent(event);
   context.callbackWaitsForEmptyEventLoop = false;
   return (await bootstrap)(event, context, callback);
 };

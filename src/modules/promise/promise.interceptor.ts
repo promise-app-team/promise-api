@@ -1,7 +1,7 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Observable, map } from 'rxjs';
 
-import { InthashService } from '@/customs/inthash/inthash.service';
+import { InthashService } from '@/customs/inthash';
 
 @Injectable()
 export class EncodePromiseID implements NestInterceptor {

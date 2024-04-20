@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
 
-import { AppController } from '@/app/app.controller';
+import { AppController } from '@/app';
 import { TypedConfigService } from '@/config/env';
 
 describe(AppController, () => {

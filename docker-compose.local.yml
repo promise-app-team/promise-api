@@ -7,7 +7,7 @@ services:
     ports:
       - ${DB_PORT}:3306
     networks:
-      - mysql
+      - server
     volumes:
       - ./dockerdata/mysql.${STAGE}:/var/lib/mysql
       - ./mysql:/docker-entrypoint-initdb.d:ro
@@ -29,5 +29,19 @@ services:
       timeout: 5s
       retries: 10
 
+  redis:
+    image: redis:7.2
+    container_name: promise-api.redis
+    ports:
+      - ${REDIS_PORT}:6379
+    networks:
+      - server
+    volumes:
+      - ./dockerdata/redis.${STAGE}:/data
+    restart: always
+    command:
+      - --save 60 1
+      - --requirepass ${REDIS_PASSWORD}
+
 networks:
-  mysql:
+  server:

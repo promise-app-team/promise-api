@@ -1,24 +1,22 @@
-import { CacheModule } from '@nestjs/cache-manager';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 
 import { AppController } from '@/app/app.controller';
-import { CommonModule } from '@/common/modules/common.module';
+import { CommonModule } from '@/common/modules';
 import { TypedConfigService, extraEnv } from '@/config/env';
 import { schema } from '@/config/validation';
-import { LoggerModule } from '@/customs/logger/logger.module';
-import { LoggerService } from '@/customs/logger/logger.service';
-import { TypedConfigModule } from '@/customs/typed-config/typed-config.module';
-import { AuthModule } from '@/modules/auth/auth.module';
-import { EventModule } from '@/modules/event/event.module';
-import { PromiseModule } from '@/modules/promise/promise.module';
-import { FileUploadModule } from '@/modules/upload/upload.module';
-import { UserModule } from '@/modules/user/user.module';
-import { PrismaModule } from '@/prisma/prisma.module';
+import { CacheModule, InMemoryCacheService, RedisCacheService } from '@/customs/cache';
+import { LoggerModule, LoggerService } from '@/customs/logger';
+import { TypedConfigModule } from '@/customs/typed-config';
+import { AuthModule } from '@/modules/auth';
+import { EventModule } from '@/modules/event';
+import { PromiseModule } from '@/modules/promise';
+import { FileUploadModule } from '@/modules/upload';
+import { UserModule } from '@/modules/user';
+import { PrismaModule } from '@/prisma';
 
 @Module({
   imports: [
-    CacheModule.register({ isGlobal: true }),
     TypedConfigModule.register({
       isGlobal: true,
       load: [extraEnv],
@@ -54,7 +52,6 @@ import { PrismaModule } from '@/prisma/prisma.module';
                 if (
                   [
                     'NestApplication',
-                    'EventGateway',
                     'NestFactory',
                     'InstanceLoader',
                     'RoutesResolver',
@@ -76,12 +73,17 @@ import { PrismaModule } from '@/prisma/prisma.module';
       inject: [LoggerService, TypedConfigService],
       useFactory(logger: LoggerService, config: TypedConfigService) {
         return {
-          log: [
-            { level: 'info', emit: 'event' },
-            { level: 'query', emit: 'event' },
-            { level: 'warn', emit: 'event' },
-            { level: 'error', emit: 'event' },
-          ],
+          log: config.get('debug.prisma')
+            ? [
+                { level: 'info', emit: 'event' },
+                { level: 'query', emit: 'event' },
+                { level: 'warn', emit: 'event' },
+                { level: 'error', emit: 'event' },
+              ]
+            : [
+                { level: 'warn', emit: 'event' },
+                { level: 'error', emit: 'event' },
+              ],
           errorFormat: config.get('colorize') ? 'pretty' : 'colorless',
           transform(prisma) {
             const tableName = config.get('db.name');
@@ -107,6 +109,21 @@ import { PrismaModule } from '@/prisma/prisma.module';
             });
             return prisma;
           },
+        };
+      },
+    }),
+    CacheModule.registerAsync({
+      isGlobal: true,
+      inject: [TypedConfigService],
+      useFactory(config: TypedConfigService) {
+        return {
+          service: config.get('is.test')
+            ? new InMemoryCacheService()
+            : new RedisCacheService({
+                host: config.get('redis.host'),
+                port: config.get('redis.port'),
+                password: config.get('redis.password'),
+              }),
         };
       },
     }),

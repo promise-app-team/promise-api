@@ -17,7 +17,7 @@ custom:
   customDomain:
     stage: ${self:provider.stage}
     domainName: ${self:custom.domain.${self:provider.stage}}
-    certificateArn: arn:aws:acm:us-east-1:736583075859:certificate/bb2cf4ae-22a7-41c9-bfc4-98a983b88663
+    certificateArn: arn:aws:acm:us-east-1:${aws:accountId}:certificate/bb2cf4ae-22a7-41c9-bfc4-98a983b88663
 
 provider:
   name: aws
@@ -29,7 +29,7 @@ provider:
   ecr:
     images:
       appimage:
-        uri: 736583075859.dkr.ecr.${self:provider.region}.amazonaws.com/promise-api-${self:provider.stage}:appimage
+        uri: ${aws:accountId}.dkr.ecr.${aws:region}.amazonaws.com/${self:service}-${self:provider.stage}:appimage
   iam:
     role:
       statements:
@@ -42,15 +42,15 @@ provider:
         - Effect: Allow
           Action: s3:PutObject
           Resource: arn:aws:s3:::${env:AWS_S3_BUCKET_NAME}/*
-  vpc:
-    securityGroupIds:
-      - sg-0322225ba04d879fa
-    subnetIds:
-      - subnet-0428912e4d39d2947
-      - subnet-075c29b5ae54675d0
+        - Effect: Allow
+          Action:
+            - execute-api:ManageConnections
+            - execute-api:Invoke
+          Resource: arn:aws:execute-api:${aws:region}:${aws:accountId}:*
   apiGateway:
     binaryMediaTypes:
       - '*/*'
+  websocketsApiName: ${self:provider.stage}-${self:service}-ws
   environment:
     SERVERLESS: true
 
@@ -67,7 +67,22 @@ provider:
 
     DB_URL: ${env:DB_URL}
 
+    REDIS_HOST: ${env:REDIS_HOST}
+    REDIS_PORT: ${env:REDIS_PORT}
+    REDIS_PASSWORD: ${env:REDIS_PASSWORD}
+
     AWS_S3_BUCKET_NAME: ${env:AWS_S3_BUCKET_NAME}
+    AWS_GW_WEBSOCKET_ENDPOINT: 
+      Fn::Join:
+        - ''
+        - - 'https://'
+          - Ref: 'WebsocketsApi'
+          - '.execute-api.'
+          - Ref: 'AWS::Region'
+          - '.'
+          - Ref: 'AWS::URLSuffix'
+          - '/'
+          - ${self:provider.stage}
 
 functions:
   main:
@@ -80,11 +95,8 @@ functions:
       entryPoint:
         - /lambda-entrypoint.sh
     events:
-      - http:
-          method: ANY
-          path: /
-          cors: true
-      - http:
-          method: ANY
-          path: /{proxy+}
-          cors: true
+      - http: ANY /
+      - http: ANY /{proxy+}
+      - websocket: $connect
+      - websocket: $disconnect
+      - websocket: $default

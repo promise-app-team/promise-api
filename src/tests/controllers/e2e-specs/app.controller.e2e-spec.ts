@@ -3,8 +3,7 @@ import { Test } from '@nestjs/testing';
 
 import { createHttpRequest } from '../utils/http-request';
 
-import { AppController } from '@/app/app.controller';
-import { AppModule } from '@/app/app.module';
+import { AppController, AppModule } from '@/app';
 import { configure } from '@/main';
 
 describe(AppController, () => {

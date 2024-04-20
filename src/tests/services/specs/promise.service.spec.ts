@@ -3,11 +3,16 @@ import { Promise as PromiseModel, User as UserModel } from '@prisma/client';
 import { formatISO } from 'date-fns';
 import * as R from 'remeda';
 
-import { InputCreatePromiseDTO, InputLocationDTO, InputUpdatePromiseDTO } from '@/modules/promise/promise.dto';
-import { PromiseStatus, PromiseUserRole } from '@/modules/promise/promise.enum';
-import { PromiseService, PromiseServiceError } from '@/modules/promise/promise.service';
-import { DestinationType } from '@/prisma/prisma.entity';
-import { PrismaService } from '@/prisma/prisma.service';
+import {
+  InputCreatePromiseDTO,
+  InputLocationDTO,
+  InputUpdatePromiseDTO,
+  PromiseStatus,
+  PromiseUserRole,
+  PromiseService,
+  PromiseServiceError,
+} from '@/modules/promise';
+import { DestinationType, PrismaService } from '@/prisma';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';
 

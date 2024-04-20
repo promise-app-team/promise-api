@@ -1,4 +1,3 @@
-import { CacheModule } from '@nestjs/cache-manager';
 import { HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -7,15 +6,23 @@ import { Prisma } from '@prisma/client';
 import { formatISO } from 'date-fns';
 import * as R from 'remeda';
 
+import { mockGlobalFn } from '../mocks';
+
 import { TypedConfigService } from '@/config/env';
-import { InthashService } from '@/customs/inthash/inthash.service';
-import { PromiseController } from '@/modules/promise/promise.controller';
-import { InputCreatePromiseDTO, InputLocationDTO, InputUpdatePromiseDTO } from '@/modules/promise/promise.dto';
-import { PromiseStatus, PromiseUserRole } from '@/modules/promise/promise.enum';
-import { EncodePromiseID } from '@/modules/promise/promise.interceptor';
-import { PromiseService } from '@/modules/promise/promise.service';
-import { UserService } from '@/modules/user/user.service';
-import { PrismaService } from '@/prisma/prisma.service';
+import { CacheModule, InMemoryCacheService } from '@/customs/cache';
+import { InthashService } from '@/customs/inthash';
+import {
+  PromiseController,
+  InputCreatePromiseDTO,
+  InputLocationDTO,
+  InputUpdatePromiseDTO,
+  PromiseStatus,
+  PromiseUserRole,
+  PromiseService,
+  EncodePromiseID,
+} from '@/modules/promise';
+import { UserService } from '@/modules/user';
+import { PrismaService } from '@/prisma';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';
 
@@ -28,7 +35,11 @@ describe(PromiseController, () => {
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
-      imports: [CacheModule.register()],
+      imports: [
+        CacheModule.register({
+          service: new InMemoryCacheService(),
+        }),
+      ],
       controllers: [PromiseController],
       providers: [
         PromiseService,
@@ -666,6 +677,8 @@ describe(PromiseController, () => {
   const deviceId = 'test-device-id';
 
   describe(PromiseController.prototype.enqueuePromise, () => {
+    mockGlobalFn('setTimeout');
+
     test('should enqueue a promise id and device id', async () => {
       const { promise } = await fixture.write.promise.output();
       const result = await promiseController.enqueuePromise(promise.id, deviceId);
@@ -678,6 +691,8 @@ describe(PromiseController, () => {
   });
 
   describe(PromiseController.prototype.dequeuePromise, () => {
+    mockGlobalFn('setTimeout');
+
     test('should dequeue a promise id by device id', async () => {
       const { promise } = await fixture.write.promise.output();
       await promiseController.enqueuePromise(promise.id, deviceId);

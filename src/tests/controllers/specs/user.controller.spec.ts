@@ -3,9 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import { pick } from 'remeda';
 
-import { UserController } from '@/modules/user/user.controller';
-import { UserService } from '@/modules/user/user.service';
-import { PrismaService } from '@/prisma/prisma.service';
+import { UserController, UserService } from '@/modules/user';
+import { PrismaService } from '@/prisma';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';
 

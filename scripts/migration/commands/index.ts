@@ -1,6 +1,6 @@
-export { UpCommand } from './up';
-export { DownCommand } from './down';
-export { ListCommand } from './list';
-export { NewCommand } from './new';
-export { SeedCommand } from './seed';
-export { HelpCommand } from './help';
+export * from './up';
+export * from './down';
+export * from './list';
+export * from './new';
+export * from './seed';
+export * from './help';

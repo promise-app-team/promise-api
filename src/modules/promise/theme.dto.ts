@@ -1,4 +1,4 @@
-import { ApplyDTO } from '@/common/mixins/dto.mixin';
-import { ThemeEntity } from '@/prisma/prisma.entity';
+import { ApplyDTO } from '@/common/mixins';
+import { ThemeEntity } from '@/prisma';
 
 export class ThemeDTO extends ApplyDTO(ThemeEntity, ['id', 'name']) {}

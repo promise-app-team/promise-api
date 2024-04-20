@@ -1,6 +1,6 @@
 import { createModelBuilder } from './builder';
 
-import { PromiseUserModel } from '@/prisma/prisma.entity';
+import { PromiseUserModel } from '@/prisma';
 
 export function createPromiseUserBuilder(initialId: number) {
   return createModelBuilder<PromiseUserModel, 'userId' | 'promiseId'>(initialId, () => ({

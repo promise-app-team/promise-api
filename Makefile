@@ -9,16 +9,16 @@ endef
 
 https := $(shell git rev-parse --show-toplevel)/https
 
-start_mysql:
-	@$(call docker_compose,local) up -d mysql
+init_db:
+	@$(call docker_compose,local) up -d mysql redis
 
-stop_mysql:
-	@$(call docker_compose,local) down --volumes mysql
+deinit_db:
+	@$(call docker_compose,local) down --volumes mysql redis
 
-start_https:
+init_https:
 	@./https/scripts/install.sh
 	@$(call docker_compose,https) up -d https
 
-stop_https:
+deinit_https:
 	@./https/scripts/uninstall.sh
 	@$(call docker_compose,https) down --rmi=all https

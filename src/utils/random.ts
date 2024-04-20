@@ -1,11 +1,8 @@
-interface Random {
-  (): boolean;
-  <T>(array: T[]): T;
-  (min: number, max: number): number;
-  (start: Date, end: Date): Date;
-}
-
-const random = function (...args: any[]) {
+export function random(): boolean;
+export function random<T>(array: T[]): T;
+export function random(min: number, max: number): number;
+export function random(start: Date, end: Date): Date;
+export function random(...args: any[]) {
   const [first, second] = args;
 
   if (Array.isArray(first)) {
@@ -21,7 +18,7 @@ const random = function (...args: any[]) {
   }
 
   return randomBoolean();
-} as Random;
+}
 
 function randomBoolean(): boolean {
   return Math.random() < 0.5;
@@ -38,5 +35,3 @@ function randomArrayPick<T>(array: T[]): T {
 function randomDate(start: Date, end: Date): Date {
   return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
 }
-
-export { random };

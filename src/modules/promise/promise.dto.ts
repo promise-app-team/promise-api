@@ -19,10 +19,11 @@ import {
 import { addMinutes, addWeeks, formatISO } from 'date-fns';
 import { filter, map, pipe } from 'remeda';
 
-import { IsAfter } from '@/common/decorators/is-after.decorator';
-import { ApplyDTO } from '@/common/mixins/dto.mixin';
-import { LocationDTO } from '@/modules/promise/location.dto';
-import { DestinationType, LocationShareType, PromiseEntity, UserEntity } from '@/prisma/prisma.entity';
+import { LocationDTO } from './location.dto';
+
+import { IsAfter } from '@/common/decorators';
+import { ApplyDTO } from '@/common/mixins';
+import { DestinationType, LocationShareType, PromiseEntity, UserEntity } from '@/prisma';
 
 export class HostDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl']) {}
 export class AttendeeDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl'], (obj) => ({

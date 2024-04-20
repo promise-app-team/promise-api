@@ -2,7 +2,7 @@ import { addHours } from 'date-fns';
 
 import { createModelBuilder } from './builder';
 
-import { DestinationType, LocationShareType, PromiseModel } from '@/prisma/prisma.entity';
+import { DestinationType, LocationShareType, PromiseModel } from '@/prisma';
 
 export function createPromiseBuilder(initialId: number) {
   return createModelBuilder<Omit<PromiseModel, 'pid'>, 'hostId'>(initialId, (id) => ({

@@ -4,12 +4,13 @@ import { Test } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import * as R from 'remeda';
 
-import { AppModule } from '@/app/app.module';
-import { InthashService } from '@/customs/inthash/inthash.service';
+import { mockGlobalFn } from '../mocks';
+
+import { AppModule } from '@/app';
+import { InthashService } from '@/customs/inthash';
 import { configure } from '@/main';
-import { PromiseController } from '@/modules/promise/promise.controller';
-import { InputCreatePromiseDTO, InputLocationDTO, InputUpdatePromiseDTO } from '@/modules/promise/promise.dto';
-import { DestinationType, LocationShareType } from '@/prisma/prisma.entity';
+import { PromiseController, InputCreatePromiseDTO, InputLocationDTO, InputUpdatePromiseDTO } from '@/modules/promise';
+import { DestinationType, LocationShareType } from '@/prisma';
 import { createHttpRequest } from '@/tests/controllers/utils/http-request';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';
@@ -924,6 +925,8 @@ describe(PromiseController, () => {
   });
 
   describe(http.request.enqueuePromise, () => {
+    mockGlobalFn('setTimeout');
+
     const deviceId = 'test-device-id';
 
     test('should enqueue deviceId to promise queue', async () => {
@@ -947,6 +950,8 @@ describe(PromiseController, () => {
   });
 
   describe(http.request.dequeuePromise, () => {
+    mockGlobalFn('setTimeout');
+
     const deviceId = 'test-device-id';
 
     test('should dequeue deviceId from promise queue', async () => {

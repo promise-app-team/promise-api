@@ -6,9 +6,9 @@ import { AuthUser } from '../auth/auth.decorator';
 import { InputDeleteUserDTO, InputUpdateUserDTO, OutputDeleteUserDTO, UserDTO } from './user.dto';
 import { UserService, UserServiceError } from './user.service';
 
-import { HttpException } from '@/common/exceptions/http.exception';
-import { Delete, Get, Put } from '@/customs/nest/decorators/http-api.decorator';
-import { UserModel } from '@/prisma/prisma.entity';
+import { HttpException } from '@/common/exceptions';
+import { Delete, Get, Put } from '@/customs/nest';
+import { UserModel } from '@/prisma';
 
 @ApiTags('User')
 @ApiBearerAuth()

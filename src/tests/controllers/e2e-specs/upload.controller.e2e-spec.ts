@@ -4,9 +4,9 @@ import { JwtService } from '@nestjs/jwt';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 
-import { AppModule } from '@/app/app.module';
+import { AppModule } from '@/app';
 import { configure } from '@/main';
-import { FileUploadController } from '@/modules/upload/upload.controller';
+import { FileUploadController } from '@/modules/upload';
 import { createHttpRequest } from '@/tests/controllers/utils/http-request';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';

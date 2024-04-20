@@ -2,7 +2,7 @@ import { HttpStatus, Type } from '@nestjs/common';
 import { ApiResponse as BaseApiResponse } from '@nestjs/swagger';
 import { unique } from 'remeda';
 
-import { HttpException, isExceptionStatus } from '@/common/exceptions/http.exception';
+import { HttpException, isExceptionStatus } from '@/common/exceptions';
 
 export type UsableStatus = Extract<
   keyof typeof HttpStatus,
