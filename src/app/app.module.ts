@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, Scope } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 
 import { AppController } from '@/app/app.controller';
@@ -8,6 +8,7 @@ import { schema } from '@/config/validation';
 import { CacheModule, InMemoryCacheService, RedisCacheService } from '@/customs/cache';
 import { LoggerModule, LoggerService } from '@/customs/logger';
 import { TypedConfigModule } from '@/customs/typed-config';
+import { WinstonLoggerService, createWinstonLogger } from '@/customs/winston-logger';
 import { AuthModule } from '@/modules/auth';
 import { EventModule } from '@/modules/event';
 import { PromiseModule } from '@/modules/promise';
@@ -36,35 +37,41 @@ import { PrismaModule } from '@/prisma';
     }),
     LoggerModule.registerAsync({
       isGlobal: true,
+      scope: Scope.TRANSIENT,
       inject: [TypedConfigService],
       useFactory(config: TypedConfigService) {
         return {
-          filter({ metadata }) {
-            const label = metadata.label;
+          logger: new WinstonLoggerService({
+            winston: createWinstonLogger({
+              colorize: config.get('colorize'),
+            }),
+            filter(args) {
+              const context = args.metadata.context ?? '';
 
-            switch (config.get('stage')) {
-              case 'test':
-                return false;
-              case 'local':
-              // return true;
-              case 'dev':
-              case 'prod':
-                if (
-                  [
-                    'NestApplication',
-                    'NestFactory',
-                    'InstanceLoader',
-                    'RoutesResolver',
-                    'RouterExplorer',
-                    'WebSocketsController',
-                  ].includes(label)
-                ) {
+              switch (config.get('stage')) {
+                case 'test':
                   return false;
-                }
-            }
+                case 'local':
+                // return true;
+                case 'dev':
+                case 'prod':
+                  if (
+                    [
+                      'NestApplication',
+                      'NestFactory',
+                      'InstanceLoader',
+                      'RoutesResolver',
+                      'RouterExplorer',
+                      'WebSocketsController',
+                    ].includes(context)
+                  ) {
+                    return false;
+                  }
+              }
 
-            return true;
-          },
+              return true;
+            },
+          }),
         };
       },
     }),
@@ -102,10 +109,7 @@ import { PrismaModule } from '@/prisma';
                 return value;
               });
 
-              logger.log(`${injectedQuery}`, {
-                label: 'Query',
-                ms: duration,
-              });
+              logger.log(`${injectedQuery}`, { ms: duration }, 'Query');
             });
             return prisma;
           },

@@ -37,3 +37,5 @@ type And<A extends boolean, B extends boolean, C extends boolean = true, D exten
 // eslint-disable-next-line prettier/prettier
 type Or<A extends boolean, B extends boolean, C extends boolean = false, D extends boolean = false> = 
   A extends true ? true : B extends true ? true : C extends true ? true : D extends true ? true : false;
+
+type MaybePromise<T> = T | Promise<T>;
