@@ -5,13 +5,13 @@ import chalk from 'chalk';
 import { highlight, logger, prompt } from '../../utils';
 import { MIGRATION_DIR, SCHEMA_FILE } from '../constants';
 import { envs } from '../envs';
-import { checkMigrationNotLatest, command, formatMigrationLink, requestContinue } from '../utils';
+import { checkMigrationLatest, command, formatMigrationLink, requestContinue } from '../utils';
 
 import { Command } from './command';
 
 export class NewCommand extends Command('new') {
   async execute() {
-    await checkMigrationNotLatest();
+    await checkMigrationLatest();
     const [upSql, downSql] = await Promise.all([
       command.prisma(
         [

@@ -3,8 +3,8 @@ import { createModelBuilder } from './builder';
 import { PromiseUserModel } from '@/prisma';
 
 export function createPromiseUserBuilder(initialId: number) {
-  return createModelBuilder<PromiseUserModel, 'userId' | 'promiseId'>(initialId, () => ({
-    userId: 0,
+  return createModelBuilder<PromiseUserModel, 'attendeeId' | 'promiseId'>(initialId, () => ({
+    attendeeId: 0,
     promiseId: 0,
     startLocationId: null,
     createdAt: new Date(),

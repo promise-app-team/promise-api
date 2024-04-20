@@ -17,7 +17,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { addMinutes, addWeeks, formatISO } from 'date-fns';
-import { filter, map, pipe } from 'remeda';
+import * as R from 'remeda';
 
 import { LocationDTO } from './location.dto';
 
@@ -50,15 +50,11 @@ export class PromiseDTO extends ApplyDTO(
   ],
   (obj) => ({
     host: HostDTO.from(obj.host),
-    themes: map(obj.themes, ({ theme }) => theme.name),
+    themes: R.map(obj.themes, ({ theme }) => theme.name),
     destination: obj.destination ? LocationDTO.from(obj.destination) : null,
-    attendees: pipe(
-      obj.users,
-      filter(({ user }) => user.id !== obj.host.id),
-      map(({ user, startLocationId }) => ({
-        ...AttendeeDTO.from({ ...user, hasStartLocation: typeof startLocationId === 'number' }),
-      }))
-    ),
+    attendees: R.map(obj.attendees, ({ attendee, startLocationId }) => ({
+      ...AttendeeDTO.from({ ...attendee, hasStartLocation: typeof startLocationId === 'number' }),
+    })),
   })
 ) {
   host!: HostDTO;

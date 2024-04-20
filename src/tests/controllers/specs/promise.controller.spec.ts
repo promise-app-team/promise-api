@@ -122,8 +122,8 @@ describe(PromiseController, () => {
          * promise2: host2 [host2, host3]
          * promise3: host3 [host3]
          */
-        await prisma.promiseUser.create({ data: { promiseId: p1.id, userId: h2.id } });
-        await prisma.promiseUser.create({ data: { promiseId: p2.id, userId: h3.id } });
+        await prisma.promiseUser.create({ data: { promiseId: p1.id, attendeeId: h2.id } });
+        await prisma.promiseUser.create({ data: { promiseId: p2.id, attendeeId: h3.id } });
 
         const getMyPromises = (id: number) => {
           return promiseController.getMyPromises({ id }, undefined, role);
@@ -195,12 +195,12 @@ describe(PromiseController, () => {
       ).forEach(([src, dest]) => R.merge(src, dest));
 
       await Promise.all([
-        prisma.promiseUser.create({ data: { userId: h3.id, promiseId: p2.id } }),
-        prisma.promiseUser.create({ data: { userId: h5.id, promiseId: p4.id } }),
-        prisma.promiseUser.create({ data: { userId: h1.id, promiseId: p5.id } }),
-        prisma.promiseUser.create({ data: { userId: h4.id, promiseId: p5.id } }),
-        prisma.promiseUser.create({ data: { userId: h1.id, promiseId: p6.id } }),
-        prisma.promiseUser.create({ data: { userId: h4.id, promiseId: p6.id } }),
+        prisma.promiseUser.create({ data: { attendeeId: h3.id, promiseId: p2.id } }),
+        prisma.promiseUser.create({ data: { attendeeId: h5.id, promiseId: p4.id } }),
+        prisma.promiseUser.create({ data: { attendeeId: h1.id, promiseId: p5.id } }),
+        prisma.promiseUser.create({ data: { attendeeId: h4.id, promiseId: p5.id } }),
+        prisma.promiseUser.create({ data: { attendeeId: h1.id, promiseId: p6.id } }),
+        prisma.promiseUser.create({ data: { attendeeId: h4.id, promiseId: p6.id } }),
       ]);
 
       const getMyPromises = (id: number) => {
@@ -339,7 +339,7 @@ describe(PromiseController, () => {
           longitude: parseFloat(input.destination.longitude.toString()),
         },
         themes: themes.map((theme) => theme.name),
-        attendees: [],
+        attendees: [R.pick(host, ['id', 'profileUrl', 'username'])],
       });
     });
   });
@@ -411,9 +411,9 @@ describe(PromiseController, () => {
 
       await expect(
         prisma.promiseUser.findUniqueOrThrow({
-          where: { identifier: { userId: user.id, promiseId: promise.id } },
+          where: { identifier: { attendeeId: user.id, promiseId: promise.id } },
         })
-      ).resolves.toMatchObject({ userId: user.id, promiseId: promise.id });
+      ).resolves.toMatchObject({ attendeeId: user.id, promiseId: promise.id });
     });
 
     test('should throw an error if the promise is not found', async () => {
@@ -446,7 +446,7 @@ describe(PromiseController, () => {
 
       await expect(
         prisma.promiseUser.findUniqueOrThrow({
-          where: { identifier: { userId: attendee.id, promiseId: promise.id } },
+          where: { identifier: { attendeeId: attendee.id, promiseId: promise.id } },
         })
       ).rejects.toThrow();
     });
@@ -602,8 +602,8 @@ describe(PromiseController, () => {
           prisma.promiseUser.update({
             where: {
               identifier: {
-                userId: attendees[i].id,
                 promiseId: promise.id,
+                attendeeId: attendees[i].id,
               },
             },
             data: { startLocationId: location.id },

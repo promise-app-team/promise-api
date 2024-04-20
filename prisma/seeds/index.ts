@@ -139,10 +139,10 @@ async function mock(prisma: PrismaClient) {
               data: sample(themes, random(1, 5)).map((theme) => ({ themeId: theme.id })),
             },
           },
-          users: {
+          attendees: {
             createMany: {
               data: randomAttendeeMap[num].map((user, index) => ({
-                userId: user.id,
+                attendeeId: user.id,
                 startLocationId: randomStartLocationsMap[num][index],
               })),
             },

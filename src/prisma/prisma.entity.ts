@@ -33,8 +33,8 @@ export enum LocationShareType {
 }
 
 const promiseUserInclude: Prisma.PromiseUserInclude = {
-  user: true,
   promise: true,
+  attendee: true,
   startLocation: true,
 };
 
@@ -58,7 +58,7 @@ const themeInclude: Prisma.ThemeInclude = {
 
 const promiseInclude: Prisma.PromiseInclude = {
   host: true,
-  users: {
+  attendees: {
     include: promiseUserInclude,
   },
   themes: {
@@ -153,13 +153,13 @@ export class PromiseEntity implements PromisePayload {
   createdAt!: Date;
   updatedAt!: Date;
 
-  users!: PromiseUserEntity[];
+  attendees!: PromiseUserEntity[];
   themes!: PromiseThemeEntity[];
 
   _count: {
     host: number;
     destination: number;
-    users: number;
+    attendees: number;
     themes: number;
   };
 }
@@ -214,11 +214,11 @@ export class LocationModel extends PickType(LocationEntity, [
 ]) {}
 
 export class PromiseUserEntity implements PromiseUserPayload {
-  userId!: number;
-  user!: UserEntity;
-
   promiseId!: number;
   promise!: PromiseEntity;
+
+  attendeeId!: number;
+  attendee!: UserEntity;
 
   startLocationId: number | null;
   startLocation!: LocationEntity | null;
@@ -228,8 +228,8 @@ export class PromiseUserEntity implements PromiseUserPayload {
 }
 
 export class PromiseUserModel extends PickType(PromiseUserEntity, [
-  'userId',
   'promiseId',
+  'attendeeId',
   'startLocationId',
   'createdAt',
   'updatedAt',

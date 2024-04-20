@@ -21,7 +21,7 @@ export class FileUploadService {
     const bucket = this.config.get('aws.bucket');
     const region = this.config.get('aws.region');
 
-    if (this.config.get('env') !== 'test') {
+    if (!this.config.get('is.test')) {
       await this.client.send(
         new PutObjectCommand({
           Bucket: bucket,

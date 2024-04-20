@@ -51,7 +51,7 @@ export async function checkMigrationInitialized() {
   }
 }
 
-export async function checkMigrationNotLatest() {
+export async function checkMigrationLatest() {
   try {
     await command.prisma('migrate status');
   } catch {

@@ -61,8 +61,8 @@ export const extraEnv = () => {
 
     is: {
       local: process.env.STAGE === 'local',
-      dev: process.env.STAGE === 'dev',
       test: process.env.STAGE === 'test',
+      dev: process.env.STAGE === 'dev',
       prod: process.env.STAGE === 'prod',
     },
   };

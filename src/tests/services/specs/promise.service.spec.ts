@@ -122,12 +122,12 @@ describe(PromiseService, () => {
         ]);
 
       await Promise.all([
-        prisma.promiseUser.create({ data: { userId: h3.id, promiseId: p2.id } }),
-        prisma.promiseUser.create({ data: { userId: h5.id, promiseId: p4.id } }),
-        prisma.promiseUser.create({ data: { userId: h1.id, promiseId: p5.id } }),
-        prisma.promiseUser.create({ data: { userId: h4.id, promiseId: p5.id } }),
-        prisma.promiseUser.create({ data: { userId: h1.id, promiseId: p6.id } }),
-        prisma.promiseUser.create({ data: { userId: h4.id, promiseId: p6.id } }),
+        prisma.promiseUser.create({ data: { attendeeId: h3.id, promiseId: p2.id } }),
+        prisma.promiseUser.create({ data: { attendeeId: h5.id, promiseId: p4.id } }),
+        prisma.promiseUser.create({ data: { attendeeId: h1.id, promiseId: p5.id } }),
+        prisma.promiseUser.create({ data: { attendeeId: h4.id, promiseId: p5.id } }),
+        prisma.promiseUser.create({ data: { attendeeId: h1.id, promiseId: p6.id } }),
+        prisma.promiseUser.create({ data: { attendeeId: h4.id, promiseId: p6.id } }),
       ]);
     });
 
@@ -882,7 +882,7 @@ describe(PromiseService, () => {
       const users = [host, attendee, newAttendee].map((attendee) => attendee);
       await expect(promiseService.findOne({ id: promise.id })).resolves.toMatchObject({
         ...promise,
-        users: users.map((user) => ({ user })),
+        attendees: users.map((attendee) => ({ attendee })),
       });
     });
 
@@ -921,7 +921,7 @@ describe(PromiseService, () => {
       });
       await expect(promiseService.findOne({ id: promise.id })).resolves.toMatchObject({
         ...promise,
-        users: [{ user: host }, { user: attendee2 }],
+        attendees: [{ attendee: host }, { attendee: attendee2 }],
       });
     });
 
@@ -1064,7 +1064,7 @@ describe(PromiseService, () => {
       const result = await promiseService.getAttendees(promise.id);
       const users = [host, ...attendees.map((attendee) => attendee)];
       expect(result).toHaveLength(4);
-      expect(result).toMatchObject(users.map((user) => ({ userId: user.id })));
+      expect(result).toMatchObject(users.map((user) => ({ attendeeId: user.id })));
     });
 
     test('should return attendees by the promise id and the user ids', async () => {
@@ -1072,7 +1072,7 @@ describe(PromiseService, () => {
       const userIds = [host.id, attendees[0].id];
       const result = await promiseService.getAttendees(promise.id, userIds);
       expect(result).toHaveLength(2);
-      expect(result).toMatchObject(userIds.map((userId) => ({ userId })));
+      expect(result).toMatchObject(userIds.map((attendeeId) => ({ attendeeId })));
     });
   });
 
