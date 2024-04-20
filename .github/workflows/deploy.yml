@@ -39,6 +39,8 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_S3_BUCKET_NAME: ${{ vars.AWS_S3_BUCKET_NAME }}
+
+      PRISMA_CLI_BINARY_TARGETS: native,rhel-openssl-1.0.x
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4

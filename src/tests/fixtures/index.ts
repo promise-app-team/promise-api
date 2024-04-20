@@ -241,7 +241,7 @@ export function createTestFixture(
       R.zip.strict(locations),
       R.filter(([attendee]) => R.isTruthy(attendee)),
       R.map(([attendee, startLocation]) => ({
-        userId: attendee.output.id,
+        attendeeId: attendee.output.id,
         startLocationId: startLocation?.output.id ?? null,
       }))
     );
@@ -258,7 +258,7 @@ export function createTestFixture(
           ...promise,
           destinationId: destination?.output.id ?? null,
           themes: { createMany: { data: themeIds.map((id) => ({ themeId: id })) } },
-          users: {
+          attendees: {
             createMany: {
               data: attendeeIds,
             },

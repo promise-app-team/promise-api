@@ -31,8 +31,8 @@ const promiseInclude: Prisma.PromiseInclude = {
       profileUrl: true,
     },
   },
-  users: {
-    select: { user: true, startLocationId: true },
+  attendees: {
+    select: { attendee: true, startLocationId: true },
   },
   themes: {
     select: { theme: true },
@@ -80,7 +80,7 @@ export class PromiseService {
     return user;
   }
 
-  async create(userId: number, input: InputCreatePromiseDTO): Promise<PromiseResult> {
+  async create(attendeeId: number, input: InputCreatePromiseDTO): Promise<PromiseResult> {
     return this.prisma.promise.create({
       data: {
         ...R.pick(input, [
@@ -94,12 +94,12 @@ export class PromiseService {
         ]),
         host: {
           connect: {
-            id: userId,
+            id: attendeeId,
           },
         },
-        users: {
+        attendees: {
           create: {
-            userId,
+            attendeeId,
           },
         },
         themes: {
@@ -193,11 +193,11 @@ export class PromiseService {
    * @throws {PromiseServiceError.NotFoundPromise}
    * @throws {PromiseServiceError.NotFoundStartLocation}
    */
-  async getStartLocation(id: number, userId: number): Promise<LocationModel> {
+  async getStartLocation(id: number, attendeeId: number): Promise<LocationModel> {
     const promise = await this.findOne({ id, status: PromiseStatus.AVAILABLE });
 
-    const promiseUser = await this.prisma.promiseUser.findFirst({
-      where: { userId, promiseId: promise.id },
+    const promiseUser = await this.prisma.promiseUser.findUnique({
+      where: { identifier: { attendeeId, promiseId: promise.id } },
       include: { startLocation: true },
     });
 
@@ -222,12 +222,12 @@ export class PromiseService {
       });
 
       const { startLocation } = await this.prisma.promiseUser.findUniqueOrThrow({
-        where: { identifier: { userId: attendeeId, promiseId: promise.id } },
+        where: { identifier: { attendeeId, promiseId: promise.id } },
         select: { startLocation: true },
       });
 
       const promiseUser = await this.prisma.promiseUser.update({
-        where: { identifier: { userId: attendeeId, promiseId: promise.id } },
+        where: { identifier: { attendeeId, promiseId: promise.id } },
         data: {
           promise: {
             update: {
@@ -259,10 +259,10 @@ export class PromiseService {
    * @throws {PromiseServiceError.NotFoundPromise}
    * @throws {PromiseServiceError.NotFoundStartLocation}
    */
-  async deleteStartLocation(id: number, userId: number): Promise<{ id: number }> {
+  async deleteStartLocation(id: number, attendeeId: number): Promise<{ id: number }> {
     try {
-      const promiseUser = await this.prisma.promiseUser.findFirstOrThrow({
-        where: { userId, promiseId: id },
+      const promiseUser = await this.prisma.promiseUser.findUniqueOrThrow({
+        where: { identifier: { attendeeId, promiseId: id } },
         select: { startLocationId: true },
       });
 
@@ -293,7 +293,7 @@ export class PromiseService {
     return this.prisma.promiseUser
       .create({
         data: {
-          user: {
+          attendee: {
             connect: {
               id: userId,
             },
@@ -321,7 +321,7 @@ export class PromiseService {
     return this.prisma.promiseUser.findMany({
       where: {
         promiseId: id,
-        ...(attendeeIds?.length && { userId: { in: attendeeIds } }),
+        ...(attendeeIds?.length && { attendeeId: { in: attendeeIds } }),
       },
       include: { startLocation: true },
     });
@@ -331,19 +331,19 @@ export class PromiseService {
    * @throws {PromiseServiceError.NotFoundPromise}
    * @throws {PromiseServiceError.HostCannotLeave}
    */
-  async leave(id: number, userId: number): Promise<{ id: number }> {
+  async leave(id: number, attendeeId: number): Promise<{ id: number }> {
     try {
       const promise = await this.prisma.promise.findUniqueOrThrow({
         where: this.#makeUniqueFilter({ id, status: PromiseStatus.AVAILABLE }),
         select: { id: true, hostId: true },
       });
 
-      if (promise.hostId === userId) {
+      if (promise.hostId === attendeeId) {
         throw PromiseServiceError.HostCannotLeave;
       }
 
       await this.prisma.promiseUser.delete({
-        where: { identifier: { userId, promiseId: promise.id } },
+        where: { identifier: { attendeeId, promiseId: promise.id } },
       });
 
       return { id: promise.id };
@@ -421,7 +421,7 @@ export class PromiseService {
     }
 
     if (typeof filter.userId === 'number') {
-      qb.andWhere({ OR: [{ hostId: filter.userId }, { users: { some: { userId: filter.userId } } }] });
+      qb.andWhere({ OR: [{ hostId: filter.userId }, { attendees: { some: { attendeeId: filter.userId } } }] });
 
       switch (filter.role) {
         case PromiseUserRole.HOST:
@@ -430,11 +430,11 @@ export class PromiseService {
         case PromiseUserRole.ATTENDEE:
           qb.andWhere({
             NOT: { hostId: filter.userId },
-            users: { some: { userId: filter.userId } },
+            attendees: { some: { attendeeId: filter.userId } },
           });
           break;
         case PromiseUserRole.ALL:
-          qb.andWhere({ OR: [{ hostId: filter.userId }, { users: { some: { userId: filter.userId } } }] });
+          qb.andWhere({ OR: [{ hostId: filter.userId }, { attendees: { some: { attendeeId: filter.userId } } }] });
           break;
       }
     }

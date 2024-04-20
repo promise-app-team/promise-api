@@ -79,29 +79,24 @@ describe(PromiseController, () => {
       promisedAt: expect.toBeString(),
       completedAt: promise.completedAt ? new Date(promise.completedAt) : null,
       createdAt: expect.toBeString(),
-      host: {
-        id: host.id,
-        username: host.username,
-        profileUrl: host.profileUrl,
-      },
+      host: R.pick(host, ['id', 'username', 'profileUrl']),
       themes: expect.toIncludeSameMembers(themes.map((theme) => theme.name)),
       destination: destination
         ? {
-            id: destination.id,
-            city: destination.city,
-            district: destination.district,
-            address: destination.address,
+            ...R.pick(destination, ['id', 'city', 'district', 'address']),
             latitude: expect.toBeDecimalLike(destination.latitude),
             longitude: expect.toBeDecimalLike(destination.longitude),
           }
         : null,
       attendees: expect.toIncludeSameMembers(
-        attendees.map((attendee: any, i: any) => ({
-          id: attendee.id,
-          username: attendee.username,
-          profileUrl: attendee.profileUrl,
-          hasStartLocation: i === 0,
-        }))
+        R.pipe(
+          [host, ...attendees],
+          R.sortBy((attendee) => attendee.id),
+          R.map.indexed((attendee, i) => ({
+            ...R.pick(attendee, ['id', 'username', 'profileUrl']),
+            hasStartLocation: i === 1,
+          }))
+        )
       ),
     };
     // satisfies Omit<PromiseDTO, 'id'>;
