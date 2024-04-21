@@ -7,14 +7,13 @@ import { PrismaService } from './prisma.service';
 export class PrismaModule {
   static register(options: PrismaModuleOptions): DynamicModule {
     return {
-      module: PrismaModule,
       global: options.isGlobal,
+      module: PrismaModule,
       providers: [
         {
+          scope: options.scope,
           provide: PrismaService,
-          useFactory() {
-            return new PrismaService(options.prismaOptions ?? {});
-          },
+          useValue: options.prisma,
         },
       ],
       exports: [PrismaService],
@@ -23,17 +22,17 @@ export class PrismaModule {
 
   static registerAsync(options: PrismaModuleAsyncOptions): DynamicModule {
     return {
-      module: PrismaModule,
       global: options.isGlobal,
+      module: PrismaModule,
       providers: [
         {
+          scope: options.scope,
           provide: PrismaService,
-          async useFactory(...args: any[]) {
-            const { transform, ...prismaOptions } = await options.useFactory(...args);
-            const prisma = new PrismaService(prismaOptions);
-            return Object.assign(prisma, transform?.(prisma));
-          },
           inject: options.inject,
+          async useFactory(...args: any[]) {
+            const { prisma } = await options.useFactory(...args);
+            return prisma ?? new PrismaService();
+          },
         },
       ],
       exports: [PrismaService],

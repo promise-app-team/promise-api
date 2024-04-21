@@ -1,11 +1,12 @@
 import { CacheService } from './services';
 
-export interface CacheModuleOptions {
+import { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
+
+interface _CacheModuleOptions {
   service: CacheService;
 }
 
-export interface CacheModuleAsyncOptions {
-  isGlobal?: boolean;
-  inject?: any[];
-  useFactory: (...args: any[]) => CacheModuleOptions | Promise<CacheModuleOptions>;
-}
+interface _CacheModuleAsyncOptions extends BaseFactoryProvider<_CacheModuleOptions> {}
+
+export type CacheModuleOptions = _CacheModuleOptions & BaseModuleOptions;
+export type CacheModuleAsyncOptions = _CacheModuleAsyncOptions & BaseModuleOptions;

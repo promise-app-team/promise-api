@@ -1,5 +1,6 @@
 import { Module, Scope } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { PrismaClient } from '@prisma/client';
 
 import { AppController } from '@/app/app.controller';
 import { CommonModule } from '@/common/modules';
@@ -79,7 +80,8 @@ import { PrismaModule } from '@/prisma';
       isGlobal: true,
       inject: [LoggerService, TypedConfigService],
       useFactory(logger: LoggerService, config: TypedConfigService) {
-        return {
+        const prisma = new PrismaClient({
+          errorFormat: config.get('colorize') ? 'pretty' : 'colorless',
           log: config.get('debug.prisma')
             ? [
                 { level: 'info', emit: 'event' },
@@ -91,29 +93,22 @@ import { PrismaModule } from '@/prisma';
                 { level: 'warn', emit: 'event' },
                 { level: 'error', emit: 'event' },
               ],
-          errorFormat: config.get('colorize') ? 'pretty' : 'colorless',
-          transform(prisma) {
-            const tableName = config.get('db.name');
-            prisma.$on('query', ({ query, params, duration }) => {
-              const sanitizedQuery = query
-                .replace(/^SELECT\s+(.*?)\s+FROM/, 'SELECT * FROM')
-                .replace(new RegExp(`\`${tableName}[._a-z]+?\`\.`, 'g'), '')
-                .replace(/\((?<table>`.+?`).(?<field>`.+?`)\)/g, '$<table>.$<field>');
+        });
 
-              const _params = JSON.parse(params);
-              const injectedQuery = sanitizedQuery.replace(/\?/g, () => {
-                const value = _params.shift();
-                if (typeof value === 'string') {
-                  return `'${value}'`;
-                }
-                return value;
-              });
+        const tableName = config.get('db.name');
+        prisma.$on('query', ({ query, params, duration }) => {
+          const sanitizedQuery = query
+            .replace(/^SELECT\s+(.*?)\s+FROM/, 'SELECT * FROM')
+            .replace(new RegExp(`\`${tableName}[._a-z]+?\`\.`, 'g'), '')
+            .replace(/\((?<table>`.+?`).(?<field>`.+?`)\)/g, '$<table>.$<field>');
+          const injectedQuery = sanitizedQuery.replace(/\?/g, () => {
+            const value = JSON.parse(params).shift();
+            return typeof value === 'string' ? `'${value}'` : value;
+          });
+          logger.log(`${injectedQuery}`, { ms: duration }, 'QUERY');
+        });
 
-              logger.log(`${injectedQuery}`, { ms: duration }, 'Query');
-            });
-            return prisma;
-          },
-        };
+        return { prisma };
       },
     }),
     CacheModule.registerAsync({

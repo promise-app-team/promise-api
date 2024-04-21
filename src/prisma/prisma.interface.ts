@@ -1,17 +1,12 @@
-import { Prisma, PrismaClient as BasePrismaClient } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
-type PrismaClient = BasePrismaClient<Prisma.PrismaClientOptions, 'query' | 'info' | 'warn' | 'error'>;
+import { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
 
-type PrismaClientOptions = Prisma.PrismaClientOptions & {
-  transform?: (prisma: PrismaClient) => PrismaClient;
-};
-
-export interface PrismaModuleOptions {
-  isGlobal?: boolean;
-  prismaOptions?: PrismaClientOptions;
+interface _PrismaModuleOptions {
+  prisma?: PrismaClient;
 }
 
-export interface PrismaModuleAsyncOptions extends PrismaModuleOptions {
-  inject?: any[];
-  useFactory: (...args: any[]) => PrismaClientOptions | Promise<PrismaClientOptions>;
-}
+interface _PrismaModuleAsyncOptions extends BaseFactoryProvider<_PrismaModuleOptions> {}
+
+export type PrismaModuleOptions = _PrismaModuleOptions & BaseModuleOptions;
+export type PrismaModuleAsyncOptions = _PrismaModuleAsyncOptions & BaseModuleOptions;

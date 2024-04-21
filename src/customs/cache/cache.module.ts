@@ -7,9 +7,11 @@ import { CacheService } from './services';
 export class CacheModule {
   static register(options: CacheModuleOptions): DynamicModule {
     return {
+      global: options.isGlobal,
       module: CacheModule,
       providers: [
         {
+          scope: options.scope,
           provide: CacheService,
           useValue: options.service,
         },
@@ -24,6 +26,7 @@ export class CacheModule {
       module: CacheModule,
       providers: [
         {
+          scope: options.scope,
           provide: CacheService,
           inject: options.inject,
           async useFactory(...args) {

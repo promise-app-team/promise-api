@@ -7,9 +7,11 @@ import { S3ClientService } from './s3-client.service';
 export class S3ClientModule {
   static forRoot(options: S3ClientModuleOptions): DynamicModule {
     return {
+      global: options.isGlobal,
       module: S3ClientModule,
       providers: [
         {
+          scope: options.scope,
           provide: S3ClientService,
           useFactory: () => new S3ClientService(options.s3options),
         },
@@ -20,15 +22,17 @@ export class S3ClientModule {
 
   static forRootAsync(options: S3ClientModuleAsyncOptions): DynamicModule {
     return {
+      global: options.isGlobal,
       module: S3ClientModule,
       providers: [
         {
+          scope: options.scope,
           provide: S3ClientService,
+          inject: options.inject,
           async useFactory(...args) {
             const opts = await options.useFactory(...args);
             return new S3ClientService(opts.s3options);
           },
-          inject: options.inject,
         },
       ],
       exports: [S3ClientService],

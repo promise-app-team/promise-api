@@ -8,9 +8,11 @@ import { InthashService } from './inthash.service';
 export class IntHashModule {
   static forRoot(options: IntHashModuleOptions): DynamicModule {
     return {
+      global: options.isGlobal,
       module: IntHashModule,
       providers: [
         {
+          scope: options.scope,
           provide: InthashService,
           useFactory: () => new InthashService(new Hasher(options)),
         },
@@ -21,15 +23,17 @@ export class IntHashModule {
 
   static forRootAsync(options: IntHashModuleAsyncOptions): DynamicModule {
     return {
+      global: options.isGlobal,
       module: IntHashModule,
       providers: [
         {
+          scope: options.scope,
           provide: InthashService,
+          inject: options.inject,
           async useFactory(...args) {
             const opts = await options.useFactory(...args);
             return new InthashService(new Hasher(opts));
           },
-          inject: options.inject,
         },
       ],
       exports: [InthashService],
