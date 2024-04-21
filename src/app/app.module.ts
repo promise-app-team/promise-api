@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client';
 
 import { AppController } from '@/app/app.controller';
 import { CommonModule } from '@/common/modules';
-import { TypedConfigService, extraEnv } from '@/config/env';
+import { TypedConfigService, env } from '@/config/env';
 import { schema } from '@/config/validation';
 import { CacheModule, InMemoryCacheService, RedisCacheService } from '@/customs/cache';
 import { LoggerModule, LoggerService } from '@/customs/logger';
@@ -21,7 +21,7 @@ import { PrismaModule } from '@/prisma';
   imports: [
     TypedConfigModule.register({
       isGlobal: true,
-      load: [extraEnv],
+      load: [env],
       envFilePath: ['.env.local'],
       validationSchema: schema,
       expandVariables: true,

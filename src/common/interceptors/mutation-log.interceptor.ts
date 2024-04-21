@@ -1,7 +1,7 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';
-import { Observable, catchError, map } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 import { LoggerService } from '@/customs/logger';
 import { PrismaService } from '@/prisma';

@@ -4,7 +4,7 @@ import { TypedConfigServiceBuilder } from '@/customs/typed-config';
 
 const BUILD = formatISO(new Date());
 
-export const extraEnv = () => {
+export const env = () => {
   const [bits, prime, inverse, xor] = (process.env.INTHASH_KEY ?? '').split('.');
 
   return {
@@ -68,4 +68,4 @@ export const extraEnv = () => {
   };
 };
 
-export class TypedConfigService extends TypedConfigServiceBuilder<ReturnType<typeof extraEnv>> {}
+export class TypedConfigService extends TypedConfigServiceBuilder<ReturnType<typeof env>> {}
