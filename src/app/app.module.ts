@@ -53,7 +53,7 @@ import { PrismaModule } from '@/prisma';
                 case 'test':
                   return false;
                 case 'local':
-                // return false;
+                // return true;
                 case 'dev':
                 case 'prod':
                   if (
