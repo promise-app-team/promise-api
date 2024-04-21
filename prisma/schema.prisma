@@ -239,25 +239,28 @@ model MutationLog {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   /// HTTP 메서드
-  method String @map("method") @db.VarChar(8)
+  method String @db.VarChar(8)
 
   /// 요청 URL
   url String @map("url") @db.VarChar(255)
 
-  /// Agent 정보
-  agent String? @map("agent") @db.VarChar(255)
-
-  /// 요청 본문
-  body Json? @map("body")
+  /// 요청 헤더
+  headers Json?
 
   /// 응답 상태 코드
-  statusCode Int @map("status_code") @db.UnsignedInt
+  statusCode Int @map("status_code") @db.UnsignedSmallInt
+
+  /// 요청 본문
+  requestBody Json? @map("request_body")
 
   /// 응답 본문
-  response Json? @map("response")
+  responseBody Json? @map("response_body")
 
-  /// 생성일
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(0)
+  /// 요청 시간
+  requestAt DateTime @map("request_at") @db.Timestamp(0)
+
+  /// 응답 시간
+  responseAt DateTime @map("response_at") @db.Timestamp(0)
 
   @@map("pm_mutation_logs")
 }

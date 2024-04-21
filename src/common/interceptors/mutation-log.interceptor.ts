@@ -23,6 +23,7 @@ export class MutationLogInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): MaybePromise<Observable<any>> {
     const request = context.switchToHttp().getRequest<Request>();
     const response = context.switchToHttp().getResponse<Response>();
+    const requestTime = new Date();
 
     if (!MUTATION_METHODS.includes(request.method)) {
       return next.handle();
@@ -48,10 +49,12 @@ export class MutationLogInterceptor implements NestInterceptor {
               userId,
               url: request.url,
               method: request.method,
+              headers: request.headers,
               statusCode: response.statusCode,
-              agent: request.headers['user-agent'],
-              body: Object.keys(request.body).length ? request.body : undefined,
-              response: Object.keys(resBody).length ? resBody : undefined,
+              requestBody: Object.keys(request.body).length ? request.body : undefined,
+              responseBody: Object.keys(resBody).length ? resBody : undefined,
+              requestAt: requestTime,
+              responseAt: new Date(),
             },
           })
           .catch((error) => this.logger.error(undefined, error));
