@@ -3,23 +3,28 @@ import { join } from 'node:path';
 import serverlessExpress from '@codegenie/serverless-express';
 import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';
 import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
+import { JwtService } from '@nestjs/jwt';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { APIGatewayEvent, Handler } from 'aws-lambda';
 
 import { AppModule } from './app';
-import { HttpException } from './common/exceptions/http.exception';
-import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
-import { StringifyDateInterceptor } from './common/interceptors/stringify-date.interceptor';
-import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
+import { HttpException } from './common/exceptions';
+import { AllExceptionsFilter } from './common/filters';
+import { MutationLogInterceptor, StringifyDateInterceptor, TimeoutInterceptor } from './common/interceptors';
 import { TypedConfigService } from './config/env';
 import { LoggerService } from './customs/logger';
+import { PrismaService } from './prisma';
 
 export async function configure(app: NestExpressApplication) {
   const logger = await app.resolve(LoggerService);
-  app.useLogger(logger);
   const { httpAdapter } = app.get(HttpAdapterHost);
+  const reflector = app.get(Reflector);
+  const prisma = app.get(PrismaService);
+  const jwt = app.get(JwtService);
+
+  app.useLogger(logger);
 
   app
     .useStaticAssets(join(__dirname, 'assets'), { prefix: '/' })
@@ -36,7 +41,8 @@ export async function configure(app: NestExpressApplication) {
     )
     .useGlobalFilters(new AllExceptionsFilter(httpAdapter, logger))
     .useGlobalInterceptors(
-      new ClassSerializerInterceptor(app.get(Reflector)),
+      new ClassSerializerInterceptor(reflector),
+      new MutationLogInterceptor(prisma, logger, jwt),
       new StringifyDateInterceptor(),
       new TimeoutInterceptor()
     )

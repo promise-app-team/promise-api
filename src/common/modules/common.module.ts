@@ -1,7 +1,6 @@
 import { Global, MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 
-import { LoggerMiddleware } from '../middlewares/logger.middleware';
-import { TrimMiddleware } from '../middlewares/trim.middleware';
+import { LoggerMiddleware, TrimMiddleware } from '../middlewares';
 
 @Global()
 @Module({})
