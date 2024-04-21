@@ -1,5 +1,5 @@
 import { ApiGatewayManagementApi } from '@aws-sdk/client-apigatewaymanagementapi';
-import { Controller, Logger, Query } from '@nestjs/common';
+import { Controller, Query } from '@nestjs/common';
 import { ApiBody, ApiTags } from '@nestjs/swagger';
 
 import { EventResponse } from './event.dto';
@@ -7,22 +7,24 @@ import { EventManager, PingEvent } from './events';
 
 import { ParsedBody } from '@/common/decorators';
 import { TypedConfigService } from '@/config/env';
+import { LoggerService } from '@/customs/logger';
 import { Get, Post } from '@/customs/nest';
 
 @ApiTags('Event')
 @Controller('event')
 export class EventController {
   private readonly client: ApiGatewayManagementApi;
-  private readonly logger: Logger = new Logger(EventController.name);
 
   constructor(
     private readonly event: EventManager,
-    private readonly config: TypedConfigService
+    private readonly config: TypedConfigService,
+    private readonly logger: LoggerService
   ) {
     const endpoint = this.config.get('aws.websocket.endpoint');
     if (!endpoint) return;
 
     this.client = new ApiGatewayManagementApi({ endpoint });
+    this.logger.setContext(EventController.name);
   }
 
   @Get('connect')

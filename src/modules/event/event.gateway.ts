@@ -1,6 +1,5 @@
 import { IncomingMessage } from 'http';
 
-import { Logger } from '@nestjs/common';
 import {
   WebSocketGateway,
   OnGatewayConnection,
@@ -14,14 +13,20 @@ import { WebSocket } from 'ws';
 import { Connection } from './connection';
 import { EventManager } from './events';
 
+import { LoggerService } from '@/customs/logger';
+
 type Client = WebSocket & Pick<Connection, 'id'>;
 
 @WebSocketGateway()
 export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private readonly clients: Map<string, Client> = new Map();
-  private readonly logger = new Logger(EventGateway.name);
 
-  constructor(private readonly event: EventManager) {}
+  constructor(
+    private readonly event: EventManager,
+    private readonly logger: LoggerService
+  ) {
+    logger.setContext(EventGateway.name);
+  }
 
   async handleConnection(@ConnectedSocket() client: Client, _incoming: IncomingMessage) {
     client.id = uuid();
