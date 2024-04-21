@@ -30,6 +30,7 @@ export class EventController {
 
   @Get('connect')
   async connect(@Query('connectionId') connectionId: string): Promise<EventResponse> {
+    console.log(`$connect (connectionId: ${connectionId})`);
     this.logger.debug(`Creating connection: ${connectionId}`);
     const response = await this.event.get('connect').handle(connectionId);
     const connections = await this.event.connection.getConnections();
@@ -39,6 +40,7 @@ export class EventController {
 
   @Get('disconnect')
   async disconnect(@Query('connectionId') connectionId: string): Promise<EventResponse> {
+    console.log(`$disconnect (connectionId: ${connectionId})`);
     this.logger.debug(`Deleting connection: ${connectionId}`);
     const response = await this.event.get('disconnect').handle(connectionId);
     const connections = await this.event.connection.getConnections();
@@ -52,6 +54,7 @@ export class EventController {
     @Query('connectionId') connectionId: string,
     @ParsedBody() body: PingEvent.Payload
   ): Promise<EventResponse> {
+    console.log(`$default (connectionId: ${connectionId})`);
     const handler = this.event.get('ping');
     this.logger.debug(`Sending message from connection: ${connectionId}`);
     handler.on('send', async (connection, data) => {
