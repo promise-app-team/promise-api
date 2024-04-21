@@ -64,7 +64,8 @@ export function createWinstonLogger(options: WinstonLoggerOptions = {}): Logger 
           // format.ms(),
           options.colorize ? format.colorize({ colors }) : format.uncolorize(),
           format.printf((args) => {
-            const { timestamp, level, message, request, response, error, ms, context, query, ...meta } = args;
+            const { timestamp, level, request, response, error, ms, context, query, message, ...meta } = args;
+            const msg = ['null', 'undefined'].includes(message) ? '' : message;
 
             function build(body: string, meta = '') {
               const head = `${colorize('dim', `${timestamp}`)}`;
@@ -89,20 +90,20 @@ export function createWinstonLogger(options: WinstonLoggerOptions = {}): Logger 
             if (error instanceof Error) {
               const errorMessage = (error.stack ?? error.message) || `${error}`;
               const stack = colorize('yellow', errorMessage);
-              return message ? build(message, `\n${stack}`) : build(stack);
+              return msg ? build(msg, `\n${stack}`) : build(stack);
             } else if (typeof error === 'string') {
               const stack = colorize('yellow', error);
-              return message ? build(`${message} ${stack}`) : build(stack);
+              return msg ? build(`${msg} ${stack}`) : build(stack);
             }
 
             if (query) {
               const sql = colorize('sql', query);
-              return message ? build(message, `\n${sql}`) : build(sql);
+              return msg ? build(msg, `\n${sql}`) : build(sql);
             }
 
             const metaString = JSON.stringify(meta, null, 2);
             const metaStringified = metaString === '{}' ? '' : `\n${metaString}`;
-            return build(message, metaStringified);
+            return build(msg, metaStringified);
           })
         ),
       }),
