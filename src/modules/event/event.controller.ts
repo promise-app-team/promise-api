@@ -25,25 +25,18 @@ export class EventController {
 
     this.client = new ApiGatewayManagementApi({ endpoint });
     this.logger.setContext(EventController.name);
-    this.logger.debug(`Initialized webSocket client with endpoint: ${endpoint}`);
   }
 
   @Get('connect')
   async connect(@Query('connectionId') connectionId: string): Promise<EventResponse> {
-    this.logger.debug(`Creating connection: ${connectionId}`);
-    const response = await this.event.get('connect').handle(connectionId);
-    const connections = await this.event.connection.getConnections();
-    this.logger.debug(`Created connection: ${connectionId} (total: ${connections.length})`);
-    return response;
+    this.logger.debug(`Client connected: ${connectionId}`);
+    return this.event.get('connect').handle(connectionId);
   }
 
   @Get('disconnect')
   async disconnect(@Query('connectionId') connectionId: string): Promise<EventResponse> {
-    this.logger.debug(`Deleting connection: ${connectionId}`);
-    const response = await this.event.get('disconnect').handle(connectionId);
-    const connections = await this.event.connection.getConnections();
-    this.logger.debug(`Deleted connection: ${connectionId} (total: ${connections.length})`);
-    return response;
+    this.logger.debug(`Client disconnected: ${connectionId}`);
+    return this.event.get('disconnect').handle(connectionId);
   }
 
   @Post('ping')
@@ -52,11 +45,10 @@ export class EventController {
     @Query('connectionId') connectionId: string,
     @ParsedBody() body: PingEvent.Payload
   ): Promise<EventResponse> {
-    console.log(`$default (connectionId: ${connectionId})`);
+    this.logger.debug(`Client sent message: ${connectionId} with ${JSON.stringify(body.data)}`);
     const handler = this.event.get('ping');
-    this.logger.debug(`Sending message from connection: ${connectionId}`);
     handler.on('send', async (connection, data) => {
-      this.logger.debug(`Sending message to connection: ${connection.id}`);
+      this.logger.debug(`Sending message to ${connection.id}: ${JSON.stringify(data)}`);
       await this.client
         .postToConnection({
           ConnectionId: connection.id,
@@ -69,9 +61,8 @@ export class EventController {
             this.logger.error(`Failed to send message to ${connection.id}: ${error.message}`);
           }
         });
+      this.logger.debug(`Sent message to ${connection.id}`);
     });
-    const response = await this.event.get('ping').handle(connectionId, body.data);
-    this.logger.debug(`Sent message from connection: ${connectionId} with ${JSON.stringify(body.data)}`);
-    return response;
+    return handler.handle(connectionId, body.data);
   }
 }

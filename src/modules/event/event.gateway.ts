@@ -14,6 +14,7 @@ import { Connection } from './connection';
 import { EventManager } from './events';
 
 import { LoggerService } from '@/customs/logger';
+import { random } from '@/utils';
 
 type Client = WebSocket & Pick<Connection, 'id'>;
 
@@ -49,8 +50,8 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handlePing(client: Client, data: any) {
     const handler = this.event.get('ping');
     handler.on('send', async (connection, data) => {
-      const client = this.clients.get(connection.id);
-      client?.send(JSON.stringify(data));
+      await new Promise((resolve) => setTimeout(resolve, random(1000, 5000)));
+      this.clients.get(connection.id)?.send(JSON.stringify(data));
     });
     const response = await handler.handle(client.id, data);
     this.logger.debug(`Client sent message: ${client.id} with ${JSON.stringify(data)}`);

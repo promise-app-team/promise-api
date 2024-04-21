@@ -13,6 +13,6 @@ export class SelfStrategy implements Strategy<PingEvent.Strategy.Self> {
 
   async post<T>(id: string, data: PingEvent.Payload<PingEvent.Strategy.Self, T>['data']) {
     const response: PingEvent.Response = { from: id, timestamp: Date.now(), data: data.body };
-    this.emitter.emit('send', { id }, response);
+    await this.emitter.emit('send', { id }, response);
   }
 }

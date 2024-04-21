@@ -1,25 +1,43 @@
-import { EventEmitter } from 'node:events';
-
 export interface TypedEventListener<TEvents extends Record<string, any> = Record<string, any>> {
-  (...args: TEvents[keyof TEvents]): void;
+  (...args: TEvents[keyof TEvents]): void | Promise<void>;
+}
+
+export interface TypedEventListenerMap<
+  TEvents extends Record<string, any> = Record<string, any>,
+  TEventListener extends TypedEventListener<TEvents>[] = TypedEventListener<TEvents>[],
+> {
+  get(event: keyof TEvents): TEventListener | undefined;
+  set(event: keyof TEvents, listener: TEventListener): void;
 }
 
 export class TypedEventEmitter<TEvents extends Record<string, any>> {
-  constructor(private readonly emitter = new EventEmitter()) {}
+  constructor(
+    private readonly listenerMap: TypedEventListenerMap<TEvents, TypedEventListener<TEvents>[]> = new Map()
+  ) {}
 
   on<K extends keyof TEvents & string>(event: K, listener: TypedEventListener<TEvents>) {
-    this.emitter.on(event, listener);
+    const listeners = this.listenerMap.get(event) || [];
+    listeners.push(listener);
+    this.listenerMap.set(event, listeners);
   }
 
   off<K extends keyof TEvents & string>(event: K, listener: TypedEventListener<TEvents>) {
-    this.emitter.off(event, listener);
+    const listeners = this.listenerMap.get(event) || [];
+    const index = listeners.indexOf(listener);
+    if (index !== -1) listeners.splice(index, 1);
+    this.listenerMap.set(event, listeners);
   }
 
   once<K extends keyof TEvents & string>(event: K, listener: TypedEventListener<TEvents>) {
-    this.emitter.once(event, listener);
+    const onceListener: TypedEventListener<TEvents> = (...args) => {
+      this.off(event, onceListener);
+      listener(...args);
+    };
+    this.on(event, onceListener);
   }
 
-  emit<K extends keyof TEvents & string>(event: K, ...args: TEvents[K]) {
-    this.emitter.emit(event, ...(args as any[]));
+  async emit<K extends keyof TEvents & string>(event: K, ...args: TEvents[K]) {
+    const listeners = this.listenerMap.get(event) || [];
+    await Promise.all(listeners.map((listener) => listener(...args)));
   }
 }
