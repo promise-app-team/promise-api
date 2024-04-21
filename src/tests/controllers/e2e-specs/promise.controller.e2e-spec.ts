@@ -46,7 +46,7 @@ describe(PromiseController, () => {
     }).compile();
 
     const app = module.createNestApplication<NestExpressApplication>();
-    http.prepare(await configure(app).init());
+    http.prepare(await configure(app).then((app) => app.init()));
 
     const authUser = await fixture.write.user.output();
     http.request.authorize(authUser, { jwt: module.get(JwtService) });

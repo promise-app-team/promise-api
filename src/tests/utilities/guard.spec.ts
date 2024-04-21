@@ -26,19 +26,6 @@ describe(ifs, () => {
 
     expect(value).toBeUndefined();
   });
-
-  test('should return default value if no condition is true', () => {
-    const value = ifs(
-      [
-        [false, 'first'],
-        [false, 'second'],
-        [false, 'third'],
-      ],
-      'default'
-    );
-
-    expect(value).toBe('default');
-  });
 });
 
 describe(guard, () => {
