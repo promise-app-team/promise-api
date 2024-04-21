@@ -101,11 +101,12 @@ import { PrismaModule } from '@/prisma';
             .replace(/^SELECT\s+(.*?)\s+FROM/, 'SELECT * FROM')
             .replace(new RegExp(`\`${tableName}[._a-z]+?\`\.`, 'g'), '')
             .replace(/\((?<table>`.+?`).(?<field>`.+?`)\)/g, '$<table>.$<field>');
+          const param = JSON.parse(params);
           const injectedQuery = sanitizedQuery.replace(/\?/g, () => {
-            const value = JSON.parse(params).shift();
+            const value = param.shift();
             return typeof value === 'string' ? `'${value}'` : value;
           });
-          logger.log(`${injectedQuery}`, { ms: duration }, 'QUERY');
+          logger.log(undefined, { query: injectedQuery, ms: duration }, 'QUERY');
         });
 
         return { prisma };

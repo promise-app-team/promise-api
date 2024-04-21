@@ -1,3 +1,4 @@
+import { highlight } from 'cli-highlight';
 import { formatISO } from 'date-fns';
 import { mapToObj } from 'remeda';
 import { format, createLogger, transports, Logger } from 'winston';
@@ -11,6 +12,7 @@ export interface WinstonLoggerOptions {
 export function createWinstonLogger(options: WinstonLoggerOptions = {}): Logger {
   const colors = mapToObj(
     [
+      'sql',
       'dim',
       'underline',
       'hidden',
@@ -30,6 +32,13 @@ export function createWinstonLogger(options: WinstonLoggerOptions = {}): Logger 
   function colorize(color: keyof typeof colors, message: string) {
     if (!options.colorize) {
       return message;
+    }
+
+    if (color === 'sql') {
+      return highlight(message, {
+        language: 'sql',
+        ignoreIllegals: true,
+      });
     }
 
     return format.colorize().colorize(color, message);
@@ -55,7 +64,7 @@ export function createWinstonLogger(options: WinstonLoggerOptions = {}): Logger 
           // format.ms(),
           options.colorize ? format.colorize({ colors }) : format.uncolorize(),
           format.printf((args) => {
-            const { timestamp, level, message, request, response, error, ms, context, ...meta } = args;
+            const { timestamp, level, message, request, response, error, ms, context, query, ...meta } = args;
 
             function build(body: string, meta = '') {
               const head = `${colorize('dim', `${timestamp}`)}`;
@@ -84,6 +93,11 @@ export function createWinstonLogger(options: WinstonLoggerOptions = {}): Logger 
             } else if (typeof error === 'string') {
               const stack = colorize('yellow', error);
               return message ? build(`${message} ${stack}`) : build(stack);
+            }
+
+            if (query) {
+              const sql = colorize('sql', query);
+              return message ? build(message, `\n${sql}`) : build(sql);
             }
 
             const metaString = JSON.stringify(meta, null, 2);
