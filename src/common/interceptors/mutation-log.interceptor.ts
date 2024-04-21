@@ -1,7 +1,7 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';
-import { Observable, tap } from 'rxjs';
+import { Observable, map } from 'rxjs';
 
 import { LoggerService } from '@/customs/logger';
 import { PrismaService } from '@/prisma';
@@ -34,7 +34,7 @@ export class MutationLogInterceptor implements NestInterceptor {
     }
 
     return next.handle().pipe(
-      tap(async (responseBody) => {
+      map(async (responseBody) => {
         const resBody = { ...responseBody };
         const userId = (request as any)?.user?.id || +this.jwt.verify(resBody['accessToken']).id;
         if (!userId) return this.logger.warn('사용자 정보를 찾을 수 없습니다.');
@@ -43,7 +43,7 @@ export class MutationLogInterceptor implements NestInterceptor {
           if (resBody[field]) resBody[field] = '[REDACTED]';
         });
 
-        this.prisma.mutationLog
+        await this.prisma.mutationLog
           .createMany({
             data: {
               userId,
@@ -58,6 +58,8 @@ export class MutationLogInterceptor implements NestInterceptor {
             },
           })
           .catch((error) => this.logger.error(undefined, error));
+
+        return responseBody;
       })
     );
   }

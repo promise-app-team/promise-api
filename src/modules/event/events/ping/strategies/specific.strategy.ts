@@ -21,10 +21,10 @@ export class SpecificStrategy implements Strategy<PingEvent.Strategy.Specific> {
 
     const to = await this.connection.getConnection(data.param.to);
     if (to) {
-      this.emitter.emit('send', to, response(data));
+      await this.emitter.emit('send', to, response(data));
     } else {
       const error = `Connection '${data.param.to}' not found`;
-      this.emitter.emit('send', { id }, response({ body: { error } }));
+      await this.emitter.emit('send', { id }, response({ body: { error } }));
     }
   }
 }

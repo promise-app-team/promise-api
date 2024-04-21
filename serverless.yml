@@ -22,6 +22,9 @@ custom:
 provider:
   name: aws
   runtime: nodejs18.x
+  deploymentBucket:
+    name: ${self:service}-${self:provider.stage}-deployment
+    versioning: true
   region: ${env:AWS_DEFAULT_REGION}
   stage: ${env:STAGE}
   httpApi:
