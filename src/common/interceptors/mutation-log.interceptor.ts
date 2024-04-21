@@ -1,7 +1,7 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';
-import { Observable, tap } from 'rxjs';
+import { Observable, catchError, tap } from 'rxjs';
 
 import { LoggerService } from '@/customs/logger';
 import { PrismaService } from '@/prisma';
@@ -43,22 +43,21 @@ export class MutationLogInterceptor implements NestInterceptor {
           if (resBody[field]) resBody[field] = '[REDACTED]';
         });
 
-        this.prisma.mutationLog
-          .createMany({
-            data: {
-              userId,
-              url: request.url,
-              method: request.method,
-              headers: request.headers,
-              statusCode: response.statusCode,
-              requestBody: Object.keys(request.body).length ? request.body : undefined,
-              responseBody: Object.keys(resBody).length ? resBody : undefined,
-              requestAt: requestTime,
-              responseAt: new Date(),
-            },
-          })
-          .catch((error) => this.logger.error(undefined, error));
-      })
+        await this.prisma.mutationLog.createMany({
+          data: {
+            userId,
+            url: request.url,
+            method: request.method,
+            headers: request.headers,
+            statusCode: response.statusCode,
+            requestBody: Object.keys(request.body).length ? request.body : undefined,
+            responseBody: Object.keys(resBody).length ? resBody : undefined,
+            requestAt: requestTime,
+            responseAt: new Date(),
+          },
+        });
+      }),
+      catchError((error) => this.logger.error(undefined, error))
     );
   }
 }
