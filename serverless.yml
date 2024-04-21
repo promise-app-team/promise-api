@@ -12,12 +12,23 @@ custom:
     includeLayers: true
     number: 3
   domain:
-    prod: api.promise-app.com
-    dev: api.dev.promise-app.com
+    api:
+      prod: api.promise-app.com
+      dev: api.dev.promise-app.com
+    websocket:
+      prod: ws.promise-app.com
+      dev: ws.dev.promise-app.com
   customDomain:
-    stage: ${self:provider.stage}
-    domainName: ${self:custom.domain.${self:provider.stage}}
-    certificateArn: arn:aws:acm:us-east-1:${aws:accountId}:certificate/bb2cf4ae-22a7-41c9-bfc4-98a983b88663
+    rest:
+      endpointType: EDGE
+      stage: ${self:provider.stage}
+      domainName: ${self:custom.domain.api.${self:provider.stage}}
+      certificateArn: arn:aws:acm:us-east-1:${aws:accountId}:certificate/bb2cf4ae-22a7-41c9-bfc4-98a983b88663
+    websocket:
+      endpointType: REGIONAL
+      stage: ${self:provider.stage}
+      domainName: ${self:custom.domain.websocket.${self:provider.stage}}
+      certificateArn: arn:aws:acm:ap-northeast-2:${aws:accountId}:certificate/c611f60a-37d4-456a-922e-ad5f4836d248
 
 provider:
   name: aws
