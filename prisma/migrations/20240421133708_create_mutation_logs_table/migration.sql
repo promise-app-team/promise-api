@@ -4,11 +4,12 @@ CREATE TABLE `pm_mutation_logs` (
     `user_id` INTEGER UNSIGNED NOT NULL,
     `method` VARCHAR(8) NOT NULL,
     `url` VARCHAR(255) NOT NULL,
-    `agent` VARCHAR(255) NULL,
-    `body` JSON NULL,
-    `status_code` INTEGER UNSIGNED NOT NULL,
-    `response` JSON NULL,
-    `created_at` TIMESTAMP(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0),
+    `headers` JSON NULL,
+    `status_code` SMALLINT UNSIGNED NOT NULL,
+    `request_body` JSON NULL,
+    `response_body` JSON NULL,
+    `request_at` TIMESTAMP(0) NOT NULL,
+    `response_at` TIMESTAMP(0) NOT NULL,
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

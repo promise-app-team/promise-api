@@ -264,11 +264,12 @@ export class MutationLogEntity implements MutationLogPayload {
   id!: number;
   userId!: number;
   user!: UserEntity;
-  url!: string;
   method!: string;
-  agent!: string | null;
-  body!: Prisma.JsonValue;
+  url!: string;
+  headers!: Prisma.JsonValue;
   statusCode!: number;
-  response!: Prisma.JsonValue;
-  createdAt!: Date;
+  requestBody!: Prisma.JsonValue;
+  responseBody!: Prisma.JsonValue;
+  requestAt!: Date;
+  responseAt!: Date;
 }
