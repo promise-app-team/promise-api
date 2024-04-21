@@ -13,6 +13,7 @@
     "nest": "nest",
     "build": "nest build",
     "start:dev": "nest start --watch",
+    "prisma": "dotenv -oe .env.local -- prisma",
     "migration": "npm run migration:local",
     "migration:local": "dotenv -oe .env.local -- tsx ./scripts/migration",
     "migration:test": "dotenv -oe .env.test -- tsx ./scripts/migration",

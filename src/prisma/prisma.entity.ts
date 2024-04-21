@@ -72,12 +72,17 @@ const locationInclude: Prisma.LocationInclude = {
   promiseUsers: true,
 };
 
+const mutationLogInclude: Prisma.MutationLogInclude = {
+  user: true,
+};
+
 type UserPayload = Prisma.UserGetPayload<{ include: typeof userInclude }>;
 type ThemePayload = Prisma.ThemeGetPayload<{ include: typeof themeInclude }>;
 type PromisePayload = Prisma.PromiseGetPayload<{ include: typeof promiseInclude }>;
 type LocationPayload = Prisma.LocationGetPayload<{ include: typeof locationInclude }>;
 type PromiseUserPayload = Prisma.PromiseUserGetPayload<{ include: typeof promiseUserInclude }>;
 type PromiseThemePayload = Prisma.PromiseThemeGetPayload<{ include: typeof promiseThemeInclude }>;
+type MutationLogPayload = Prisma.MutationLogGetPayload<{ include: typeof mutationLogInclude }>;
 
 export class UserEntity implements UserPayload {
   id!: number;
@@ -95,10 +100,12 @@ export class UserEntity implements UserPayload {
   createdAt!: Date;
   updatedAt!: Date;
 
+  mutationLogs!: MutationLogEntity[];
   myPromises!: PromiseEntity[];
   promises!: PromiseUserEntity[];
 
   _count!: {
+    mutationLogs: number;
     myPromises: number;
     promises: number;
   };
@@ -252,3 +259,16 @@ export class PromiseThemeModel extends PickType(PromiseThemeEntity, [
   'createdAt',
   'updatedAt',
 ]) {}
+
+export class MutationLogEntity implements MutationLogPayload {
+  id!: number;
+  userId!: number;
+  user!: UserEntity;
+  url!: string;
+  method!: string;
+  agent!: string | null;
+  body!: Prisma.JsonValue;
+  statusCode!: number;
+  response!: Prisma.JsonValue;
+  createdAt!: Date;
+}
