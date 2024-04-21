@@ -1,8 +1,5 @@
 FROM node:18-alpine AS base
 
-ARG NOW
-ENV NOW=$NOW
-
 # TODO: PRMS-153
 # ARG PRISMA_CLI_BINARY_TARGETS
 # ENV PRISMA_CLI_BINARY_TARGETS=$PRISMA_CLI_BINARY_TARGETS
@@ -27,5 +24,8 @@ RUN . ./patch.sh && npm run build
 FROM public.ecr.aws/lambda/nodejs:18 as deploy
 COPY --from=install /deps/prod/node_modules node_modules
 COPY --from=build /app/dist dist
+
+ARG NOW
+ENV NOW=$NOW
 
 CMD ["dist/main.handler"]
