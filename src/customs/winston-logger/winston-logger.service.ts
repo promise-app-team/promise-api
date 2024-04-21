@@ -6,11 +6,14 @@ import { LoggerService } from '../logger';
 import { FilterArgs, LoggerOptions } from './winston-logger.interface';
 
 @Injectable()
-export class WinstonLoggerService extends LoggerService {
+export class WinstonLoggerService extends LoggerService<LoggerOptions> {
   private readonly logger: Logger;
 
-  constructor(private options: LoggerOptions) {
-    super();
+  constructor(options: LoggerOptions);
+  constructor(context: string, options: LoggerOptions);
+  constructor(...args: any[]) {
+    const [context, options] = args.length === 1 ? [undefined, args[0]] : args;
+    super(context, options);
     this.logger = options.winston;
   }
 
@@ -32,22 +35,22 @@ export class WinstonLoggerService extends LoggerService {
     this.logger.error(message, metadata);
   }
 
-  debug?(message: any, ...optionalParams: any[]) {
+  debug(message: any, ...optionalParams: any[]) {
     const metadata = this.metadata('debug', optionalParams);
     if (this.isFiltered({ level: 'debug', message, metadata })) return;
     this.logger.debug(message, metadata);
   }
 
-  verbose?(message: any, ...optionalParams: any[]) {
-    const metadata = this.metadata('verbose', optionalParams);
-    if (this.isFiltered({ level: 'verbose', message, metadata })) return;
-    this.logger.verbose(message, metadata);
-  }
-
-  fatal?(message: any, ...optionalParams: any[]) {
+  fatal(message: any, ...optionalParams: any[]) {
     const metadata = this.metadata('fatal', optionalParams);
     if (this.isFiltered({ level: 'fatal', message, metadata })) return;
     this.logger.error(message, metadata);
+  }
+
+  verbose(message: any, ...optionalParams: any[]) {
+    const metadata = this.metadata('verbose', optionalParams);
+    if (this.isFiltered({ level: 'verbose', message, metadata })) return;
+    this.logger.verbose(message, metadata);
   }
 
   private isFiltered(args: FilterArgs): boolean {
