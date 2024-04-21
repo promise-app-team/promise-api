@@ -16,10 +16,10 @@ import { TimeoutInterceptor } from './common/interceptors/timeout.interceptor';
 import { TypedConfigService } from './config/env';
 import { LoggerService } from './customs/logger';
 
-export function configure(app: NestExpressApplication) {
-  app.useLogger(app.get(LoggerService));
+export async function configure(app: NestExpressApplication) {
+  const logger = await app.resolve(LoggerService);
+  app.useLogger(logger);
   const { httpAdapter } = app.get(HttpAdapterHost);
-  const config = app.get(TypedConfigService);
 
   app
     .useStaticAssets(join(__dirname, 'assets'), { prefix: '/' })
@@ -34,7 +34,7 @@ export function configure(app: NestExpressApplication) {
         },
       })
     )
-    .useGlobalFilters(new AllExceptionsFilter(httpAdapter, config))
+    .useGlobalFilters(new AllExceptionsFilter(httpAdapter, logger))
     .useGlobalInterceptors(
       new ClassSerializerInterceptor(app.get(Reflector)),
       new StringifyDateInterceptor(),

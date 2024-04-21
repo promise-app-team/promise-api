@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { Module, Scope } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
+import { PrismaClient } from '@prisma/client';
 
 import { AppController } from '@/app/app.controller';
 import { CommonModule } from '@/common/modules';
@@ -8,6 +9,7 @@ import { schema } from '@/config/validation';
 import { CacheModule, InMemoryCacheService, RedisCacheService } from '@/customs/cache';
 import { LoggerModule, LoggerService } from '@/customs/logger';
 import { TypedConfigModule } from '@/customs/typed-config';
+import { WinstonLoggerService, createWinstonLogger } from '@/customs/winston-logger';
 import { AuthModule } from '@/modules/auth';
 import { EventModule } from '@/modules/event';
 import { PromiseModule } from '@/modules/promise';
@@ -36,35 +38,41 @@ import { PrismaModule } from '@/prisma';
     }),
     LoggerModule.registerAsync({
       isGlobal: true,
+      scope: Scope.TRANSIENT,
       inject: [TypedConfigService],
       useFactory(config: TypedConfigService) {
         return {
-          filter({ metadata }) {
-            const label = metadata.label;
+          logger: new WinstonLoggerService({
+            winston: createWinstonLogger({
+              colorize: config.get('colorize'),
+            }),
+            filter(args) {
+              const context = args.metadata.context ?? '';
 
-            switch (config.get('stage')) {
-              case 'test':
-                return false;
-              case 'local':
-              // return true;
-              case 'dev':
-              case 'prod':
-                if (
-                  [
-                    'NestApplication',
-                    'NestFactory',
-                    'InstanceLoader',
-                    'RoutesResolver',
-                    'RouterExplorer',
-                    'WebSocketsController',
-                  ].includes(label)
-                ) {
+              switch (config.get('stage')) {
+                case 'test':
                   return false;
-                }
-            }
+                case 'local':
+                // return true;
+                case 'dev':
+                case 'prod':
+                  if (
+                    [
+                      'NestApplication',
+                      'NestFactory',
+                      'InstanceLoader',
+                      'RoutesResolver',
+                      'RouterExplorer',
+                      'WebSocketsController',
+                    ].includes(context)
+                  ) {
+                    return false;
+                  }
+              }
 
-            return true;
-          },
+              return true;
+            },
+          }),
         };
       },
     }),
@@ -72,7 +80,8 @@ import { PrismaModule } from '@/prisma';
       isGlobal: true,
       inject: [LoggerService, TypedConfigService],
       useFactory(logger: LoggerService, config: TypedConfigService) {
-        return {
+        const prisma = new PrismaClient({
+          errorFormat: config.get('colorize') ? 'pretty' : 'colorless',
           log: config.get('debug.prisma')
             ? [
                 { level: 'info', emit: 'event' },
@@ -84,32 +93,23 @@ import { PrismaModule } from '@/prisma';
                 { level: 'warn', emit: 'event' },
                 { level: 'error', emit: 'event' },
               ],
-          errorFormat: config.get('colorize') ? 'pretty' : 'colorless',
-          transform(prisma) {
-            const tableName = config.get('db.name');
-            prisma.$on('query', ({ query, params, duration }) => {
-              const sanitizedQuery = query
-                .replace(/^SELECT\s+(.*?)\s+FROM/, 'SELECT * FROM')
-                .replace(new RegExp(`\`${tableName}[._a-z]+?\`\.`, 'g'), '')
-                .replace(/\((?<table>`.+?`).(?<field>`.+?`)\)/g, '$<table>.$<field>');
+        });
 
-              const _params = JSON.parse(params);
-              const injectedQuery = sanitizedQuery.replace(/\?/g, () => {
-                const value = _params.shift();
-                if (typeof value === 'string') {
-                  return `'${value}'`;
-                }
-                return value;
-              });
+        const tableName = config.get('db.name');
+        prisma.$on('query', ({ query, params, duration }) => {
+          const sanitizedQuery = query
+            .replace(/^SELECT\s+(.*?)\s+FROM/, 'SELECT * FROM')
+            .replace(new RegExp(`\`${tableName}[._a-z]+?\`\.`, 'g'), '')
+            .replace(/\((?<table>`.+?`).(?<field>`.+?`)\)/g, '$<table>.$<field>');
+          const param = JSON.parse(params);
+          const injectedQuery = sanitizedQuery.replace(/\?/g, () => {
+            const value = param.shift();
+            return typeof value === 'string' ? `'${value}'` : value;
+          });
+          logger.log(undefined, { query: injectedQuery, ms: duration }, 'QUERY');
+        });
 
-              logger.log(`${injectedQuery}`, {
-                label: 'Query',
-                ms: duration,
-              });
-            });
-            return prisma;
-          },
-        };
+        return { prisma };
       },
     }),
     CacheModule.registerAsync({

@@ -1,9 +1,10 @@
 import { HasherOptions } from 'inthash';
 
-export interface IntHashModuleOptions extends HasherOptions {}
+import { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
 
-export interface IntHashModuleAsyncOptions {
-  isGlobal?: boolean;
-  inject?: any[];
-  useFactory: (...args: any[]) => IntHashModuleOptions | Promise<IntHashModuleOptions>;
-}
+interface _IntHashModuleOptions extends HasherOptions {}
+
+interface _IntHashModuleAsyncOptions extends BaseFactoryProvider<_IntHashModuleOptions> {}
+
+export type IntHashModuleOptions = _IntHashModuleOptions & BaseModuleOptions;
+export type IntHashModuleAsyncOptions = _IntHashModuleAsyncOptions & BaseModuleOptions;

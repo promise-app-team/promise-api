@@ -15,7 +15,7 @@ describe(AppController, () => {
     }).compile();
 
     const app = module.createNestApplication<NestExpressApplication>();
-    http.prepare(await configure(app).init());
+    http.prepare(await configure(app).then((app) => app.init()));
   });
 
   describe(http.request.ping, () => {

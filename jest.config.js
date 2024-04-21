@@ -20,7 +20,7 @@ module.exports = {
   },
   verbose: false,
   collectCoverageFrom: ['app/**/[^_]*.(t|j)s', 'modules/**/[^_]*.{!(gateway),}.(t|j)s', 'utils/**/[^_]*.(t|j)s'],
-  coverageDirectory: 'coverage',
+  coverageDirectory: '../coverage',
   testEnvironment: 'node',
   preset: 'ts-jest',
 };

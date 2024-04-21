@@ -1,13 +1,13 @@
 export function ifs<
-  ConditionMap extends [boolean, any][],
+  T = any,
+  ConditionMap extends [boolean, any][] = [boolean, T][],
   PossibleValueType = ConditionMap extends [boolean, infer R][] ? R : never,
->(conditionMaps: [...ConditionMap], elseValue?: PossibleValueType): PossibleValueType | undefined {
+>(conditionMaps: [...ConditionMap]): PossibleValueType | undefined {
   for (const [condition, value] of conditionMaps) {
     if (condition) {
       return value;
     }
   }
-  return elseValue;
 }
 
 export function guard<T>(handler: () => T, defaultValue?: T): T;

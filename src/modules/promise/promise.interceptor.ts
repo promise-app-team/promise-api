@@ -20,7 +20,7 @@ export class EncodePromiseID implements NestInterceptor {
     return data;
   }
 
-  intercept(context: ExecutionContext, next: CallHandler<any>): Observable<any> | Promise<Observable<any>> {
+  intercept(context: ExecutionContext, next: CallHandler<any>): MaybePromise<Observable<any>> {
     return next.handle().pipe(map(this.#transform.bind(this)));
   }
 }

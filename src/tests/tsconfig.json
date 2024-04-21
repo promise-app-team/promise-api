@@ -2,7 +2,7 @@
   "extends": ["../../tsconfig.json"],
   "compilerOptions": {
     "sourceMap": true,
-    "types": ["jest", "@types/multer"],
+    "types": ["jest", "@types/multer", "../types/utils.d.ts"],
     "baseUrl": "../",
     "paths": {
       "@/*": ["*"]

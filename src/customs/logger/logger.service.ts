@@ -1,74 +1,28 @@
 import { Injectable, LoggerService as NestLoggerService } from '@nestjs/common';
 
-import { logger } from './logger';
-import { LoggerModuleOptions, LoggingContext } from './logger.interface';
-
 @Injectable()
-export class LoggerService implements NestLoggerService {
-  private readonly logger = logger;
+export abstract class LoggerService implements NestLoggerService {
+  protected context?: string;
 
-  constructor(private readonly options?: LoggerModuleOptions) {}
-
-  // for custom logger
-
-  info(message: string, context?: LoggingContext) {
-    this.logger.info(message, context);
+  setContext(context: string) {
+    this.context = context;
   }
 
-  // for nestjs logger
+  abstract log(message: any, context?: string): any;
+  abstract log(message: any, metadata?: Record<string, any>, context?: string): any;
 
-  log(message: any, ...optionalParams: any[]) {
-    const [param] = optionalParams;
-    const metadata = typeof param === 'string' ? { label: param } : { ...param };
-    if (this.options?.filter?.({ level: 'log', message, metadata }) === false) return;
-    this.logger.info(message, metadata);
-  }
+  abstract warn(message: any, context?: string): any;
+  abstract warn(message: any, metadata?: Record<string, any>, context?: string): any;
 
-  warn(message: any, ...optionalParams: any[]) {
-    const [param] = optionalParams;
-    const metadata = typeof param === 'string' ? { label: param } : { ...param };
-    if (this.options?.filter?.({ level: 'warn', message, metadata }) === false) return;
-    this.logger.warn(message, { label: optionalParams });
-  }
+  abstract error(message: any, stack?: string, context?: string): any;
+  abstract error(message: any, metadata?: Record<string, any>, stack?: string, context?: string): any;
 
-  error(message: any, ...optionalParams: any[]) {
-    const metadata =
-      typeof optionalParams[0] === 'string'
-        ? {
-            error: optionalParams[0],
-            label: optionalParams[1],
-          }
-        : typeof optionalParams[0] === 'object'
-          ? {
-              error: optionalParams[0].error,
-              label: optionalParams[0].label,
-            }
-          : {
-              ...optionalParams,
-            };
+  abstract debug?(message: any, context?: string): any;
+  abstract debug?(message: any, metadata?: Record<string, any>, context?: string): any;
 
-    if (this.options?.filter?.({ level: 'error', message, metadata }) === false) return;
-    this.logger.error(message, metadata);
-  }
+  abstract fatal?(message: any, stack?: string, context?: string): any;
+  abstract fatal?(message: any, metadata?: Record<string, any>, stack?: string, context?: string): any;
 
-  /**
-   * @deprecated Method not implemented.
-   */
-  fatal(_message: any, ..._optionalParams: any[]) {
-    throw new Error('Method not implemented.');
-  }
-
-  /**
-   * @deprecated Method not implemented.
-   */
-  debug?(_message: any, ..._optionalParams: any[]) {
-    throw new Error('Method not implemented.');
-  }
-
-  /**
-   * @deprecated Method not implemented.
-   */
-  verbose?(_message: any, ..._optionalParams: any[]) {
-    throw new Error('Method not implemented.');
-  }
+  abstract verbose?(message: any, context?: string): any;
+  abstract verbose?(message: any, metadata?: Record<string, any>, context?: string): any;
 }

@@ -65,7 +65,6 @@ export class ConnectionService {
   async delConnection(ids: string[]): Promise<void>;
   async delConnection(...ids: string[]): Promise<void>;
   async delConnection(...ids: (string | string[])[]): Promise<void> {
-    console.log(ids);
     R.pipe(
       ids,
       R.flatten(),

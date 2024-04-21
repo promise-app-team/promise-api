@@ -1,23 +1,12 @@
-interface FilterArgs {
-  level: string;
-  message: string;
-  metadata: Record<string, any>;
+import { LoggerService } from './logger.service';
+
+import { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
+
+interface _LoggerModuleOptions {
+  logger?: LoggerService;
 }
 
-export interface LoggerModuleOptions {
-  isGlobal?: boolean;
-  filter?: (args: FilterArgs) => boolean;
-}
+interface _LoggerModuleAsyncOptions extends BaseFactoryProvider<_LoggerModuleOptions> {}
 
-type MaybePromise<T> = T | Promise<T>;
-
-export interface LoggerModuleAsyncOptions {
-  isGlobal?: boolean;
-  useFactory: (...args: any[]) => MaybePromise<LoggerModuleOptions>;
-  inject?: any[];
-}
-
-export interface LoggingContext {
-  label?: string;
-  ms?: number;
-}
+export type LoggerModuleOptions = _LoggerModuleOptions & BaseModuleOptions;
+export type LoggerModuleAsyncOptions = _LoggerModuleAsyncOptions & BaseModuleOptions;

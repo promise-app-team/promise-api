@@ -11,12 +11,7 @@ export class LoggerMiddleware implements NestMiddleware {
     const requestedAt = Date.now();
 
     res.on('finish', () => {
-      this.logger.log('', {
-        label: 'HTTP',
-        request: req,
-        response: res,
-        ms: Date.now() - requestedAt,
-      });
+      this.logger.log(undefined, { request: req, response: res, ms: Date.now() - requestedAt }, 'HTTP');
     });
 
     next();
