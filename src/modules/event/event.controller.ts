@@ -25,21 +25,24 @@ export class EventController {
 
     this.client = new ApiGatewayManagementApi({ endpoint });
     this.logger.setContext(EventController.name);
+    this.logger.debug(`Initialized webSocket client with endpoint: ${endpoint}`);
   }
 
   @Get('connect')
   async connect(@Query('connectionId') connectionId: string): Promise<EventResponse> {
+    this.logger.debug(`Creating connection: ${connectionId}`);
     const response = await this.event.get('connect').handle(connectionId);
     const connections = await this.event.connection.getConnections();
-    this.logger.log(`[$connect] Created connection: ${connectionId} (total: ${connections.length})`);
+    this.logger.debug(`Created connection: ${connectionId} (total: ${connections.length})`);
     return response;
   }
 
   @Get('disconnect')
   async disconnect(@Query('connectionId') connectionId: string): Promise<EventResponse> {
+    this.logger.debug(`Deleting connection: ${connectionId}`);
     const response = await this.event.get('disconnect').handle(connectionId);
     const connections = await this.event.connection.getConnections();
-    this.logger.log(`[$disconnect] Deleted connection: ${connectionId} (total: ${connections.length})`);
+    this.logger.debug(`Deleted connection: ${connectionId} (total: ${connections.length})`);
     return response;
   }
 
@@ -49,8 +52,11 @@ export class EventController {
     @Query('connectionId') connectionId: string,
     @ParsedBody() body: PingEvent.Payload
   ): Promise<EventResponse> {
+    console.log(`$default (connectionId: ${connectionId})`);
     const handler = this.event.get('ping');
+    this.logger.debug(`Sending message from connection: ${connectionId}`);
     handler.on('send', async (connection, data) => {
+      this.logger.debug(`Sending message to connection: ${connection.id}`);
       await this.client
         .postToConnection({
           ConnectionId: connection.id,
@@ -65,7 +71,7 @@ export class EventController {
         });
     });
     const response = await this.event.get('ping').handle(connectionId, body.data);
-    this.logger.log(`[$ping] Sent message from connection: ${connectionId} with ${JSON.stringify(body.data)}`);
+    this.logger.debug(`Sent message from connection: ${connectionId} with ${JSON.stringify(body.data)}`);
     return response;
   }
 }

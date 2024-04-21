@@ -51,6 +51,7 @@ provider:
     binaryMediaTypes:
       - '*/*'
   websocketsApiName: ${self:provider.stage}-${self:service}-ws
+  websocketsApiRouteSelectionExpression: $request.body.event
   environment:
     SERVERLESS: true
 

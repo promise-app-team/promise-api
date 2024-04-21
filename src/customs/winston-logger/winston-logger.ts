@@ -1,47 +1,58 @@
-import { highlight } from 'cli-highlight';
 import { formatISO } from 'date-fns';
-import { mapToObj } from 'remeda';
+import { highlight } from 'sql-highlight';
 import { format, createLogger, transports, Logger } from 'winston';
 
-import { ifs } from '@/utils';
+import { createColorMap } from './color';
+
+import { ifs, memoize } from '@/utils';
 
 export interface WinstonLoggerOptions {
   colorize?: boolean;
 }
 
-export function createWinstonLogger(options: WinstonLoggerOptions = {}): Logger {
-  const colors = mapToObj(
-    [
-      'sql',
-      'dim',
-      'underline',
-      'hidden',
-      'black',
-      'red',
-      'green',
-      'yellow',
-      'blue',
-      'magenta',
-      'cyan',
-      'white',
-      'gray',
-    ] as const,
-    (color) => [color, color]
-  );
+const colors = createColorMap(['sql'] as const);
 
+export const createWinstonLogger = memoize((options: WinstonLoggerOptions = {}): Logger => {
   function colorize(color: keyof typeof colors, message: string) {
     if (!options.colorize) {
       return message;
     }
 
     if (color === 'sql') {
+      const blue = '\x1b[34m';
+      const magenta = '\x1b[35m';
+      const yellow = '\x1b[33m';
+      const green = '\x1b[32m';
+      const gray = '\x1b[90m';
       return highlight(message, {
-        language: 'sql',
-        ignoreIllegals: true,
+        colors: {
+          keyword: blue,
+          function: magenta,
+          number: green,
+          string: gray,
+          special: yellow,
+          bracket: green,
+          comment: '\x1b[2m\x1b[90m',
+          clear: '\x1b[0m',
+        },
       });
     }
 
-    return format.colorize().colorize(color, message);
+    return format.colorize({ colors }).colorize(color, message);
+  }
+
+  function colorizeByLevel(level: string, message: string) {
+    return colorize(
+      ifs<keyof typeof colors>([
+        [level.includes('LOG'), 'green'],
+        [level.includes('WARN'), 'yellow'],
+        [level.includes('ERROR'), 'red'],
+        [level.includes('DEBUG'), 'blue'],
+        [level.includes('FATAL'), 'magenta'],
+        [level.includes('VERBOSE'), 'cyan'],
+      ]) ?? 'black',
+      message
+    );
   }
 
   return createLogger({
@@ -53,7 +64,7 @@ export function createWinstonLogger(options: WinstonLoggerOptions = {}): Logger 
             transform(info) {
               return {
                 ...info,
-                level: `${info.level.toUpperCase()}`.padStart(5),
+                level: info.level.toUpperCase().padStart(7),
                 context: info.level ? `[${info.context}]` : '',
               };
             },
@@ -62,15 +73,18 @@ export function createWinstonLogger(options: WinstonLoggerOptions = {}): Logger 
             format: () => formatISO(new Date()),
           }),
           // format.ms(),
-          options.colorize ? format.colorize({ colors }) : format.uncolorize(),
           format.printf((args) => {
-            const { timestamp, level, message, request, response, error, ms, context, query, ...meta } = args;
+            const { timestamp, level, request, response, error, ms, context, query, message, ...meta } = args;
+            const msg = ['null', 'undefined'].includes(message) ? '' : message;
 
-            function build(body: string, meta = '') {
-              const head = `${colorize('dim', `${timestamp}`)}`;
-              const label = context ? colorize('magenta', `${context} `) : '';
+            function build(message: string, meta = '') {
+              const head = `${colorize('dim', `[${timestamp}]`)}`;
+              const label = context ? colorize('bold cyan', `${context} `) : '';
               const footer = ` ${colorize('dim', `${ms ? `+${ms}ms` : ''}`)}`;
-              return `${head} ${level} ${label}${body ?? ''}${footer} ${meta}`;
+              const lvl = colorizeByLevel(level, level);
+              const body = colorizeByLevel(level, message);
+
+              return `${head} ${lvl} ${label}${body ?? ''}${footer} ${meta}`;
             }
 
             if (isRequest(request) && isResponse(response)) {
@@ -89,20 +103,20 @@ export function createWinstonLogger(options: WinstonLoggerOptions = {}): Logger 
             if (error instanceof Error) {
               const errorMessage = (error.stack ?? error.message) || `${error}`;
               const stack = colorize('yellow', errorMessage);
-              return message ? build(message, `\n${stack}`) : build(stack);
+              return msg ? build(msg, `\n${stack}`) : build(stack);
             } else if (typeof error === 'string') {
               const stack = colorize('yellow', error);
-              return message ? build(`${message} ${stack}`) : build(stack);
+              return msg ? build(`${msg} ${stack}`) : build(stack);
             }
 
             if (query) {
               const sql = colorize('sql', query);
-              return message ? build(message, `\n${sql}`) : build(sql);
+              return msg ? build(msg, `\n${sql}`) : build(sql);
             }
 
             const metaString = JSON.stringify(meta, null, 2);
             const metaStringified = metaString === '{}' ? '' : `\n${metaString}`;
-            return build(message, metaStringified);
+            return build(msg, metaStringified);
           })
         ),
       }),
@@ -116,4 +130,4 @@ export function createWinstonLogger(options: WinstonLoggerOptions = {}): Logger 
   function isResponse(response: any): boolean {
     return response && response.statusCode;
   }
-}
+});

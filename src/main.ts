@@ -127,6 +127,5 @@ function configureWebSocketEvent(event: APIGatewayEvent) {
 
 export const handler: Handler = async (event, context, callback) => {
   configureWebSocketEvent(event);
-  context.callbackWaitsForEmptyEventLoop = false;
   return (await bootstrap)(event, context, callback);
 };

@@ -43,8 +43,7 @@ export class MutationLogInterceptor implements NestInterceptor {
         });
 
         this.prisma.mutationLog
-          .create({
-            select: null,
+          .createMany({
             data: {
               userId,
               url: request.url,
