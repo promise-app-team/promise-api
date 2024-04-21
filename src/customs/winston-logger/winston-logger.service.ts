@@ -26,31 +26,31 @@ export class WinstonLoggerService extends LoggerService<LoggerOptions> {
   warn(message: any, ...optionalParams: any[]) {
     const metadata = this.metadata('warn', optionalParams);
     if (this.isFiltered({ level: 'warn', message, metadata })) return;
-    this.logger.warn(message, metadata);
+    this.logger.info(message, metadata);
   }
 
   error(message: any, ...optionalParams: any[]) {
     const metadata = this.metadata('error', optionalParams);
     if (this.isFiltered({ level: 'error', message, metadata })) return;
-    this.logger.error(message, metadata);
+    this.logger.info(message, metadata);
   }
 
   debug(message: any, ...optionalParams: any[]) {
     const metadata = this.metadata('debug', optionalParams);
     if (this.isFiltered({ level: 'debug', message, metadata })) return;
-    this.logger.debug(message, metadata);
+    this.logger.info(message, metadata);
   }
 
   fatal(message: any, ...optionalParams: any[]) {
     const metadata = this.metadata('fatal', optionalParams);
     if (this.isFiltered({ level: 'fatal', message, metadata })) return;
-    this.logger.error(message, metadata);
+    this.logger.info(message, metadata);
   }
 
   verbose(message: any, ...optionalParams: any[]) {
     const metadata = this.metadata('verbose', optionalParams);
     if (this.isFiltered({ level: 'verbose', message, metadata })) return;
-    this.logger.verbose(message, metadata);
+    this.logger.info(message, metadata);
   }
 
   private isFiltered(args: FilterArgs): boolean {
