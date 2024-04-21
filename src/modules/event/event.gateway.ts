@@ -31,16 +31,18 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleConnection(@ConnectedSocket() client: Client, _incoming: IncomingMessage) {
     client.id = uuid();
     this.clients.set(client.id, client);
-    await this.event.get('connect').handle(client.id);
+    const response = await this.event.get('connect').handle(client.id);
     const connections = await this.event.connection.getConnections();
-    this.logger.log(`[CONNECT] Client connected: ${client.id} (total: ${connections.length})`);
+    this.logger.debug(`Client connected: ${client.id} (total: ${connections.length})`);
+    return response;
   }
 
   async handleDisconnect(@ConnectedSocket() client: Client) {
     this.clients.delete(client.id);
-    await this.event.get('disconnect').handle(client.id);
+    const response = await this.event.get('disconnect').handle(client.id);
     const connections = await this.event.connection.getConnections();
-    this.logger.log(`[DISCONNECT] Client disconnected: ${client.id} (total: ${connections.length})`);
+    this.logger.debug(`Client disconnected: ${client.id} (total: ${connections.length})`);
+    return response;
   }
 
   @SubscribeMessage('ping')
@@ -50,7 +52,8 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
       const client = this.clients.get(connection.id);
       client?.send(JSON.stringify(data));
     });
-    await handler.handle(client.id, data);
-    this.logger.log(`[MESSAGE] Client sent message: ${client.id} with ${JSON.stringify(data)}`);
+    const response = await handler.handle(client.id, data);
+    this.logger.debug(`Client sent message: ${client.id} with ${JSON.stringify(data)}`);
+    return response;
   }
 }
