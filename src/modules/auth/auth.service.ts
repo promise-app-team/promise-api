@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+import { JsonWebTokenError, TokenExpiredError } from '@nestjs/jwt';
 
 import { UserService } from '../user/user.service';
 
