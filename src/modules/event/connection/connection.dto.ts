@@ -10,6 +10,16 @@ export class Connection {
   iat!: number;
 
   /**
+   * expired at (timestamp)
+   */
+  exp!: number;
+
+  /**
+   * ttl (time to live in seconds)
+   */
+  ttl!: number;
+
+  /**
    * scope
    */
   scp!: string;
