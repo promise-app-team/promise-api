@@ -1,9 +1,9 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { Request, Response } from 'express';
 import { Observable, map } from 'rxjs';
 
 import { LoggerService } from '@/customs/logger';
+import { JwtAuthTokenService } from '@/modules/auth';
 import { PrismaService } from '@/prisma';
 import { guard } from '@/utils';
 
@@ -23,7 +23,7 @@ export class MutationLogInterceptor implements NestInterceptor {
   constructor(
     private readonly prisma: PrismaService,
     private readonly logger: LoggerService,
-    private readonly jwt: JwtService
+    private readonly jwt: JwtAuthTokenService
   ) {
     logger.setContext(MutationLogInterceptor.name);
   }
@@ -44,7 +44,7 @@ export class MutationLogInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map(async (responseBody: any) => {
         let userId = null;
-        userId ||= guard(() => +this.jwt.decode(responseBody.accessToken).id, null);
+        userId ||= guard(() => +this.jwt.verifyToken(responseBody.accessToken).sub, null);
         userId ||= guard(() => (request as any).user.id, null);
         if (!userId) return responseBody;
 

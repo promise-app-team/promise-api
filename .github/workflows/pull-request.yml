@@ -17,7 +17,8 @@ jobs:
       STAGE: ${{ vars.STAGE }}
       NODE_ENV: ${{ vars.NODE_ENV }}
 
-      JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+      JWT_SIGN_KEY: ${{ secrets.JWT_SIGN_KEY }}
+      JWT_VERIFY_KEY: ${{ vars.JWT_VERIFY_KEY }}
       INTHASH_KEY: ${{ secrets.INTHASH_KEY }}
 
       DB_USER: ${{ vars.DB_USER }}

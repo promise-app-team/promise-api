@@ -4,3 +4,4 @@ export * from './auth.service';
 export * from './auth.decorator';
 export * from './auth.dto';
 export * from './auth.guard';
+export * from './jwt-token.service';

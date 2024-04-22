@@ -1,6 +1,5 @@
 import { HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import { formatISO } from 'date-fns';
@@ -11,6 +10,7 @@ import { mockGlobalFn } from '../mocks';
 import { TypedConfigService } from '@/config/env';
 import { CacheModule, InMemoryCacheService } from '@/customs/cache';
 import { InthashService } from '@/customs/inthash';
+import { JwtAuthTokenService } from '@/modules/auth';
 import {
   PromiseController,
   InputCreatePromiseDTO,
@@ -48,7 +48,7 @@ describe(PromiseController, () => {
         ConfigService,
         { provide: PrismaService, useValue: prisma },
         { provide: InthashService, useValue: {} },
-        { provide: JwtService, useValue: {} },
+        { provide: JwtAuthTokenService, useValue: {} },
         { provide: UserService, useValue: {} },
       ],
     }).compile();

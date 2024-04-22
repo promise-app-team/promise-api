@@ -1,6 +1,7 @@
 import { CanActivate, ExecutionContext, Injectable, UseGuards } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
+
+import { JwtAuthTokenService } from './jwt-token.service';
 
 import { HttpException } from '@/common/exceptions';
 import { UserService } from '@/modules/user/user.service';
@@ -8,8 +9,8 @@ import { UserService } from '@/modules/user/user.service';
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
   constructor(
-    private readonly jwt: JwtService,
-    private readonly userService: UserService
+    private readonly userService: UserService,
+    private readonly jwt: JwtAuthTokenService
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -18,8 +19,8 @@ export class JwtAuthGuard implements CanActivate {
     if (!token) throw HttpException.new('로그인이 필요합니다.', 'UNAUTHORIZED');
 
     try {
-      const payload = this.jwt.verify(token);
-      request.user = await this.userService.findOneById(+payload.id);
+      const payload = this.jwt.verifyToken(token);
+      request.user = await this.userService.findOneById(payload.sub);
     } catch (error) {
       throw HttpException.new('로그인이 필요합니다...', 'UNAUTHORIZED');
     }

@@ -23,7 +23,8 @@ jobs:
       NODE_ENV: ${{ vars.NODE_ENV }}
       NO_COLOR: ${{ vars.NO_COLOR }}
 
-      JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+      JWT_SIGN_KEY: ${{ secrets.JWT_SIGN_KEY }}
+      JWT_VERIFY_KEY: ${{ vars.JWT_VERIFY_KEY }}
       INTHASH_KEY: ${{ secrets.INTHASH_KEY }}
 
       JWT_ACCESS_EXPIRES_IN: ${{ vars.JWT_ACCESS_EXPIRES_IN }}

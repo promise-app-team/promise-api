@@ -1,8 +1,8 @@
 import { HttpStatus } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import { pick } from 'remeda';
 
+import { JwtAuthTokenService } from '@/modules/auth';
 import { UserController, UserService } from '@/modules/user';
 import { PrismaService } from '@/prisma';
 import { createTestFixture } from '@/tests/fixtures';
@@ -16,7 +16,11 @@ describe(UserController, () => {
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       controllers: [UserController],
-      providers: [UserService, { provide: JwtService, useValue: {} }, { provide: PrismaService, useValue: prisma }],
+      providers: [
+        UserService,
+        { provide: JwtAuthTokenService, useValue: {} },
+        { provide: PrismaService, useValue: prisma },
+      ],
     }).compile();
 
     userController = module.get(UserController);
