@@ -5,10 +5,18 @@ import { Observable, map } from 'rxjs';
 
 import { LoggerService } from '@/customs/logger';
 import { PrismaService } from '@/prisma';
+import { guard } from '@/utils';
 
 const MUTATION_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 const EXCLUDE_PATHS = ['/event/', '/promises/queue'];
-const REDACTED_FIELDS = ['accessToken', 'refreshToken'];
+
+function redact(obj: Record<string, any>, keys: string[], mask = '[REDACTED]'): Record<string, any> {
+  const newObj = { ...obj };
+  for (const key of keys) {
+    if (newObj[key]) Reflect.set(newObj, key, mask);
+  }
+  return newObj;
+}
 
 @Injectable()
 export class MutationLogInterceptor implements NestInterceptor {
@@ -34,14 +42,11 @@ export class MutationLogInterceptor implements NestInterceptor {
     }
 
     return next.handle().pipe(
-      map(async (responseBody) => {
-        const resBody = { ...responseBody };
-        const userId = (request as any)?.user?.id || +this.jwt.verify(resBody['accessToken']).id;
-        if (!userId) return this.logger.warn('사용자 정보를 찾을 수 없습니다.');
-
-        REDACTED_FIELDS.forEach((field) => {
-          if (resBody[field]) resBody[field] = '[REDACTED]';
-        });
+      map(async (responseBody: any) => {
+        let userId = null;
+        userId ||= guard(() => +this.jwt.decode(responseBody.accessToken).id, null);
+        userId ||= guard(() => (request as any).user.id, null);
+        if (!userId) return responseBody;
 
         await this.prisma.mutationLog
           .createMany({
@@ -49,15 +54,17 @@ export class MutationLogInterceptor implements NestInterceptor {
               userId,
               url: request.url,
               method: request.method,
-              headers: request.headers,
+              headers: redact(request.headers, ['authorization']),
               statusCode: response.statusCode,
               requestBody: Object.keys(request.body).length ? request.body : undefined,
-              responseBody: Object.keys(resBody).length ? resBody : undefined,
+              responseBody: Object.keys(responseBody).length
+                ? redact(responseBody, ['accessToken', 'refreshToken'])
+                : undefined,
               requestAt: requestTime,
               responseAt: new Date(),
             },
           })
-          .catch((error) => this.logger.error(undefined, error));
+          .catch((error) => this.logger.error(error));
 
         return responseBody;
       })

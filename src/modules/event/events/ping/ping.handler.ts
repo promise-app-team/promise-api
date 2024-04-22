@@ -16,6 +16,8 @@ export class PingEventHandler implements EventHandler {
   }
 
   async handle(id: string, data: PingEvent.Payload['data']): Promise<EventResponse> {
+    await this.connection.setConnection({ id });
+
     const strategy = data.param?.strategy;
     if (!strategy) {
       const error = `Strategy not found`;

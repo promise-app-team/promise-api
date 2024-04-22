@@ -32,7 +32,8 @@ export class ConnectionService {
     this.connectionMap = R.pipe(
       this.connections,
       R.concat(connections ?? []),
-      R.uniqueBy((c) => c.id),
+      R.filter(this.isExpired.bind(this)),
+      R.uniqueBy(R.prop('id')),
       R.map((c) => [c.id, c] as const),
       (input) => new Map(input)
     );
@@ -46,17 +47,18 @@ export class ConnectionService {
     return this.connectionMap.size ? this.connections : [];
   }
 
-  async setConnection(connection: Pick<Connection, 'id'>): Promise<boolean> {
+  async setConnection(connection: Pick<Connection, 'id'>, ttl = 60 * 60 * 24): Promise<boolean> {
     if (this.connectionMap.has(connection.id)) return false;
     const iat = getUnixTime(new Date());
     const newConnection = {
       ...connection,
       iat,
+      exp: iat + ttl,
+      ttl,
       scp: this.scope,
       stg: this.config.get('stage'),
-    };
+    } satisfies Connection;
     this.connectionMap.set(connection.id, newConnection);
-
     const [key, value] = [this.key, this.connections];
     await this.cache.set(key, value);
     return true;
@@ -72,5 +74,9 @@ export class ConnectionService {
       R.forEach(this.connectionMap.delete.bind(this.connectionMap))
     );
     await this.cache.set(this.key, this.connections);
+  }
+
+  isExpired(connection: Connection): boolean {
+    return getUnixTime(new Date()) > connection.exp;
   }
 }

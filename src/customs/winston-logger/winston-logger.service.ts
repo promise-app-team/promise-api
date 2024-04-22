@@ -18,37 +18,37 @@ export class WinstonLoggerService extends LoggerService<LoggerOptions> {
   }
 
   log(message: any, ...optionalParams: any[]) {
-    const metadata = this.metadata('log', optionalParams);
+    const metadata = this.metadata('log', message, optionalParams);
     if (this.isFiltered({ level: 'log', message, metadata })) return;
     this.logger.info(message, metadata);
   }
 
   warn(message: any, ...optionalParams: any[]) {
-    const metadata = this.metadata('warn', optionalParams);
+    const metadata = this.metadata('warn', message, optionalParams);
     if (this.isFiltered({ level: 'warn', message, metadata })) return;
     this.logger.info(message, metadata);
   }
 
   error(message: any, ...optionalParams: any[]) {
-    const metadata = this.metadata('error', optionalParams);
+    const metadata = this.metadata('error', message, optionalParams);
     if (this.isFiltered({ level: 'error', message, metadata })) return;
     this.logger.info(message, metadata);
   }
 
   debug(message: any, ...optionalParams: any[]) {
-    const metadata = this.metadata('debug', optionalParams);
+    const metadata = this.metadata('debug', message, optionalParams);
     if (this.isFiltered({ level: 'debug', message, metadata })) return;
     this.logger.info(message, metadata);
   }
 
   fatal(message: any, ...optionalParams: any[]) {
-    const metadata = this.metadata('fatal', optionalParams);
+    const metadata = this.metadata('fatal', message, optionalParams);
     if (this.isFiltered({ level: 'fatal', message, metadata })) return;
     this.logger.info(message, metadata);
   }
 
   verbose(message: any, ...optionalParams: any[]) {
-    const metadata = this.metadata('verbose', optionalParams);
+    const metadata = this.metadata('verbose', message, optionalParams);
     if (this.isFiltered({ level: 'verbose', message, metadata })) return;
     this.logger.info(message, metadata);
   }
@@ -57,13 +57,18 @@ export class WinstonLoggerService extends LoggerService<LoggerOptions> {
     return this.options?.filter?.(args) === false;
   }
 
-  private metadata(level: LogLevel, params: any[]): Record<string, any> {
+  private metadata(level: LogLevel, message: any, params: any[]): Record<string, any> {
     const base = { level, context: this.context };
     if (!params.length) return base;
 
     if (['error', 'fatal'].includes(level)) {
-      const [meta, error, context] = typeof params[0] === 'object' ? params : [undefined, params[0], params[1]];
-      return { ...base, error, context: context || this.context, ...meta };
+      if (params[0] instanceof Error) {
+        const [error, context] = params;
+        return { ...base, error, context: context || this.context };
+      } else {
+        const [meta, error, context] = params[0] && typeof params[0] === 'object' ? params : [undefined, ...params];
+        return { ...base, error, context: context || this.context, ...meta };
+      }
     } else {
       const [meta, context] = typeof params[0] === 'object' ? params : [undefined, params[0]];
       return { ...base, context: context || this.context, ...meta };
