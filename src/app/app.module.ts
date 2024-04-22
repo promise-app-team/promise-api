@@ -85,11 +85,11 @@ import { PrismaModule } from '@/prisma';
               ],
         });
 
-        const tableName = config.get('db.name');
+        const tableName = `${config.get('db.name')}_${config.get('stage')}`;
         prisma.$on('query', ({ query, params, duration }) => {
           const sanitizedQuery = query
             .replace(/^SELECT\s+(.*?)\s+FROM/, 'SELECT * FROM')
-            .replace(new RegExp(`\`${tableName}[._a-z]+?\`\.`, 'g'), '')
+            .replace(new RegExp(`\`${tableName}\`\.`, 'g'), '')
             .replace(/\((?<table>`.+?`).(?<field>`.+?`)\)/g, '$<table>.$<field>');
           const param = JSON.parse(params);
           const injectedQuery = sanitizedQuery.replace(/\?/g, () => {

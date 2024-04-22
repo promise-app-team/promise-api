@@ -30,6 +30,7 @@ jobs:
       JWT_ACCESS_EXPIRES_IN: ${{ vars.JWT_ACCESS_EXPIRES_IN }}
       JWT_REFRESH_EXPIRES_IN: ${{ vars.JWT_REFRESH_EXPIRES_IN }}
 
+      DB_NAME: ${{ vars.DB_NAME }}
       DB_URL: mysql://${{ vars.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ vars.DB_HOST }}:${{ vars.DB_PORT }}/${{ vars.DB_NAME }}_dev
 
       REDIS_HOST: ${{ vars.REDIS_HOST }}

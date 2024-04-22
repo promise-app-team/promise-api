@@ -44,7 +44,7 @@ export class MutationLogInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map(async (responseBody: any) => {
         let userId = null;
-        userId ||= guard(() => +this.jwt.verifyToken(responseBody.accessToken).sub, null);
+        userId ||= guard(() => this.jwt.verifyToken(responseBody.accessToken).sub, null);
         userId ||= guard(() => (request as any).user.id, null);
         if (!userId) return responseBody;
 
