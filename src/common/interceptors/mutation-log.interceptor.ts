@@ -5,6 +5,7 @@ import { Observable, map } from 'rxjs';
 
 import { LoggerService } from '@/customs/logger';
 import { PrismaService } from '@/prisma';
+import { guard } from '@/utils';
 
 const MUTATION_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 const EXCLUDE_PATHS = ['/event/', '/promises/queue'];
@@ -34,10 +35,13 @@ export class MutationLogInterceptor implements NestInterceptor {
     }
 
     return next.handle().pipe(
-      map(async (responseBody) => {
+      map(async (responseBody: any) => {
         const resBody = { ...responseBody };
-        const userId = (request as any)?.user?.id || +this.jwt.verify(resBody['accessToken']).id;
-        if (!userId) return this.logger.warn('사용자 정보를 찾을 수 없습니다.');
+
+        let userId = null;
+        userId ||= guard(() => +this.jwt.decode(responseBody.accessToken).id, null);
+        userId ||= guard(() => (request as any).user.id, null);
+        if (!userId) return responseBody;
 
         REDACTED_FIELDS.forEach((field) => {
           if (resBody[field]) resBody[field] = '[REDACTED]';
@@ -57,7 +61,7 @@ export class MutationLogInterceptor implements NestInterceptor {
               responseAt: new Date(),
             },
           })
-          .catch((error) => this.logger.error(undefined, error));
+          .catch((error) => this.logger.error(error));
 
         return responseBody;
       })

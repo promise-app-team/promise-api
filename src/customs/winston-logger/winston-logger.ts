@@ -75,7 +75,7 @@ export const createWinstonLogger = memoize((options: WinstonLoggerOptions = {}):
           // format.ms(),
           format.printf((args) => {
             const { timestamp, level, request, response, error, ms, context, query, message, ...meta } = args;
-            const msg = ['null', 'undefined'].includes(message) ? '' : message;
+            const msg = [null, undefined, 'null', 'undefined'].includes(message) ? '' : message;
 
             function build(message: string, meta = '') {
               const head = `${colorize('dim', `[${timestamp}]`)}`;
