@@ -9,7 +9,14 @@ import { guard } from '@/utils';
 
 const MUTATION_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 const EXCLUDE_PATHS = ['/event/', '/promises/queue'];
-const REDACTED_FIELDS = ['accessToken', 'refreshToken'];
+
+function redact(obj: Record<string, any>, keys: string[], mask = '[REDACTED]'): Record<string, any> {
+  const newObj = { ...obj };
+  for (const key of keys) {
+    if (newObj[key]) Reflect.set(newObj, key, mask);
+  }
+  return newObj;
+}
 
 @Injectable()
 export class MutationLogInterceptor implements NestInterceptor {
@@ -36,16 +43,10 @@ export class MutationLogInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       map(async (responseBody: any) => {
-        const resBody = { ...responseBody };
-
         let userId = null;
         userId ||= guard(() => +this.jwt.decode(responseBody.accessToken).id, null);
         userId ||= guard(() => (request as any).user.id, null);
         if (!userId) return responseBody;
-
-        REDACTED_FIELDS.forEach((field) => {
-          if (resBody[field]) resBody[field] = '[REDACTED]';
-        });
 
         await this.prisma.mutationLog
           .createMany({
@@ -53,10 +54,12 @@ export class MutationLogInterceptor implements NestInterceptor {
               userId,
               url: request.url,
               method: request.method,
-              headers: request.headers,
+              headers: redact(request.headers, ['authorization']),
               statusCode: response.statusCode,
               requestBody: Object.keys(request.body).length ? request.body : undefined,
-              responseBody: Object.keys(resBody).length ? resBody : undefined,
+              responseBody: Object.keys(responseBody).length
+                ? redact(responseBody, ['accessToken', 'refreshToken'])
+                : undefined,
               requestAt: requestTime,
               responseAt: new Date(),
             },
