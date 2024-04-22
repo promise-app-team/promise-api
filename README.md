@@ -40,10 +40,9 @@ $ npm run init
 
 프로젝트 루트 디렉터리에 위치한 `.env.local` 파일을 열어 환경 변수를 설정합니다.
 
->환경변수의 값 주변에 공백 혹은 따옴표를 사용하지 않아야 합니다.
-
->`STAGE` 환경 변수는 다른 단어와 결합할 때 사용합니다. `local`, `test`, `dev`, `prod` 을 사용합니다. \
->`NODE_ENV` 환경 변수는 단독으로 사용합니다. `local`, `test`, `development`, `production` 을 사용합니다.
+- 문자 사이에 공백이 있지 않는 한, 환경변수의 값 주변에 공백 혹은 따옴표를 감싸지 않아야 합니다.
+- `STAGE` 환경 변수는 다른 단어와 결합할 때 사용합니다. `local`, `test`, `dev`, `prod` 을 사용합니다.
+- `NODE_ENV` 환경 변수는 단독으로 사용합니다. `local`, `test`, `development`, `production` 을 사용합니다.
 
 ### 데이터베이스 설정
 
@@ -64,7 +63,7 @@ $ make init_db
 - `${DB_NAME}_test`
 - `${DB_NAME}_test_shadow`
 
-데이터베이스를 중지하려면 다음 명령어를 실행합니다.
+데이터베이스를 중지하려면 다음 명령어를 실행합니다. (간혹 데이터베이스를 찾지 못하는 경우 사용합니다.)
 
 ```bash
 $ make deinit_db
@@ -218,9 +217,10 @@ $ npm run test
 특정 키워드로 필터링하여 테스트를 실행할 수 있습니다.
 
 ```bash
-$ npm run test auth.controller # auth.controller.spec.ts 파일을 테스트합니다.
-$ npm run test service         # 모든 *.service.spec.ts 파일을 테스트합니다.
-$ npm run test e2e             # 모든 *.e2e-spec.ts 파일을 테스트합니다.
+$ npm run test auth.controller.spec # auth.controller.spec.ts 파일을 테스트합니다.
+$ npm run test user.controller.e2e  # user.controller.e2e-spec.ts 파일을 테스트합니다.
+$ npm run test service              # 모든 *.service.spec.ts 파일을 테스트합니다.
+$ npm run test e2e                  # 모든 *.e2e-spec.ts 파일을 테스트합니다.
 ```
 
 커버리지를 확인하기 위해 다음 명령어를 실행합니다.
