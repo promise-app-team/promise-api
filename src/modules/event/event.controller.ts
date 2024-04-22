@@ -30,12 +30,14 @@ export class EventController {
   @Get('connect')
   async requestConnectEvent(@Query('connectionId') connectionId: string): Promise<EventResponse> {
     this.logger.debug(`Client connected: ${connectionId}`);
+
     return this.event.get('connect').handle(connectionId);
   }
 
   @Get('disconnect')
   async requestDisconnectEvent(@Query('connectionId') connectionId: string): Promise<EventResponse> {
     this.logger.debug(`Client disconnected: ${connectionId}`);
+
     return this.event.get('disconnect').handle(connectionId);
   }
 
@@ -46,14 +48,25 @@ export class EventController {
     @ParsedBody() body: PingEvent.Payload
   ): Promise<EventResponse> {
     this.logger.debug(`Client sent message: ${connectionId} with ${JSON.stringify(body.data)}`);
+
     const handler = this.event.get('ping');
+
     handler.on('send', async (connection, data) => {
       this.logger.debug(`Sending message to ${connection.id}: ${JSON.stringify(data)}`);
-      await this.client
-        .postToConnection({ ConnectionId: connection.id, Data: JSON.stringify(data) })
-        .catch((error) => this.logger.error(`Failed to send message to ${connection.id}`, error));
-      this.logger.debug(`Sent message to ${connection.id}`);
+
+      try {
+        await this.client.postToConnection({ ConnectionId: connection.id, Data: JSON.stringify(data) });
+
+        this.logger.debug(`Sent message to ${connection.id}`);
+      } catch (error: any) {
+        this.logger.error(`Failed to send message to ${connection.id}`, error);
+
+        if (error.name === 'GoneException') {
+          await this.event.get('disconnect').handle(connection.id);
+        }
+      }
     });
+
     return handler.handle(connectionId, body.data);
   }
 }
