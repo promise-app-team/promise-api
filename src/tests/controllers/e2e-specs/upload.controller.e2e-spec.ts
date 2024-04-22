@@ -1,11 +1,11 @@
 import path from 'node:path';
 
-import { JwtService } from '@nestjs/jwt';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 
 import { AppModule } from '@/app';
 import { configure } from '@/main';
+import { JwtAuthTokenService } from '@/modules/auth';
 import { FileUploadController } from '@/modules/upload';
 import { createHttpRequest } from '@/tests/controllers/utils/http-request';
 import { createTestFixture } from '@/tests/fixtures';
@@ -27,7 +27,7 @@ describe(FileUploadController, () => {
     http.prepare(await configure(app).then((app) => app.init()));
 
     const authUser = await fixture.write.user.output();
-    http.request.authorize(authUser, { jwt: module.get(JwtService) });
+    http.request.authorize(authUser, { jwt: module.get(JwtAuthTokenService) });
     fixture.configure({ authUser });
   });
 

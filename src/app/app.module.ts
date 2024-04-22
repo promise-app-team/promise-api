@@ -1,5 +1,4 @@
 import { Module, Scope } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
 import { PrismaClient } from '@prisma/client';
 
 import { AppController } from '@/app/app.controller';
@@ -26,15 +25,6 @@ import { PrismaModule } from '@/prisma';
       validationSchema: schema,
       expandVariables: true,
       config: TypedConfigService,
-    }),
-    JwtModule.registerAsync({
-      global: true,
-      inject: [TypedConfigService],
-      useFactory(config: TypedConfigService) {
-        return {
-          secret: config.get('jwt.secret'),
-        };
-      },
     }),
     LoggerModule.registerAsync({
       isGlobal: true,

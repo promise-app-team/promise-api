@@ -26,6 +26,7 @@
     "coverage": "dotenv -oe .env.test -- jest --coverage",
     "update": "npx npm-check-updates -ui",
     "inthash": "dotenv -oe .env.local -- tsx ./scripts/inthash.ts",
+    "generate-key-pair": "tsx ./scripts/generate-key-pair.ts",
     "init": "./scripts/initialize.sh"
   },
   "dependencies": {
@@ -53,6 +54,7 @@
     "inthash": "^3.0.3",
     "ioredis": "^5.4.1",
     "joi": "^17.12.2",
+    "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.9.2",
     "remeda": "^1.57.0",
     "rxjs": "^7.8.1",
@@ -68,6 +70,7 @@
     "@types/aws-lambda": "^8.10.136",
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.12",
+    "@types/jsonwebtoken": "^9.0.6",
     "@types/multer": "^1.4.11",
     "@types/supertest": "^6.0.2",
     "@types/uuid": "^9.0.8",

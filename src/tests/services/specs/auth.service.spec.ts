@@ -1,12 +1,13 @@
-import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 
 import { TypedConfigService } from '@/config/env';
-import { AuthService, AuthServiceError } from '@/modules/auth';
+import { LoggerService } from '@/customs/logger';
+import { WinstonLoggerService } from '@/customs/winston-logger';
+import { AuthService, AuthServiceError, JwtAuthTokenService } from '@/modules/auth';
 import { UserService } from '@/modules/user';
 import { PrismaService } from '@/prisma';
 import { createTestFixture } from '@/tests/fixtures';
-import { mockJwtService } from '@/tests/services/mocks/jwt.service.mock';
+import { mockJwtAuthTokenService } from '@/tests/services/mocks/jwt-token.service.mock';
 import { createPrismaClient } from '@/tests/setups/prisma';
 
 describe(AuthService, () => {
@@ -22,7 +23,8 @@ describe(AuthService, () => {
         AuthService,
         UserService,
         { provide: PrismaService, useValue: prisma },
-        { provide: JwtService, useValue: mockJwtService({ validId, invalidId }) },
+        { provide: LoggerService, useValue: WinstonLoggerService },
+        { provide: JwtAuthTokenService, useValue: mockJwtAuthTokenService({ validId, invalidId }) },
         { provide: TypedConfigService, useValue: { get() {} } },
       ],
     }).compile();

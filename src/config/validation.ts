@@ -7,7 +7,8 @@ export const schema = Joi.object({
 
   DB_URL: Joi.string().required(),
 
-  JWT_SECRET_KEY: Joi.string().required(),
+  JWT_SIGN_KEY: Joi.string().required(),
+  JWT_VERIFY_KEY: Joi.string().required(),
   INTHASH_KEY: Joi.string().required(),
 
   JWT_ACCESS_EXPIRES_IN: Joi.string().allow(''),

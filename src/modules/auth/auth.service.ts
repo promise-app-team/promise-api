@@ -1,11 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
+import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 
 import { UserService } from '../user/user.service';
 
 import { AuthTokenDTO } from './auth.dto';
-
-import { TypedConfigService } from '@/config/env';
+import { JwtAuthTokenService } from './jwt-token.service';
 
 export enum AuthServiceError {
   AuthTokenFailed = '토큰 생성에 실패했습니다.',
@@ -17,9 +16,8 @@ export enum AuthServiceError {
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly config: TypedConfigService,
     private readonly user: UserService,
-    private readonly jwt: JwtService
+    private readonly jwt: JwtAuthTokenService
   ) {}
 
   /**
@@ -31,9 +29,11 @@ export class AuthService {
    * @throws {AuthServiceError.AuthTokenFailed} when the token generation fails
    */
   async authenticate(user: { id: number }): Promise<AuthTokenDTO> {
-    return this.#generateToken({ id: `${user.id}` }).catch(() => {
+    try {
+      return this.jwt.generateTokens({ sub: user.id });
+    } catch (error) {
       throw AuthServiceError.AuthTokenFailed;
-    });
+    }
   }
 
   /**
@@ -47,26 +47,14 @@ export class AuthService {
    * @throws {AuthServiceError.UserNotFound} when the user is not found
    */
   async refresh(token: string): Promise<AuthTokenDTO> {
-    // TODO: AuthToken 모듈로 분리
     try {
-      const payload = this.jwt.verify(token);
-      const node = await this.user.findOneById(+payload.id);
-      return this.#generateToken({ id: `${node.id}` });
+      const payload = this.jwt.verifyToken(token);
+      const node = await this.user.findOneById(payload.sub);
+      return this.jwt.generateTokens({ sub: node.id });
     } catch (error) {
       if (error instanceof TokenExpiredError) throw AuthServiceError.AuthTokenExpired;
       if (error instanceof JsonWebTokenError) throw AuthServiceError.AuthTokenInvalid;
       throw error;
     }
-  }
-
-  // TODO: AuthToken 모듈로 분리
-  async #generateToken(payload: object) {
-    const accessToken = this.jwt.sign(payload, {
-      expiresIn: this.config.get('jwt.expires.access'),
-    });
-    const refreshToken = this.jwt.sign(payload, {
-      expiresIn: this.config.get('jwt.expires.refresh'),
-    });
-    return { accessToken, refreshToken };
   }
 }

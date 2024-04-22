@@ -1,7 +1,7 @@
 import { HttpStatus } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 
+import { JwtAuthTokenService } from '@/modules/auth';
 import { FileUploadController, FileUploadService } from '@/modules/upload';
 import { UserService } from '@/modules/user';
 
@@ -24,8 +24,8 @@ describe(FileUploadController, () => {
     const module = await Test.createTestingModule({
       controllers: [FileUploadController],
       providers: [
-        { provide: JwtService, useValue: {} },
         { provide: UserService, useValue: {} },
+        { provide: JwtAuthTokenService, useValue: {} },
         { provide: FileUploadService, useValue: mockFileUploadService },
       ],
     }).compile();

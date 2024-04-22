@@ -3,7 +3,6 @@ import { join } from 'node:path';
 import serverlessExpress from '@codegenie/serverless-express';
 import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';
 import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
-import { JwtService } from '@nestjs/jwt';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -15,6 +14,7 @@ import { AllExceptionsFilter } from './common/filters';
 import { MutationLogInterceptor, StringifyDateInterceptor, TimeoutInterceptor } from './common/interceptors';
 import { TypedConfigService } from './config/env';
 import { LoggerService } from './customs/logger';
+import { JwtAuthTokenService } from './modules/auth';
 import { PrismaService } from './prisma';
 
 export async function configure(app: NestExpressApplication) {
@@ -22,7 +22,7 @@ export async function configure(app: NestExpressApplication) {
   const { httpAdapter } = app.get(HttpAdapterHost);
   const reflector = app.get(Reflector);
   const prisma = app.get(PrismaService);
-  const jwt = app.get(JwtService);
+  const jwt = app.get(JwtAuthTokenService);
 
   app.useLogger(logger);
 

@@ -7,7 +7,7 @@ const BUILD = formatISO(new Date());
 export const env = () => {
   const [bits, prime, inverse, xor] = (process.env.INTHASH_KEY ?? '').split('.');
 
-  return {
+  const env = {
     tz: process.env.TZ || 'UTC',
     stage: (process.env.STAGE || 'local') as 'local' | 'dev' | 'test' | 'prod',
     env: (process.env.NODE_ENV || 'local') as 'local' | 'development' | 'test' | 'production',
@@ -37,7 +37,8 @@ export const env = () => {
     },
 
     jwt: {
-      secret: process.env.JWT_SECRET_KEY,
+      signKey: process.env.JWT_SIGN_KEY!.replace(/\\n/g, '\n'),
+      verifyKey: process.env.JWT_VERIFY_KEY!.replace(/\\n/g, '\n'),
       expires: {
         access: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
         refresh: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
@@ -66,6 +67,8 @@ export const env = () => {
       prod: process.env.STAGE === 'prod',
     },
   };
+
+  return env;
 };
 
 export class TypedConfigService extends TypedConfigServiceBuilder<ReturnType<typeof env>> {}

@@ -1,4 +1,3 @@
-import { JwtService } from '@nestjs/jwt';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import { pick } from 'remeda';
@@ -7,6 +6,7 @@ import { createHttpRequest } from '../utils/http-request';
 
 import { AppModule } from '@/app';
 import { configure } from '@/main';
+import { JwtAuthTokenService } from '@/modules/auth';
 import { UserController } from '@/modules/user';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';
@@ -20,7 +20,7 @@ describe(UserController, () => {
     deleteMyProfile: 'profile',
   });
 
-  let jwt: JwtService;
+  let jwt: JwtAuthTokenService;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -30,7 +30,7 @@ describe(UserController, () => {
     const app = module.createNestApplication<NestExpressApplication>();
     http.prepare(await configure(app).then((app) => app.init()));
 
-    jwt = module.get(JwtService);
+    jwt = module.get(JwtAuthTokenService);
   });
 
   beforeEach(async () => {
@@ -48,7 +48,7 @@ describe(UserController, () => {
     });
 
     test('should return 401 if user is not found', async () => {
-      const accessToken = jwt.sign({ id: 0 }, { expiresIn: '1h' });
+      const accessToken = jwt.generateAccessToken({ sub: 0 });
       const res = await http.request.getMyProfile().get.auth(accessToken, { type: 'bearer' }).expect(401);
 
       expect(res.body).toMatchObject({
@@ -71,7 +71,7 @@ describe(UserController, () => {
     });
 
     test('should return 401 if user is not found', async () => {
-      const accessToken = jwt.sign({ id: 0 }, { expiresIn: '1h' });
+      const accessToken = jwt.generateAccessToken({ sub: 0 });
       const res = await http.request.updateMyProfile().put.auth(accessToken, { type: 'bearer' }).send({}).expect(401);
 
       expect(res.body).toMatchObject({
@@ -105,7 +105,7 @@ describe(UserController, () => {
     });
 
     test('should return 401 if user is not found', async () => {
-      const accessToken = jwt.sign({ id: 0 }, { expiresIn: '1h' });
+      const accessToken = jwt.generateAccessToken({ sub: 0 });
       const res = await http.request
         .deleteMyProfile()
         .delete.auth(accessToken, { type: 'bearer' })

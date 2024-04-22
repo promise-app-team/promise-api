@@ -1,12 +1,12 @@
 import path from 'node:path';
 
 import { INestApplication } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import { compile } from 'path-to-regexp';
 import { mapValues } from 'remeda';
 import request from 'supertest';
 
+import { JwtAuthTokenService } from '@/modules/auth';
 import { Methods } from '@/types';
 
 type HttpMethod = keyof Pick<request.SuperTest, 'get' | 'post' | 'put' | 'patch' | 'delete'>;
@@ -33,7 +33,7 @@ type HttpRequest<T> = Record<OperatorName<T>, Operator> & {
   auth: Auth;
   close: INestApplication['close'];
   authorize(token: string): void;
-  authorize<U extends User>(user: U, options: { jwt: JwtService }): void;
+  authorize<U extends User>(user: U, options: { jwt: JwtAuthTokenService }): void;
   unauthorize(): void;
 };
 
@@ -50,7 +50,7 @@ function initializeHttpRequest<T>(app: INestApplication | null, routes: Routes<T
     },
     authorize(user, options) {
       if (!request) throw new Error('Server is not prepared');
-      const token = options.jwt.sign({ id: user.id }, { expiresIn: '1h' });
+      const token = options.jwt.generateAccessToken({ sub: user.id });
       auth = { user, token };
     },
     unauthorize() {

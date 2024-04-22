@@ -1,4 +1,3 @@
-import { JwtService } from '@nestjs/jwt';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
@@ -9,6 +8,7 @@ import { mockGlobalFn } from '../mocks';
 import { AppModule } from '@/app';
 import { InthashService } from '@/customs/inthash';
 import { configure } from '@/main';
+import { JwtAuthTokenService } from '@/modules/auth';
 import { PromiseController, InputCreatePromiseDTO, InputLocationDTO, InputUpdatePromiseDTO } from '@/modules/promise';
 import { DestinationType, LocationShareType } from '@/prisma';
 import { createHttpRequest } from '@/tests/controllers/utils/http-request';
@@ -49,7 +49,7 @@ describe(PromiseController, () => {
     http.prepare(await configure(app).then((app) => app.init()));
 
     const authUser = await fixture.write.user.output();
-    http.request.authorize(authUser, { jwt: module.get(JwtService) });
+    http.request.authorize(authUser, { jwt: module.get(JwtAuthTokenService) });
     fixture.configure({ authUser });
     hasher = module.get(InthashService);
   });
@@ -815,7 +815,7 @@ describe(PromiseController, () => {
       const allDifferent = (arr: any[]) => arr.every((v, i, a) => a.indexOf(v) === i);
 
       const locations = await Promise.all(
-        R.times(5, () =>
+        R.times(10, () =>
           fixture.write.location.output({
             latitude: new Prisma.Decimal(randomLat()),
             longitude: new Prisma.Decimal(randomLng()),
@@ -824,14 +824,14 @@ describe(PromiseController, () => {
       );
       const { promise, attendees } = await fixture.write.promise.output({
         host: http.request.auth.user,
-        attendees: 5,
+        attendees: 10,
         startLocations: locations,
       });
 
       const cases = [
-        [attendees[0], attendees[1], attendees[2]],
-        [attendees[1], attendees[2], attendees[3]],
-        [attendees[2], attendees[3], attendees[4]],
+        [attendees[0], attendees[3], attendees[5], attendees[7], attendees[9]],
+        [attendees[1], attendees[2], attendees[4], attendees[6], attendees[8]],
+        [attendees[0], attendees[1], attendees[2], attendees[3], attendees[4]],
       ].map((attendees) => attendees.map((attendee) => attendee.id));
 
       const pid = hasher.encode(promise.id);

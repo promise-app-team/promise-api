@@ -1,4 +1,3 @@
-import { JwtService } from '@nestjs/jwt';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 
@@ -7,7 +6,7 @@ import { createHttpRequest } from '../utils/http-request';
 import { AppModule } from '@/app';
 import { HttpException } from '@/common/exceptions';
 import { configure } from '@/main';
-import { AuthController, AuthServiceError } from '@/modules/auth';
+import { AuthController, AuthServiceError, JwtAuthTokenService } from '@/modules/auth';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';
 
@@ -19,7 +18,7 @@ describe(AuthController, () => {
     login: 'login',
   });
 
-  let jwt: JwtService;
+  let jwt: JwtAuthTokenService;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -29,7 +28,7 @@ describe(AuthController, () => {
     const app = module.createNestApplication<NestExpressApplication>();
     http.prepare(await configure(app).then((app) => app.init()));
 
-    jwt = module.get(JwtService);
+    jwt = module.get(JwtAuthTokenService);
   });
 
   describe(http.request.login, () => {
@@ -86,15 +85,16 @@ describe(AuthController, () => {
     test('should throw 400 error when refresh token is expired', async () => {
       const res = await http.request
         .refreshTokens()
-        .post.send({ refreshToken: jwt.sign({ id: 0 }, { expiresIn: '0s' }) })
+        .post.send({ refreshToken: jwt.generateRefreshToken({ sub: 0 }, 0) })
         .expect(400);
+
       expect(res.body).toEqual(HttpException.new(AuthServiceError.AuthTokenExpired, 'BAD_REQUEST').getResponse());
     });
 
     test('should throw 404 error when user not found', async () => {
       const res = await http.request
         .refreshTokens()
-        .post.send({ refreshToken: jwt.sign({ id: 0 }, { expiresIn: '1d' }) })
+        .post.send({ refreshToken: jwt.generateRefreshToken({ sub: 0 }) })
         .expect(404);
 
       expect(res.body).toEqual(HttpException.new(AuthServiceError.UserNotFound, 'NOT_FOUND').getResponse());
@@ -103,7 +103,7 @@ describe(AuthController, () => {
     test('should throw 500 error when unknown error occurred', async () => {
       const res2 = await http.request
         .refreshTokens()
-        .post.send({ refreshToken: jwt.sign({ id: 'unknown' }, { expiresIn: '1d' }) })
+        .post.send({ refreshToken: jwt.generateRefreshToken({ sub: 'unknown' as any }) })
         .expect(500);
       expect(res2.body).toMatchObject({ statusCode: 500, error: 'Internal Server Error' });
     });
