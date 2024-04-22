@@ -47,7 +47,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('ping')
-  async handlePing(client: Client, data: any) {
+  async handlePingEvent(client: Client, data: any) {
     const handler = this.event.get('ping');
     handler.on('send', async (connection, data) => {
       await new Promise((resolve) => setTimeout(resolve, random(1000, 5000)));

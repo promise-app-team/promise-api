@@ -28,20 +28,20 @@ export class EventController {
   }
 
   @Get('connect')
-  async connect(@Query('connectionId') connectionId: string): Promise<EventResponse> {
+  async requestConnectEvent(@Query('connectionId') connectionId: string): Promise<EventResponse> {
     this.logger.debug(`Client connected: ${connectionId}`);
     return this.event.get('connect').handle(connectionId);
   }
 
   @Get('disconnect')
-  async disconnect(@Query('connectionId') connectionId: string): Promise<EventResponse> {
+  async requestDisconnectEvent(@Query('connectionId') connectionId: string): Promise<EventResponse> {
     this.logger.debug(`Client disconnected: ${connectionId}`);
     return this.event.get('disconnect').handle(connectionId);
   }
 
   @Post('ping')
   @ApiBody({ type: PingEvent.DTO.PingEventPayloadDTO })
-  async message(
+  async requestPingEvent(
     @Query('connectionId') connectionId: string,
     @ParsedBody() body: PingEvent.Payload
   ): Promise<EventResponse> {
@@ -50,17 +50,8 @@ export class EventController {
     handler.on('send', async (connection, data) => {
       this.logger.debug(`Sending message to ${connection.id}: ${JSON.stringify(data)}`);
       await this.client
-        .postToConnection({
-          ConnectionId: connection.id,
-          Data: JSON.stringify(data),
-        })
-        .catch((error) => {
-          if (error.name === 'GoneException') {
-            this.logger.error(`Connection ${connection.id} is gone`);
-          } else {
-            this.logger.error(`Failed to send message to ${connection.id}: ${error.message}`);
-          }
-        });
+        .postToConnection({ ConnectionId: connection.id, Data: JSON.stringify(data) })
+        .catch((error) => this.logger.error(`Failed to send message to ${connection.id}`, error));
       this.logger.debug(`Sent message to ${connection.id}`);
     });
     return handler.handle(connectionId, body.data);
