@@ -1,3 +1,5 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 export module AbstractEvent {
   export type Type = Record<string, any>;
   export type Param = Record<string, any>;
@@ -16,6 +18,13 @@ export module AbstractEvent {
   export type Message = Record<string, any>;
   export type Response = Record<string, any>;
   export type Context = Record<string, any>;
+
+  export module DTO {
+    export class EventResponse {
+      @ApiProperty({ example: 'result message' })
+      message: string;
+    }
+  }
 }
 
 export interface AbstractEvent {

@@ -1,13 +1,18 @@
 import { ExecutionContext, createParamDecorator } from '@nestjs/common';
 
-export const ParsedBody = createParamDecorator((data: unknown, ctx: ExecutionContext) => {
+export const ParsedBody = createParamDecorator((path: string, ctx: ExecutionContext) => {
   const request = ctx.switchToHttp().getRequest();
+
+  let body = request.body;
   try {
     if (Buffer.isBuffer(request.body)) {
-      return JSON.parse(request.body.toString());
+      body = JSON.parse(request.body.toString());
+    } else {
+      body = JSON.parse(request.body);
     }
-    return JSON.parse(request.body);
   } catch {
-    return request.body;
+    body = request.body;
   }
+
+  return path ? body[path] : body;
 });

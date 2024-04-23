@@ -1,3 +1,5 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
 import { AbstractEvent } from '../event.interface';
 
 export module PingEvent {
@@ -51,6 +53,37 @@ export module PingEvent {
   export interface Type {
     send: [to: string, data: Message];
   }
+
+  export module DTO {
+    export class PingEventParamDTO {
+      @ApiProperty({ example: Object.values(Strategy).join('/') })
+      strategy: Strategy;
+
+      @ApiPropertyOptional({ nullable: true, example: 'connectionId (only for specific strategy)' })
+      to?: string;
+    }
+
+    export class PingEventBodyDTO {
+      @ApiProperty({ example: 'pong' })
+      message: string;
+    }
+
+    export class PingEventDataDTO {
+      @ApiProperty()
+      param: PingEventParamDTO;
+
+      @ApiProperty()
+      body: PingEventBodyDTO;
+    }
+
+    export class PingEventPayloadDTO {
+      @ApiProperty({ example: 'ping' })
+      event: 'ping';
+
+      @ApiProperty()
+      data: PingEventDataDTO;
+    }
+  }
 }
 
 export interface PingEvent extends AbstractEvent {
@@ -62,34 +95,3 @@ export interface PingEvent extends AbstractEvent {
   Response: PingEvent.Response;
   Strategy: PingEvent.Strategy;
 }
-
-// export module DTO {
-//   export class PingEventParamDTO {
-//     @ApiProperty({ example: Object.values(Strategy).join('/') })
-//     strategy: Strategy;
-
-//     @ApiPropertyOptional({ nullable: true, example: 'connectionId (only for specific strategy)' })
-//     to?: string;
-//   }
-
-//   export class PingEventBodyDTO {
-//     @ApiProperty({ example: 'pong' })
-//     message: string;
-//   }
-
-//   export class PingEventDataDTO {
-//     @ApiProperty()
-//     param: PingEventParamDTO;
-
-//     @ApiProperty()
-//     body: PingEventBodyDTO;
-//   }
-
-//   export class PingEventPayloadDTO {
-//     @ApiProperty({ example: 'ping' })
-//     event: 'ping';
-
-//     @ApiProperty()
-//     data: PingEventDataDTO;
-//   }
-// }

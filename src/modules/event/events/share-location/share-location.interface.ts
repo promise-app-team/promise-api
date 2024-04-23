@@ -1,3 +1,5 @@
+import { ApiProperty } from '@nestjs/swagger';
+
 import { AbstractEvent } from '../event.interface';
 
 import { PrismaService } from '@/prisma';
@@ -42,6 +44,40 @@ export module ShareLocationEvent {
 
   export interface Context {
     prisma: PrismaService;
+  }
+
+  export module DTO {
+    export class ShareLocationEventParamDTO {
+      @ApiProperty({ example: 'userId' })
+      id: number;
+
+      @ApiProperty({ example: ['1234567890'] })
+      promiseIds: string[];
+    }
+
+    export class ShareLocationEventBodyDTO {
+      @ApiProperty({ example: 37.7749 })
+      lat: number;
+
+      @ApiProperty({ example: 122.4194 })
+      lng: number;
+    }
+
+    export class ShareLocationEventDataDTO {
+      @ApiProperty()
+      param: ShareLocationEventParamDTO;
+
+      @ApiProperty()
+      body: ShareLocationEventBodyDTO;
+    }
+
+    export class ShareLocationEventPayloadDTO {
+      @ApiProperty({ example: 'share-location' })
+      event: 'share-location';
+
+      @ApiProperty()
+      data: ShareLocationEventDataDTO;
+    }
   }
 }
 
