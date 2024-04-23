@@ -1,30 +1,36 @@
 import { Injectable } from '@nestjs/common';
 
-import { ConnectionService } from '../connection';
-
-import { ConnectEventHandler } from './connect';
-import { DisconnectEventHandler } from './disconnect';
 import { PingEventHandler } from './ping';
+import { ShareLocationHandler } from './share-location';
 
-interface Event {
-  connect: ConnectEventHandler;
-  disconnect: DisconnectEventHandler;
+import { TypedConfigService } from '@/config/env';
+import { CacheService } from '@/customs/cache';
+import { PrismaService } from '@/prisma';
+
+export interface Events {
   ping: PingEventHandler;
+  'share-location': ShareLocationHandler;
 }
 
 @Injectable()
 export class EventManager {
-  private readonly events: Event;
+  private readonly events: Events;
 
-  constructor(readonly connection: ConnectionService) {
+  constructor(
+    private readonly config: TypedConfigService,
+    private readonly prisma: PrismaService,
+    private readonly cache: CacheService
+  ) {
+    const stage = this.config.get('stage');
     this.events = {
-      connect: new ConnectEventHandler(this.connection),
-      disconnect: new DisconnectEventHandler(this.connection),
-      ping: new PingEventHandler(this.connection),
+      ping: new PingEventHandler({ event: 'ping', stage }, this.cache),
+      'share-location': new ShareLocationHandler({ event: 'share-location', stage }, this.cache),
     };
   }
 
-  get<T extends keyof Event>(event: T): Event[T] {
+  get<T extends keyof Events>(event: T): Events[T] {
+    if (!event) throw new Error('Must provide an event name by query parameter');
+    if (!this.events[event]) throw new Error(`Event '${event}' not found`);
     return this.events[event];
   }
 }

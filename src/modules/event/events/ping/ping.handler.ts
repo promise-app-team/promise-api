@@ -1,22 +1,22 @@
-import { ConnectionService } from '../../connection';
-import { EventResponse } from '../../event.dto';
+import { ConnectionID, ConnectionScope } from '../../connections';
+import { EventResponse } from '../event.dto';
 import { EventHandler } from '../event.handler';
 
 import { PingEvent } from './ping.dto';
 import { Strategy, StrategyManager } from './strategies';
 
-import { TypedEventEmitter, TypedEventListener } from '@/utils';
+import { CacheService } from '@/customs/cache';
 
-export class PingEventHandler implements EventHandler {
+export class PingEventHandler extends EventHandler<PingEvent.Type> {
   private readonly strategy: StrategyManager;
-  private readonly emitter = new TypedEventEmitter<PingEvent.Type>();
 
-  constructor(private readonly connection: ConnectionService) {
+  constructor(scope: ConnectionScope, cache: CacheService) {
+    super(scope, cache);
     this.strategy = new StrategyManager(this.connection, this.emitter);
   }
 
-  async handle(id: string, data: PingEvent.Payload['data']): Promise<EventResponse> {
-    await this.connection.setConnection({ id });
+  async handle(id: ConnectionID, data: PingEvent.Data): Promise<EventResponse> {
+    await this.connection.setConnection(id);
 
     const strategy = data.param?.strategy;
     if (!strategy) {
@@ -35,18 +35,5 @@ export class PingEventHandler implements EventHandler {
     await handler.post(id, data);
 
     return { message: 'pong' };
-  }
-
-  private registered = new Set<string>();
-
-  async on<K extends keyof PingEvent.Type>(event: K, listener: TypedEventListener<PingEvent.Type>) {
-    if (this.registered.has(event)) return;
-    this.registered.add(event);
-    this.emitter.on(event, listener);
-  }
-
-  async off<K extends keyof PingEvent.Type>(event: K, listener: TypedEventListener<PingEvent.Type>) {
-    this.registered.delete(event);
-    this.emitter.off(event, listener);
   }
 }

@@ -5,7 +5,7 @@ import { CommonStrategy } from './common.strategy';
 import { SelfStrategy } from './self.strategy';
 import { SpecificStrategy } from './specific.strategy';
 
-import { ConnectionService } from '@/modules/event/connection';
+import { ConnectionManager } from '@/modules/event/connections';
 import { TypedEventEmitter } from '@/utils';
 
 interface StrategyMap {
@@ -19,10 +19,9 @@ export class StrategyManager {
   private readonly strategies: StrategyMap;
 
   constructor(
-    private readonly connection: ConnectionService,
+    private readonly connection: ConnectionManager,
     private readonly emitter: TypedEventEmitter<PingEvent.Type>
   ) {
-    this.connection.init('ping');
     this.strategies = {
       [PingEvent.Strategy.Self]: new SelfStrategy(this.connection, this.emitter),
       [PingEvent.Strategy.Specific]: new SpecificStrategy(this.connection, this.emitter),

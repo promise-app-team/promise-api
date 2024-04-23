@@ -1,28 +1,32 @@
-import { User } from '@prisma/client';
-
-import { EventPayload } from '../../event.dto';
+import { EventPayload } from '../event.dto';
 
 export namespace ShareLocationEvent {
-  export class Param {
-    pid: string;
+  export class Body {
+    lat: number;
+    lng: number;
   }
 
-  export class Body {
-    lat: number | string;
-    lng: number | string;
+  export class Param {
+    uid: number;
+  }
+
+  export class Data {
+    param: Param;
+    body: Body;
   }
 
   export class Payload implements EventPayload {
     event: 'share-location';
-    data: {
-      param: Param;
-      body: Body;
-    };
+    data: Data;
   }
 
   export class Response {
-    from: Pick<User, 'id' | 'username' | 'profileUrl'>;
+    from: string;
     timestamp: number;
     data: Body;
+  }
+
+  export interface Type {
+    share: [to: string, data: Response];
   }
 }

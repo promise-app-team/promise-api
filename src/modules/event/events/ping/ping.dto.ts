@@ -1,7 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-import { Connection } from '../../connection';
-
 export module PingEvent {
   export enum Strategy {
     Self = 'self',
@@ -32,7 +30,7 @@ export module PingEvent {
     message: string;
   }
 
-  export class Data<P = any, T = any> {
+  export class Data<P = Params[Strategy], T = Body> {
     param?: P;
     body: T;
   }
@@ -52,7 +50,7 @@ export module PingEvent {
   }
 
   export interface Type {
-    send: [connection: Pick<Connection, 'id'>, data: Response];
+    send: [to: string, data: Response];
   }
 
   export module DTO {
