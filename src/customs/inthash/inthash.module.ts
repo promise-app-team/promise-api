@@ -1,5 +1,4 @@
 import { DynamicModule, Module } from '@nestjs/common';
-import { Hasher } from 'inthash';
 
 import { IntHashModuleAsyncOptions, IntHashModuleOptions } from './inthash.interface';
 import { InthashService } from './inthash.service';
@@ -14,7 +13,7 @@ export class IntHashModule {
         {
           scope: options.scope,
           provide: InthashService,
-          useFactory: () => new InthashService(new Hasher(options)),
+          useValue: new InthashService(options),
         },
       ],
       exports: [InthashService],
@@ -32,7 +31,7 @@ export class IntHashModule {
           inject: options.inject,
           async useFactory(...args) {
             const opts = await options.useFactory(...args);
-            return new InthashService(new Hasher(opts));
+            return new InthashService(opts);
           },
         },
       ],

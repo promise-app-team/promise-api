@@ -5,23 +5,52 @@ import { EventHandler } from '../event.handler';
 
 import { ShareLocationEvent } from './share-location.interface';
 
+import { PromiseStatus, PromiseUserRole } from '@/modules/promise';
+import { makePromiseFilter } from '@/modules/promise/promise.utils';
+
 export class ShareLocationHandler extends EventHandler<ShareLocationEvent> {
-  async connect(id: ConnectionID): Promise<ShareLocationEvent.Response> {
+  private channel = (pid: number | string) => `promise_${pid}`;
+
+  async connect(id: ConnectionID, extra?: Record<string, any>): Promise<ShareLocationEvent.Response> {
+    if (!extra?.['userId']) throw new Error('User needs to be authenticated');
     if (!this.context?.prisma) throw new Error('PrismaService not found');
 
-    await this.connection.setConnection(id);
+    const promises = await this.context.prisma.promise.findMany({
+      where: makePromiseFilter({
+        userId: +extra.userId,
+        role: PromiseUserRole.ALL,
+        status: PromiseStatus.AVAILABLE,
+      }),
+    });
+
+    if (promises.length > 0) {
+      await Promise.all(promises.map((p) => this.connection.setConnection(id, this.channel(p.id))));
+    } else {
+      throw new Error('No available promises');
+    }
 
     return { message: `Connected to ${id}` };
   }
 
   async handle(id: ConnectionID, data: ShareLocationEvent.Data): Promise<ShareLocationEvent.Response> {
-    await this.connection.setConnection(id);
-
-    await this.emitter.emit('share', id, {
-      from: data.param.uid,
-      timestamp: getUnixTime(new Date()),
-      data: data.body,
-    });
+    await Promise.all(
+      data.param.promiseIds.map(async (pid) => {
+        const channel = this.channel(pid);
+        await this.connection.setConnection(id, channel);
+        const connections = await this.connection.getConnections(channel);
+        return Promise.all(
+          connections
+            .filter((to) => to.id !== id)
+            .map((to) =>
+              this.emitter.emit('share', to.id, {
+                from: data.param.id,
+                timestamp: getUnixTime(new Date()),
+                data: data.body,
+              })
+            )
+        );
+      })
+    );
 
     return { message: 'location shared' };
   }

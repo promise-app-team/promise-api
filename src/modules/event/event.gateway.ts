@@ -17,6 +17,7 @@ import { EventHandler, EventManager, Events } from './events';
 import { PingEvent } from './events/ping';
 import { ShareLocationEvent } from './events/share-location';
 
+import { InthashService } from '@/customs/inthash';
 import { LoggerService } from '@/customs/logger';
 import { random } from '@/utils';
 
@@ -29,6 +30,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly event: EventManager,
     private readonly jwt: JwtAuthTokenService,
+    private readonly hasher: InthashService,
     private readonly logger: LoggerService
   ) {
     logger.setContext(EventGateway.name);
@@ -38,13 +40,12 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const authToken = this.getAuthToken(incoming);
       const payload = authToken ? this.jwt.verifyToken(authToken) : null;
-      console.log(payload);
       const params = new URLSearchParams(incoming.url?.replace('/?', ''));
       client.id = uuid();
       this.clients.set(client.id, client);
 
       const name = params.get('event') as keyof Events;
-      const response = await this.event.get(name).connect(client.id);
+      const response = await this.event.get(name).connect(client.id, { userId: payload?.sub });
       this.logger.debug(`Client connected: ${client.id} (total: ${this.clients.size})`);
       return response;
     } catch (error: any) {
@@ -83,10 +84,9 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.clients.get(id)?.send(JSON.stringify(data));
     });
 
+    data.param.promiseIds = data.param.promiseIds.map((id) => this.hasher.decode(id));
     const response = await handler.handle(client.id, data);
-
     this.logger.debug(`Client sent message: ${client.id} with ${JSON.stringify(data)}`);
-
     return response;
   }
 

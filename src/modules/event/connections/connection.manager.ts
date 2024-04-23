@@ -97,7 +97,12 @@ export class ConnectionManager {
     channel: ConnectionChannel = 'default',
     opts?: { ttl?: number }
   ): Promise<boolean> {
-    await this.loadConnections(channel);
+    const key = this.makeCacheKey(channel);
+    const connection = await this.getConnection(id, channel);
+    if (connection) {
+      this.debug(this.setConnection, `Connection already exists (${channel}): %o`, connection);
+      return false;
+    }
 
     this.debug(this.setConnection, `Setting connection (${channel}): %o`, id);
 
@@ -108,11 +113,10 @@ export class ConnectionManager {
     }
 
     const iat = getUnixTime(new Date());
-    const ttl = opts?.ttl ?? 60 * 60 * 24;
+    const ttl = opts?.ttl ?? this.stage === 'local' ? 60 * 5 : 60 * 60 * 24;
     const newConnection: Connection = { id, iat, exp: iat + ttl };
     connectionMap.set(id, newConnection);
 
-    const key = this.makeCacheKey(channel);
     await this.cache.set(key, Array.from(connectionMap.values() ?? []));
     this.debug(this.setConnection, `Connection set (${channel}): %o`, newConnection);
 
@@ -161,22 +165,36 @@ export class ConnectionManager {
     return true;
   }
 
-  static async delConnection(id: ConnectionID): Promise<boolean> {
+  private static reservedDelConnections = new Set<ConnectionID>();
+
+  static async delConnection(id: ConnectionID): Promise<void> {
+    this.reservedDelConnections.add(id);
+    await new Promise((resolve) => setTimeout(() => this.delConnections().then(resolve), 300));
+  }
+
+  static async delConnections() {
+    if (this.reservedDelConnections.size === 0) return;
+    const reservedDelConnections = Array.from(this.reservedDelConnections.values());
+
     for (const [eventName, channelMap] of this.pool.entries()) {
       for (const [channelName, connectionMap] of channelMap.entries()) {
-        const connection = connectionMap.get(id);
-        if (!connection) continue;
+        for (const id of reservedDelConnections) {
+          const connection = connectionMap.get(id);
+          if (!connection) continue;
 
-        const instance = this.instances.get(eventName);
-        if (!instance) continue;
+          const instance = this.instances.get(eventName);
+          if (!instance) continue;
 
-        connectionMap.delete(id);
-        const key = instance.makeCacheKey(channelName);
-        await instance.cache.set(key, Array.from(connectionMap.values() ?? []));
-        return true;
+          connectionMap.delete(id);
+          const key = instance.makeCacheKey(channelName);
+          await instance.cache.set(key, Array.from(connectionMap.values() ?? []));
+
+          instance.debug(this.delConnections, `Connection deleted (${key}): %s`, id);
+        }
       }
     }
-    return false;
+
+    this.reservedDelConnections.clear();
   }
 
   isExpired(connection: Connection): boolean {

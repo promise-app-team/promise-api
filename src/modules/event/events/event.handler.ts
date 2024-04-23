@@ -15,8 +15,9 @@ export abstract class EventHandler<TEvent extends AbstractEvent> {
     this.context = context;
   }
 
-  async connect(id: ConnectionID): Promise<TEvent['Response']> {
-    await this.connection.setConnection(id);
+  async connect(id: ConnectionID, _payload?: Record<string, any>): Promise<TEvent['Response']> {
+    const success = await this.connection.setConnection(id);
+    if (!success) throw new Error(`Failed to connect to ${id}`);
     return { message: `Connected to ${id}` };
   }
 
@@ -25,7 +26,11 @@ export abstract class EventHandler<TEvent extends AbstractEvent> {
     return { message: `Disconnected from ${id}` };
   }
 
-  abstract handle(id: ConnectionID, data: AbstractEvent.Data): Promise<TEvent['Response']>;
+  abstract handle(
+    id: ConnectionID,
+    data: AbstractEvent.Data,
+    payload?: Record<string, any>
+  ): Promise<TEvent['Response']>;
 
   private registered = new Set();
 

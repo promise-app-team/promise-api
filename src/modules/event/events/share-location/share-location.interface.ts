@@ -9,7 +9,8 @@ export module ShareLocationEvent {
   }
 
   export interface Param {
-    uid: number;
+    id: number;
+    promiseIds: string[];
   }
 
   export interface Data {

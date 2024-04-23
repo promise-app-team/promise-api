@@ -24,7 +24,7 @@ export class EventManager {
     const stage = this.config.get('stage');
     this.events = {
       ping: new PingEventHandler({ event: 'ping', stage }, this.cache),
-      'share-location': new ShareLocationHandler({ event: 'share-location', stage }, this.cache),
+      'share-location': new ShareLocationHandler({ event: 'share-location', stage }, this.cache, { prisma }),
     };
   }
 
