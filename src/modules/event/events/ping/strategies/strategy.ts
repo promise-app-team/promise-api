@@ -1,4 +1,4 @@
-import { PingEvent } from '../ping.dto';
+import { PingEvent } from '../ping.interface';
 
 import { ConnectionID, ConnectionManager } from '@/modules/event/connections';
 import { TypedEventEmitter } from '@/utils';

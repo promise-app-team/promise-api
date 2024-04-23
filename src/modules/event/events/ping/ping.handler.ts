@@ -1,13 +1,12 @@
 import { ConnectionID, ConnectionScope } from '../../connections';
-import { EventResponse } from '../event.dto';
 import { EventHandler } from '../event.handler';
 
-import { PingEvent } from './ping.dto';
+import { PingEvent } from './ping.interface';
 import { Strategy, StrategyManager } from './strategies';
 
 import { CacheService } from '@/customs/cache';
 
-export class PingEventHandler extends EventHandler<PingEvent.Type> {
+export class PingEventHandler extends EventHandler<PingEvent> {
   private readonly strategy: StrategyManager;
 
   constructor(scope: ConnectionScope, cache: CacheService) {
@@ -15,7 +14,7 @@ export class PingEventHandler extends EventHandler<PingEvent.Type> {
     this.strategy = new StrategyManager(this.connection, this.emitter);
   }
 
-  async handle(id: ConnectionID, data: PingEvent.Data): Promise<EventResponse> {
+  async handle(id: ConnectionID, data: PingEvent.Data): Promise<PingEvent.Response> {
     await this.connection.setConnection(id);
 
     const strategy = data.param?.strategy;

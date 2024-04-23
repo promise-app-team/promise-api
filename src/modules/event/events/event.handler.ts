@@ -1,41 +1,41 @@
 import { ConnectionID, ConnectionManager, ConnectionScope } from '../connections';
 
-import { EventPayload, EventResponse } from './event.dto';
+import { AbstractEvent } from './event.interface';
 
 import { CacheService } from '@/customs/cache';
 import { TypedEventEmitter, TypedEventListener } from '@/utils';
 
-export abstract class EventHandler<TEvents extends Record<string, any>, TContext extends Record<string, any> = never> {
+export abstract class EventHandler<TEvent extends AbstractEvent> {
   protected readonly connection: ConnectionManager;
-  protected readonly emitter = new TypedEventEmitter<TEvents>();
-  protected readonly context?: TContext;
+  protected readonly emitter = new TypedEventEmitter<TEvent['Type']>();
+  protected readonly context?: TEvent['Context'];
 
-  constructor(scope: ConnectionScope, cache: CacheService, context?: TContext) {
+  constructor(scope: ConnectionScope, cache: CacheService, context?: TEvent['Context']) {
     this.connection = ConnectionManager.forEvent(scope.event, scope.stage, { cache });
     this.context = context;
   }
 
-  async connect(id: ConnectionID): Promise<EventResponse> {
+  async connect(id: ConnectionID): Promise<TEvent['Response']> {
     await this.connection.setConnection(id);
     return { message: `Connected to ${id}` };
   }
 
-  static async disconnect(id: ConnectionID): Promise<EventResponse> {
+  static async disconnect(id: ConnectionID): Promise<AbstractEvent.Response> {
     await ConnectionManager.delConnection(id);
     return { message: `Disconnected from ${id}` };
   }
 
-  abstract handle(id: ConnectionID, data: EventPayload['data']): Promise<EventResponse>;
+  abstract handle(id: ConnectionID, data: AbstractEvent.Data): Promise<TEvent['Response']>;
 
   private registered = new Set();
 
-  async on<K extends keyof TEvents>(event: K, listener: TypedEventListener<TEvents>) {
+  async on<K extends keyof TEvent['Type']>(event: K, listener: TypedEventListener<TEvent['Type']>) {
     if (this.registered.has(event)) return;
     this.registered.add(event);
     this.emitter.on(event as string, listener);
   }
 
-  async off<K extends keyof TEvents>(event: K, listener: TypedEventListener<TEvents>) {
+  async off<K extends keyof TEvent['Type']>(event: K, listener: TypedEventListener<TEvent['Type']>) {
     this.registered.delete(event);
     this.emitter.off(event as string, listener);
   }

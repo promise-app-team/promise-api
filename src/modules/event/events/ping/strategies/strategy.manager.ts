@@ -1,4 +1,4 @@
-import { PingEvent } from '../ping.dto';
+import { PingEvent } from '../ping.interface';
 
 import { BroadcastStrategy } from './broadcast.strategy';
 import { CommonStrategy } from './common.strategy';
