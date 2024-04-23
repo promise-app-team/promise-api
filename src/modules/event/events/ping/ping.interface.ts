@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { getUnixTime } from 'date-fns';
 
 import { AbstractEvent } from '../event.interface';
 
@@ -63,17 +64,12 @@ export module PingEvent {
       to?: string;
     }
 
-    export class PingEventBodyDTO {
-      @ApiProperty({ example: 'pong' })
-      message: string;
-    }
-
     export class PingEventDataDTO {
       @ApiProperty()
       param: PingEventParamDTO;
 
-      @ApiProperty()
-      body: PingEventBodyDTO;
+      @ApiProperty({ type: 'any' })
+      body: any;
     }
 
     export class PingEventPayloadDTO {
@@ -82,6 +78,17 @@ export module PingEvent {
 
       @ApiProperty()
       data: PingEventDataDTO;
+    }
+
+    export class PingEventMessageDTO {
+      @ApiProperty({ example: 'connectionId' })
+      from: string;
+
+      @ApiProperty({ example: getUnixTime(Date.now()) })
+      timestamp: number;
+
+      @ApiProperty()
+      data: any;
     }
   }
 }

@@ -40,7 +40,7 @@ export class ConnectionManager {
 
   private makeCacheKey(channel: ConnectionChannel = 'default') {
     const { event, stage } = this;
-    const scope: ConnectionScope = { event, stage, channel };
+    const scope: ConnectionScope = { event, channel, stage };
     return `connection:[${JSON.stringify(scope)}]`;
   }
 
@@ -99,10 +99,7 @@ export class ConnectionManager {
   ): Promise<boolean> {
     const key = this.makeCacheKey(channel);
     const connection = await this.getConnection(id, channel);
-    if (connection) {
-      this.debug(this.setConnection, `Connection already exists (${channel}): %o`, connection);
-      return false;
-    }
+    if (connection) return false;
 
     this.debug(this.setConnection, `Setting connection (${channel}): %o`, id);
 
@@ -113,7 +110,7 @@ export class ConnectionManager {
     }
 
     const iat = getUnixTime(new Date());
-    const ttl = opts?.ttl ?? this.stage === 'local' ? 60 * 5 : 60 * 60 * 24;
+    const ttl = opts?.ttl ?? 60 * 60 * 24;
     const newConnection: Connection = { id, iat, exp: iat + ttl };
     connectionMap.set(id, newConnection);
 

@@ -45,7 +45,7 @@ export class ShareLocationHandler extends EventHandler<ShareLocationEvent> {
               this.emitter.emit('share', to.id, {
                 from: data.param.id,
                 timestamp: getUnixTime(new Date()),
-                data: data.body,
+                data: { ...data.body },
               })
             )
         );

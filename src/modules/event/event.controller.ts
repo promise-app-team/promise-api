@@ -43,10 +43,9 @@ export class EventController {
   ): Promise<AbstractEvent.DTO.EventResponse> {
     try {
       this.logger.debug(`Client connected: ${connectionId}. Joining event: ${event} (User ID: ${user.id})`);
-      return this.event.get(event).connect(connectionId, { userId: user.id });
+      return await this.event.get(event).connect(connectionId, { userId: user.id });
     } catch (error: any) {
       this.logger.error(`Failed to connect client: ${connectionId}`, error);
-      this.client.deleteConnection({ ConnectionId: connectionId });
       throw HttpException.new(error, 'FORBIDDEN');
     }
   }

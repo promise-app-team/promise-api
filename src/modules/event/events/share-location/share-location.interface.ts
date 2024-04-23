@@ -25,13 +25,15 @@ export module ShareLocationEvent {
     data: Data;
   }
 
+  export interface MessageData {
+    lat: number;
+    lng: number;
+  }
+
   export interface Message {
     from: number;
     timestamp: number;
-    data: {
-      lat: number;
-      lng: number;
-    };
+    data: MessageData;
   }
 
   export interface Response {
@@ -77,6 +79,25 @@ export module ShareLocationEvent {
 
       @ApiProperty()
       data: ShareLocationEventDataDTO;
+    }
+
+    export class ShareLocationEventMessageDataDTO {
+      @ApiProperty({ example: 37.7749 })
+      lat: number;
+
+      @ApiProperty({ example: 122.4194 })
+      lng: number;
+    }
+
+    export class ShareLocationEventMessageDTO {
+      @ApiProperty({ example: 'userId' })
+      from: number;
+
+      @ApiProperty({ example: 1633488000 })
+      timestamp: number;
+
+      @ApiProperty()
+      data: ShareLocationEventMessageDataDTO;
     }
   }
 }
