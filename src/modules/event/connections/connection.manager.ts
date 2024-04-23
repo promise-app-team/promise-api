@@ -50,6 +50,17 @@ export class ConnectionManager {
 
     const key = this.makeCacheKey(channel);
     const loadedConnections = await this.cache.get<Connection[]>(key);
+
+    const expiredConnections = R.pipe(
+      loadedConnections ?? [],
+      R.filter(this.isExpired.bind(this)),
+      R.map(R.prop('id'))
+    );
+    if (expiredConnections.length > 0) {
+      this.debug(this.loadConnections, `Expired Connections (${key}): %o`, expiredConnections);
+      await this.delConnections(expiredConnections, channel);
+    }
+
     const filteredConnectionMap: ConnectionMap = R.pipe(
       loadedConnections ?? [],
       R.filter(this.isExpired.bind(this)),
@@ -57,9 +68,10 @@ export class ConnectionManager {
       R.map((c) => [c.id, c] as const),
       (input) => new Map(input)
     );
-    this.channelMap.set(channel, filteredConnectionMap);
-
-    this.debug(this.loadConnections, `Loaded Connections (${key}): %o`, filteredConnectionMap);
+    if (filteredConnectionMap.size > 0) {
+      this.channelMap.set(channel, filteredConnectionMap);
+      this.debug(this.loadConnections, `Loaded Connections (${key}): %o`, filteredConnectionMap);
+    }
 
     this.debug(this.loadConnections, `Current connection pool: %o`, ConnectionManager.pool);
   }
