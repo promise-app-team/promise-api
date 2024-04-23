@@ -29,12 +29,10 @@ export class JwtAuthGuard implements CanActivate {
 
   private getToken(request: Request): string | null {
     const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : null;
+    return type?.toLowerCase() === 'bearer' ? token : null;
   }
 }
 
 export function AuthGuard(): MethodDecorator {
-  return (target, key, descriptor) => {
-    UseGuards(JwtAuthGuard)(target, key, descriptor);
-  };
+  return UseGuards(JwtAuthGuard);
 }

@@ -26,7 +26,7 @@ export class ShareLocationHandler extends EventHandler<ShareLocationEvent> {
     if (promises.length > 0) {
       await Promise.all(promises.map((p) => this.connection.setConnection(id, this.channel(p.id))));
     } else {
-      throw new Error('No available promises');
+      throw new Error('참여 중인 약속이 없습니다.');
     }
 
     return { message: `Connected to ${id}` };

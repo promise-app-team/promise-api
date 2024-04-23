@@ -10,6 +10,7 @@ import { PingEvent } from './events/ping';
 import { ShareLocationEvent } from './events/share-location';
 
 import { ParsedBody } from '@/common/decorators';
+import { HttpException } from '@/common/exceptions';
 import { TypedConfigService } from '@/config/env';
 import { InthashService } from '@/customs/inthash';
 import { LoggerService } from '@/customs/logger';
@@ -33,7 +34,7 @@ export class EventController {
     this.logger.setContext(EventController.name);
   }
 
-  @Get('connect', { auth: true, description: 'Connect to WebSocket' })
+  @Get('connect', { auth: true, description: 'Connect to WebSocket', exceptions: ['FORBIDDEN'] })
   @ApiQuery({ name: 'event', type: 'string', required: true })
   async requestConnectEvent<User extends Pick<UserModel, 'id'>>(
     @AuthUser() user: User,
@@ -41,12 +42,12 @@ export class EventController {
     @Query('connectionId') connectionId: string
   ): Promise<AbstractEvent.DTO.EventResponse> {
     try {
-      this.logger.debug(`Client connected: ${connectionId}`);
+      this.logger.debug(`Client connected: ${connectionId}. Joining event: ${event} (User ID: ${user.id})`);
       return this.event.get(event).connect(connectionId, { userId: user.id });
     } catch (error: any) {
       this.logger.error(`Failed to connect client: ${connectionId}`, error);
       this.client.deleteConnection({ ConnectionId: connectionId });
-      return { message: 'Failed to connect' };
+      throw HttpException.new(error, 'FORBIDDEN');
     }
   }
 
