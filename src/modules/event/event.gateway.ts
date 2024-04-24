@@ -74,7 +74,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     handler.on('error', async (cid, error) => {
       await new Promise((resolve) => setTimeout(resolve, random(100, 1000)));
-      this.clients.get(cid)?.send(JSON.stringify({ error }));
+      this.clients.get(cid)?.send(JSON.stringify(error));
     });
 
     const response = await handler.handle(client.cid, data);
@@ -93,7 +93,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     handler.on('error', async (cid, error) => {
       await new Promise((resolve) => setTimeout(resolve, random(100, 1000)));
-      this.clients.get(cid)?.send(JSON.stringify({ error }));
+      this.clients.get(cid)?.send(JSON.stringify(error));
     });
 
     data.param._promiseIds = data.param.promiseIds.map((id) => this.hasher.decode(id));

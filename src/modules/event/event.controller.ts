@@ -81,7 +81,7 @@ export class EventController {
 
     handler.on('error', async (cid, error) => {
       try {
-        await this.client.postToConnection({ ConnectionId: cid, Data: JSON.stringify({ error }) });
+        await this.client.postToConnection({ ConnectionId: cid, Data: JSON.stringify(error) });
       } catch (error: any) {
         this.logger.error(`Failed to send error to ${cid}`, error);
         if (error.name === 'GoneException') {
@@ -118,7 +118,7 @@ export class EventController {
 
     handler.on('error', async (cid, error) => {
       try {
-        await this.client.postToConnection({ ConnectionId: cid, Data: JSON.stringify({ error }) });
+        await this.client.postToConnection({ ConnectionId: cid, Data: JSON.stringify(error) });
       } catch (error: any) {
         this.logger.error(`Failed to send error to ${cid}`, error);
         if (error.name === 'GoneException') {

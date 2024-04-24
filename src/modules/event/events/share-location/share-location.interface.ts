@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
 
 import { ConnectionID } from '../../connections';
 import { AbstractEvent } from '../event.interface';
@@ -31,10 +31,14 @@ export module ShareLocationEvent {
     lng: number;
   }
 
-  export interface Message {
+  export interface MessageError {
+    error: string;
+  }
+
+  export interface Message<TData = MessageData> {
     from: number;
     timestamp: number;
-    data: MessageData;
+    data: TData;
   }
 
   export interface Response {
@@ -43,7 +47,7 @@ export module ShareLocationEvent {
 
   export interface Type {
     share: [to: ConnectionID, data: Message];
-    error: [to: ConnectionID, error: string];
+    error: [to: ConnectionID, data: Message<MessageError>];
   }
 
   export interface Context {
@@ -75,31 +79,42 @@ export module ShareLocationEvent {
       body: ShareLocationEventBodyDTO;
     }
 
+    export class ShareLocationEventMessageDataDTO {
+      @ApiProperty({ example: 37.7749, description: 'Latitude' })
+      lat: number;
+
+      @ApiProperty({ example: 122.4194, description: 'Longitude' })
+      lng: number;
+    }
+
+    export class ShareLocationEventMessageErrorDTO {
+      @ApiProperty({ example: 'error message', description: 'Error message' })
+      error: string;
+    }
+
+    export class ShareLocationEventMessageDTO {
+      @ApiProperty({ example: 1, description: 'User ID' })
+      from: number;
+
+      @ApiProperty({ example: 1633488000 })
+      timestamp: number;
+
+      @ApiProperty({
+        oneOf: [
+          { type: 'object', $ref: '#/components/schemas/ShareLocationEventMessageErrorDTO' },
+          { type: 'object', $ref: '#/components/schemas/ShareLocationEventMessageDataDTO' },
+        ],
+      })
+      data: ShareLocationEventMessageDataDTO | ShareLocationEventMessageErrorDTO;
+    }
+
+    @ApiExtraModels(ShareLocationEventMessageDTO, ShareLocationEventMessageDataDTO, ShareLocationEventMessageErrorDTO)
     export class ShareLocationEventPayloadDTO {
       @ApiProperty({ example: 'share-location' })
       event: 'share-location';
 
       @ApiProperty()
       data: ShareLocationEventDataDTO;
-    }
-
-    export class ShareLocationEventMessageDataDTO {
-      @ApiProperty({ example: 37.7749 })
-      lat: number;
-
-      @ApiProperty({ example: 122.4194 })
-      lng: number;
-    }
-
-    export class ShareLocationEventMessageDTO {
-      @ApiProperty({ example: 'userId' })
-      from: number;
-
-      @ApiProperty({ example: 1633488000 })
-      timestamp: number;
-
-      @ApiProperty()
-      data: ShareLocationEventMessageDataDTO;
     }
   }
 }

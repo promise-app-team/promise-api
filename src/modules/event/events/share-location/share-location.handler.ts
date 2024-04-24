@@ -32,13 +32,18 @@ export class ShareLocationHandler extends EventHandler<ShareLocationEvent> {
   }
 
   async handle(cid: ConnectionID, data: ShareLocationEvent.Data): Promise<ShareLocationEvent.Response> {
+    const timestamp = getUnixTime(new Date());
     await Promise.all(
       data.param._promiseIds.map(async (pid, i) => {
         const channel = this.channel(pid);
         const connection = await this.connection.getConnection(cid, channel);
         if (!connection) {
           const error = `연결된 약속을 찾을 수 없습니다 (pid: ${data.param.promiseIds[i]})`;
-          await this.emitter.emit('error', cid, error);
+          await this.emitter.emit('error', cid, {
+            from: 0,
+            timestamp,
+            data: { error },
+          });
           return { message: error };
         }
 
@@ -49,7 +54,7 @@ export class ShareLocationHandler extends EventHandler<ShareLocationEvent> {
             .map((to) =>
               this.emitter.emit('share', to.cid, {
                 from: connection.uid,
-                timestamp: getUnixTime(new Date()),
+                timestamp,
                 data: {
                   lat: data.body.lat,
                   lng: data.body.lng,

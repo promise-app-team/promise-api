@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { getUnixTime } from 'date-fns';
 
 import { ConnectionID } from '../../connections';
@@ -46,23 +46,30 @@ export module PingEvent {
     message: string;
   }
 
-  export interface Message<T = any> {
+  export type MessageData = any;
+  export type MessageError = { error: string };
+
+  export interface Message<TData = MessageData> {
     from: string;
     timestamp: number;
-    data: T;
+    data: TData;
   }
 
   export interface Type {
     send: [to: ConnectionID, data: Message];
-    error: [to: ConnectionID, error: string];
+    error: [to: ConnectionID, error: Message<MessageError>];
   }
 
   export module DTO {
     export class PingEventParamDTO {
-      @ApiProperty({ example: Object.values(Strategy).join('/') })
+      @ApiProperty({ example: Object.values(Strategy).join('|') })
       strategy: Strategy;
 
-      @ApiPropertyOptional({ nullable: true, example: 'connectionId (only for specific strategy)' })
+      @ApiPropertyOptional({
+        nullable: true,
+        example: '1234567890',
+        description: 'ConnectionId to send message to (required if strategy is specific)',
+      })
       to?: string;
     }
 
@@ -70,16 +77,8 @@ export module PingEvent {
       @ApiProperty()
       param: PingEventParamDTO;
 
-      @ApiProperty({ type: 'any' })
-      body: any;
-    }
-
-    export class PingEventPayloadDTO {
-      @ApiProperty({ example: 'ping' })
-      event: 'ping';
-
       @ApiProperty()
-      data: PingEventDataDTO;
+      body: any;
     }
 
     export class PingEventMessageDTO {
@@ -91,6 +90,15 @@ export module PingEvent {
 
       @ApiProperty()
       data: any;
+    }
+
+    @ApiExtraModels(PingEventMessageDTO)
+    export class PingEventPayloadDTO {
+      @ApiProperty({ example: 'ping' })
+      event: 'ping';
+
+      @ApiProperty()
+      data: PingEventDataDTO;
     }
   }
 }

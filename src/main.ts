@@ -15,7 +15,6 @@ import { MutationLogInterceptor, StringifyDateInterceptor, TimeoutInterceptor } 
 import { TypedConfigService } from './config/env';
 import { LoggerService } from './customs/logger';
 import { JwtAuthTokenService } from './modules/auth';
-import { PingEvent, ShareLocationEvent } from './modules/event';
 import { PrismaService } from './prisma';
 
 export async function configure(app: NestExpressApplication) {
@@ -69,9 +68,7 @@ async function initializeApp<App extends NestExpressApplication>() {
     .setExternalDoc('OpenAPI Specification (JSON)', `/api-json`)
     .build();
 
-  const document = SwaggerModule.createDocument(app, openApiConfig, {
-    extraModels: [PingEvent.DTO.PingEventMessageDTO, ShareLocationEvent.DTO.ShareLocationEventMessageDTO],
-  });
+  const document = SwaggerModule.createDocument(app, openApiConfig);
   SwaggerModule.setup('api', app, document, {
     customSiteTitle: 'Promise API',
     customfavIcon: '/favicon.ico',

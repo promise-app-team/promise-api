@@ -1,3 +1,5 @@
+import { getUnixTime } from 'date-fns';
+
 import { ConnectionID, ConnectionScope } from '../../connections';
 import { EventHandler } from '../event.handler';
 
@@ -18,7 +20,11 @@ export class PingEventHandler extends EventHandler<PingEvent> {
     const exists = await this.connection.exists(cid, 'default');
     if (!exists) {
       const error = `Connection not found: ${cid}`;
-      await this.emitter.emit('error', cid, error);
+      await this.emitter.emit('error', cid, {
+        from: cid,
+        timestamp: getUnixTime(new Date()),
+        data: { error },
+      });
       return { message: error };
     }
 
