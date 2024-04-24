@@ -20,6 +20,7 @@ import { addMinutes, addWeeks, formatISO } from 'date-fns';
 import * as R from 'remeda';
 
 import { LocationDTO } from './location.dto';
+import { ThemeDTO } from './theme.dto';
 
 import { IsAfter } from '@/common/decorators';
 import { ApplyDTO } from '@/common/mixins';
@@ -50,7 +51,7 @@ export class PromiseDTO extends ApplyDTO(
   ],
   (obj) => ({
     host: HostDTO.from(obj.host),
-    themes: R.map(obj.themes, ({ theme }) => theme.name),
+    themes: R.map(obj.themes, ({ theme }) => ThemeDTO.from(theme)),
     destination: obj.destination ? LocationDTO.from(obj.destination) : null,
     attendees: R.map(obj.attendees, ({ attendee, startLocationId }) => ({
       ...AttendeeDTO.from({ ...attendee, hasStartLocation: typeof startLocationId === 'number' }),
@@ -58,7 +59,7 @@ export class PromiseDTO extends ApplyDTO(
   })
 ) {
   host!: HostDTO;
-  themes!: string[];
+  themes!: ThemeDTO[];
   destination!: LocationDTO | null;
   attendees!: AttendeeDTO[];
 }
