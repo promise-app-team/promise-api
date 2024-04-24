@@ -14,24 +14,29 @@ export class PingEventHandler extends EventHandler<PingEvent> {
     this.strategy = new StrategyManager(this.connection, this.emitter);
   }
 
-  async handle(id: ConnectionID, data: PingEvent.Data): Promise<PingEvent.Response> {
-    await this.connection.setConnection(id);
+  async handle(cid: ConnectionID, data: PingEvent.Data): Promise<PingEvent.Response> {
+    const exists = await this.connection.exists(cid, 'default');
+    if (!exists) {
+      const error = `Connection not found: ${cid}`;
+      await this.emitter.emit('error', cid, error);
+      return { message: error };
+    }
 
     const strategy = data.param?.strategy;
     if (!strategy) {
       const error = `Strategy not found`;
-      await this.strategy.get('common').post(id, { body: { error } });
+      await this.strategy.get('common').post(cid, { body: { error } });
       return { message: error };
     }
 
     const handler: Strategy = this.strategy.get(strategy);
     if (!handler) {
       const error = `Strategy '${strategy}' not found`;
-      await this.strategy.get('common').post(id, { body: { error } });
+      await this.strategy.get('common').post(cid, { body: { error } });
       return { message: error };
     }
 
-    await handler.post(id, data);
+    await handler.post(cid, data);
 
     return { message: 'pong' };
   }

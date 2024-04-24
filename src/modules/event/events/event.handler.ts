@@ -1,4 +1,4 @@
-import { ConnectionID, ConnectionManager, ConnectionScope } from '../connections';
+import { Connection, ConnectionID, ConnectionManager, ConnectionScope } from '../connections';
 
 import { AbstractEvent } from './event.interface';
 
@@ -15,19 +15,19 @@ export abstract class EventHandler<TEvent extends AbstractEvent> {
     this.context = context;
   }
 
-  async connect(id: ConnectionID, _payload?: Record<string, any>): Promise<TEvent['Response']> {
-    const success = await this.connection.setConnection(id);
-    if (!success) throw new Error(`Failed to connect to ${id}`);
-    return { message: `Connected to ${id}` };
+  async connect(connection: Pick<Connection, 'cid' | 'uid'>): Promise<TEvent['Response']> {
+    const success = await this.connection.setConnection(connection, 'default');
+    if (!success) throw new Error(`Failed to connect to ${connection.cid} (${connection.uid})`);
+    return { message: `Connected to ${connection.cid}` };
   }
 
-  static async disconnect(id: ConnectionID): Promise<AbstractEvent.Response> {
-    await ConnectionManager.delConnection(id);
-    return { message: `Disconnected from ${id}` };
+  static async disconnect(cid: ConnectionID): Promise<AbstractEvent.Response> {
+    await ConnectionManager.delConnection(cid);
+    return { message: `Disconnected from ${cid}` };
   }
 
   abstract handle(
-    id: ConnectionID,
+    cid: ConnectionID,
     data: AbstractEvent.Data,
     payload?: Record<string, any>
   ): Promise<TEvent['Response']>;

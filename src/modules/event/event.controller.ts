@@ -43,7 +43,7 @@ export class EventController {
   ): Promise<AbstractEvent.DTO.EventResponse> {
     try {
       this.logger.debug(`Client connected: ${connectionId}. Joining event: ${event} (User ID: ${user.id})`);
-      return await this.event.get(event).connect(connectionId, { userId: user.id });
+      return await this.event.get(event).connect({ cid: connectionId, uid: user.id });
     } catch (error: any) {
       this.logger.error(`Failed to connect client: ${connectionId}`, error);
       throw HttpException.new(error, 'FORBIDDEN');
@@ -66,15 +66,26 @@ export class EventController {
     this.logger.debug(`Client sent message: ${connectionId} with ${JSON.stringify(data)}`);
     const handler = this.event.get('ping');
 
-    handler.on('send', async (id, data) => {
-      this.logger.debug(`Sending message to ${id}: ${JSON.stringify(data)}`);
+    handler.on('send', async (cid, data) => {
+      this.logger.debug(`Sending message to ${cid}: ${JSON.stringify(data)}`);
       try {
-        await this.client.postToConnection({ ConnectionId: id, Data: JSON.stringify(data) });
-        this.logger.debug(`Sent message to ${id}`);
+        await this.client.postToConnection({ ConnectionId: cid, Data: JSON.stringify(data) });
+        this.logger.debug(`Sent message to ${cid}`);
       } catch (error: any) {
-        this.logger.error(`Failed to send message to ${id}`, error);
+        this.logger.error(`Failed to send message to ${cid}`, error);
         if (error.name === 'GoneException') {
-          await EventHandler.disconnect(id);
+          await EventHandler.disconnect(cid);
+        }
+      }
+    });
+
+    handler.on('error', async (cid, error) => {
+      try {
+        await this.client.postToConnection({ ConnectionId: cid, Data: JSON.stringify({ error }) });
+      } catch (error: any) {
+        this.logger.error(`Failed to send error to ${cid}`, error);
+        if (error.name === 'GoneException') {
+          await EventHandler.disconnect(cid);
         }
       }
     });
@@ -92,15 +103,26 @@ export class EventController {
 
     const handler = this.event.get('share-location');
 
-    handler.on('share', async (id, data) => {
+    handler.on('share', async (cid, data) => {
       try {
-        this.logger.debug(`Sharing location to ${id}: ${JSON.stringify(data)}`);
-        await this.client.postToConnection({ ConnectionId: id, Data: JSON.stringify(data) });
-        this.logger.debug(`Shared location to ${id}`);
+        this.logger.debug(`Sharing location to ${cid}: ${JSON.stringify(data)}`);
+        await this.client.postToConnection({ ConnectionId: cid, Data: JSON.stringify(data) });
+        this.logger.debug(`Shared location to ${cid}`);
       } catch (error: any) {
-        this.logger.error(`Failed to share location to ${id}`, error);
+        this.logger.error(`Failed to share location to ${cid}`, error);
         if (error.name === 'GoneException') {
-          await EventHandler.disconnect(id);
+          await EventHandler.disconnect(cid);
+        }
+      }
+    });
+
+    handler.on('error', async (cid, error) => {
+      try {
+        await this.client.postToConnection({ ConnectionId: cid, Data: JSON.stringify({ error }) });
+      } catch (error: any) {
+        this.logger.error(`Failed to send error to ${cid}`, error);
+        if (error.name === 'GoneException') {
+          await EventHandler.disconnect(cid);
         }
       }
     });

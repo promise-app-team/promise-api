@@ -9,5 +9,5 @@ export abstract class Strategy<S extends PingEvent.Strategy = PingEvent.Strategy
     protected emitter: TypedEventEmitter<PingEvent.Type>
   ) {}
 
-  abstract post<T>(id: ConnectionID, data: PingEvent.Payload<S, T>['data']): Promise<void>;
+  abstract post<T>(cid: ConnectionID, data: PingEvent.Payload<S, T>['data']): Promise<void>;
 }

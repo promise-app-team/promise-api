@@ -17,11 +17,12 @@ import { EventHandler, EventManager, Events } from './events';
 import { PingEvent } from './events/ping';
 import { ShareLocationEvent } from './events/share-location';
 
+import { HttpException } from '@/common/exceptions';
 import { InthashService } from '@/customs/inthash';
 import { LoggerService } from '@/customs/logger';
 import { random } from '@/utils';
 
-type Client = WebSocket & Pick<Connection, 'id'>;
+type Client = WebSocket & Pick<Connection, 'cid' | 'uid'>;
 
 @WebSocketGateway()
 export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -40,38 +41,44 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const authToken = this.getAuthToken(incoming);
       const payload = authToken ? this.jwt.verifyToken(authToken) : null;
-      const params = new URLSearchParams(incoming.url?.replace('/?', ''));
-      client.id = uuid();
-      this.clients.set(client.id, client);
+      if (!payload) throw new Error('Invalid auth token');
 
+      Object.assign(client, { cid: uuid(), uid: payload.sub });
+      this.clients.set(client.cid, client);
+
+      const params = new URLSearchParams(incoming.url?.replace('/?', ''));
       const name = params.get('event') as keyof Events;
-      const response = await this.event.get(name).connect(client.id, { userId: payload?.sub });
-      this.logger.debug(`Client connected: ${client.id} (total: ${this.clients.size})`);
+      const response = await this.event.get(name).connect(client);
+      this.logger.debug(`Client connected: ${client.cid} (total: ${this.clients.size})`);
       return response;
     } catch (error: any) {
-      this.logger.error(`Failed to connect client: ${client.id}`, error);
-      client.close();
+      throw HttpException.new(error, 'FORBIDDEN');
     }
   }
 
   async handleDisconnect(@ConnectedSocket() client: Client) {
-    this.clients.delete(client.id);
-    this.logger.debug(`Client disconnected: ${client.id} (total: ${this.clients.size})`);
-    await EventHandler.disconnect(client.id);
-    return { message: `Disconnected from ${client.id}` };
+    this.clients.delete(client.cid);
+    this.logger.debug(`Client disconnected: ${client.cid} (total: ${this.clients.size})`);
+    await EventHandler.disconnect(client.cid);
+    return { message: `Disconnected from ${client.cid}` };
   }
 
   @SubscribeMessage('ping')
   async handlePingEvent(client: Client, data: PingEvent.Data) {
     const handler = this.event.get('ping');
 
-    handler.on('send', async (id, data) => {
+    handler.on('send', async (cid, data) => {
       await new Promise((resolve) => setTimeout(resolve, random(100, 1000)));
-      this.clients.get(id)?.send(JSON.stringify(data));
+      this.clients.get(cid)?.send(JSON.stringify(data));
     });
 
-    const response = await handler.handle(client.id, data);
-    this.logger.debug(`Client sent message: ${client.id} with ${JSON.stringify(data)}`);
+    handler.on('error', async (cid, error) => {
+      await new Promise((resolve) => setTimeout(resolve, random(100, 1000)));
+      this.clients.get(cid)?.send(JSON.stringify({ error }));
+    });
+
+    const response = await handler.handle(client.cid, data);
+    this.logger.debug(`Client sent message: ${client.cid} with ${JSON.stringify(data)}`);
     return response;
   }
 
@@ -79,14 +86,19 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleShareLocationEvent(client: Client, data: ShareLocationEvent.Data) {
     const handler = this.event.get('share-location');
 
-    handler.on('share', async (id, data) => {
+    handler.on('share', async (cid, data) => {
       await new Promise((resolve) => setTimeout(resolve, random(100, 1000)));
-      this.clients.get(id)?.send(JSON.stringify(data));
+      this.clients.get(cid)?.send(JSON.stringify(data));
     });
 
-    data.param.promiseIds = data.param.promiseIds.map((id) => this.hasher.decode(id));
-    const response = await handler.handle(client.id, data);
-    this.logger.debug(`Client sent message: ${client.id} with ${JSON.stringify(data)}`);
+    handler.on('error', async (cid, error) => {
+      await new Promise((resolve) => setTimeout(resolve, random(100, 1000)));
+      this.clients.get(cid)?.send(JSON.stringify({ error }));
+    });
+
+    data.param._promiseIds = data.param.promiseIds.map((id) => this.hasher.decode(id));
+    const response = await handler.handle(client.cid, data);
+    this.logger.debug(`Client sent message: ${client.cid} with ${JSON.stringify(data)}`);
     return response;
   }
 

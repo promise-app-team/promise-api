@@ -1,6 +1,6 @@
 import { getUnixTime } from 'date-fns';
 
-import { ConnectionID } from '../../connections';
+import { Connection, ConnectionID } from '../../connections';
 import { EventHandler } from '../event.handler';
 
 import { ShareLocationEvent } from './share-location.interface';
@@ -11,41 +11,49 @@ import { makePromiseFilter } from '@/modules/promise/promise.utils';
 export class ShareLocationHandler extends EventHandler<ShareLocationEvent> {
   private channel = (pid: number | string) => `promise_${pid}`;
 
-  async connect(id: ConnectionID, extra?: Record<string, any>): Promise<ShareLocationEvent.Response> {
-    if (!extra?.['userId']) throw new Error('User needs to be authenticated');
+  async connect(connection: Pick<Connection, 'cid' | 'uid'>): Promise<ShareLocationEvent.Response> {
     if (!this.context?.prisma) throw new Error('PrismaService not found');
 
     const promises = await this.context.prisma.promise.findMany({
       where: makePromiseFilter({
-        userId: +extra.userId,
+        userId: connection.uid,
         role: PromiseUserRole.ALL,
         status: PromiseStatus.AVAILABLE,
       }),
     });
 
     if (promises.length > 0) {
-      await Promise.all(promises.map((p) => this.connection.setConnection(id, this.channel(p.id))));
+      await Promise.all(promises.map((p) => this.connection.setConnection(connection, this.channel(p.id))));
     } else {
       throw new Error('참여 중인 약속이 없습니다.');
     }
 
-    return { message: `Connected to ${id}` };
+    return { message: `Connected to ${connection.cid}` };
   }
 
-  async handle(id: ConnectionID, data: ShareLocationEvent.Data): Promise<ShareLocationEvent.Response> {
+  async handle(cid: ConnectionID, data: ShareLocationEvent.Data): Promise<ShareLocationEvent.Response> {
     await Promise.all(
-      data.param.promiseIds.map(async (pid) => {
+      data.param._promiseIds.map(async (pid, i) => {
         const channel = this.channel(pid);
-        await this.connection.setConnection(id, channel);
+        const connection = await this.connection.getConnection(cid, channel);
+        if (!connection) {
+          const error = `연결된 약속을 찾을 수 없습니다 (pid: ${data.param.promiseIds[i]})`;
+          await this.emitter.emit('error', cid, error);
+          return { message: error };
+        }
+
         const connections = await this.connection.getConnections(channel);
         return Promise.all(
           connections
-            .filter((to) => to.id !== id)
+            .filter((to) => to.cid !== cid)
             .map((to) =>
-              this.emitter.emit('share', to.id, {
-                from: data.param.id,
+              this.emitter.emit('share', to.cid, {
+                from: connection.uid,
                 timestamp: getUnixTime(new Date()),
-                data: { ...data.body },
+                data: {
+                  lat: data.body.lat,
+                  lng: data.body.lng,
+                },
               })
             )
         );

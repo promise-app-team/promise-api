@@ -8,15 +8,15 @@ import { Strategy } from './strategy';
 import { ConnectionID } from '@/modules/event/connections';
 
 export class BroadcastStrategy extends Strategy<PingEvent.Strategy.Broadcast> {
-  async post<T>(id: ConnectionID, data: PingEvent.Payload<PingEvent.Strategy.Broadcast, T>['data']) {
-    const toConnections = await this.connection.getConnections();
+  async post<T>(cid: ConnectionID, data: PingEvent.Payload<PingEvent.Strategy.Broadcast, T>['data']) {
+    const toConnections = await this.connection.getConnections('default');
     await Promise.all(
       R.pipe(
         toConnections,
-        R.filter((to) => to.id !== id),
+        R.filter((to) => to.cid !== cid),
         R.map((to) =>
-          this.emitter.emit('send', to.id, {
-            from: id,
+          this.emitter.emit('send', to.cid, {
+            from: cid,
             timestamp: getUnixTime(Date.now()),
             data: data.body,
           })

@@ -1,6 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { getUnixTime } from 'date-fns';
 
+import { ConnectionID } from '../../connections';
 import { AbstractEvent } from '../event.interface';
 
 export module PingEvent {
@@ -52,7 +53,8 @@ export module PingEvent {
   }
 
   export interface Type {
-    send: [to: string, data: Message];
+    send: [to: ConnectionID, data: Message];
+    error: [to: ConnectionID, error: string];
   }
 
   export module DTO {

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+import { ConnectionID } from '../../connections';
 import { AbstractEvent } from '../event.interface';
 
 import { PrismaService } from '@/prisma';
@@ -11,8 +12,8 @@ export module ShareLocationEvent {
   }
 
   export interface Param {
-    id: number;
     promiseIds: string[];
+    _promiseIds: string[]; // decoded
   }
 
   export interface Data {
@@ -41,7 +42,8 @@ export module ShareLocationEvent {
   }
 
   export interface Type {
-    share: [to: string, data: Message];
+    share: [to: ConnectionID, data: Message];
+    error: [to: ConnectionID, error: string];
   }
 
   export interface Context {

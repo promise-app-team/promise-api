@@ -7,9 +7,9 @@ import { Strategy } from './strategy';
 import { ConnectionID } from '@/modules/event/connections';
 
 export class CommonStrategy extends Strategy<never> {
-  async post<T>(id: ConnectionID, data: PingEvent.Payload<never, T>['data']) {
-    this.emitter.emit('send', id, {
-      from: id,
+  async post<T>(cid: ConnectionID, data: PingEvent.Payload<never, T>['data']) {
+    this.emitter.emit('send', cid, {
+      from: cid,
       timestamp: getUnixTime(Date.now()),
       data: data.body,
     });
