@@ -1,5 +1,13 @@
-import { PingEvent } from '../ping.dto';
+import { PingEvent } from '../ping.interface';
 
-export interface Strategy<S extends PingEvent.Strategy = PingEvent.Strategy> {
-  post<T>(id: string, data: PingEvent.Payload<S, T>['data']): Promise<void>;
+import { ConnectionID, ConnectionManager } from '@/modules/event/connections';
+import { TypedEventEmitter } from '@/utils';
+
+export abstract class Strategy<S extends PingEvent.Strategy = PingEvent.Strategy> {
+  constructor(
+    protected connection: ConnectionManager,
+    protected emitter: TypedEventEmitter<PingEvent.Type>
+  ) {}
+
+  abstract post<T>(cid: ConnectionID, data: PingEvent.Payload<S, T>['data']): Promise<void>;
 }

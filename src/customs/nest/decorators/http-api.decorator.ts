@@ -5,6 +5,7 @@ import {
   Patch as NestPatch,
   Delete as NestDelete,
   UseInterceptors,
+  applyDecorators,
 } from '@nestjs/common';
 import { ApiInternalServerErrorResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
 
@@ -20,31 +21,31 @@ function Template(
   path?: Path,
   options?: HttpAPIOptions
 ): MethodDecorator {
-  return (...args) => {
-    const { auth, exceptions, response, interceptors, ...rest } = options || {};
+  const { auth, exceptions, response, interceptors, ...rest } = options || {};
 
-    if (auth) {
-      AuthGuard()(...args);
-      ApiUnauthorizedResponse({ type: HttpException })(...args);
-    }
+  const toApplyDecorators = [decorator(path)];
 
-    if (response) {
-      ApiResponse([status, response])(...args);
-    }
+  if (auth) {
+    toApplyDecorators.push(AuthGuard());
+    toApplyDecorators.push(ApiUnauthorizedResponse({ type: HttpException }));
+  }
 
-    if (exceptions) {
-      ApiResponse(...exceptions)(...args);
-    }
+  if (response) {
+    toApplyDecorators.push(ApiResponse([status, response]));
+  }
 
-    ApiOperation({ ...rest })(...args);
-    ApiInternalServerErrorResponse({ type: HttpException })(...args);
+  if (exceptions) {
+    toApplyDecorators.push(ApiResponse(...exceptions));
+  }
 
-    decorator(path)(...args);
+  if (interceptors) {
+    toApplyDecorators.push(UseInterceptors(...interceptors));
+  }
 
-    if (interceptors) {
-      UseInterceptors(...interceptors)(...args);
-    }
-  };
+  toApplyDecorators.push(ApiOperation({ ...rest }));
+  toApplyDecorators.push(ApiInternalServerErrorResponse({ type: HttpException }));
+
+  return applyDecorators(...toApplyDecorators);
 }
 
 export const Get = (path?: Path, options?: HttpAPIOptions) => Template(NestGet, 'OK', path, options);

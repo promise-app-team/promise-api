@@ -5,23 +5,7 @@ import { UserService } from '../user';
 import { PromiseController } from './promise.controller';
 import { PromiseService } from './promise.service';
 
-import { TypedConfigService } from '@/config/env';
-import { IntHashModule } from '@/customs/inthash';
-
 @Module({
-  imports: [
-    IntHashModule.forRootAsync({
-      inject: [TypedConfigService],
-      useFactory(config: TypedConfigService) {
-        return {
-          bits: config.get('inthash.bits'),
-          prime: config.get('inthash.prime'),
-          inverse: config.get('inthash.inverse'),
-          xor: config.get('inthash.xor'),
-        };
-      },
-    }),
-  ],
   controllers: [PromiseController],
   providers: [UserService, PromiseService],
 })

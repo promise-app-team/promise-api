@@ -33,6 +33,7 @@ export async function configure(app: NestExpressApplication) {
         transform: true,
         whitelist: true,
         stopAtFirstError: true,
+        validateCustomDecorators: true,
         exceptionFactory(errors) {
           const error = Object.values(errors[0].constraints ?? {}).pop();
           return HttpException.new(error ?? 'Unexpected Error', 'BAD_REQUEST');

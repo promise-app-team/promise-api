@@ -6,6 +6,7 @@ import { CommonModule } from '@/common/modules';
 import { TypedConfigService, env } from '@/config/env';
 import { schema } from '@/config/validation';
 import { CacheModule, InMemoryCacheService, RedisCacheService } from '@/customs/cache';
+import { IntHashModule } from '@/customs/inthash';
 import { LoggerModule, LoggerService } from '@/customs/logger';
 import { TypedConfigModule } from '@/customs/typed-config';
 import { WinstonLoggerService, createWinstonLogger } from '@/customs/winston-logger';
@@ -114,6 +115,18 @@ import { PrismaModule } from '@/prisma';
                 port: config.get('redis.port'),
                 password: config.get('redis.password'),
               }),
+        };
+      },
+    }),
+    IntHashModule.forRootAsync({
+      isGlobal: true,
+      inject: [TypedConfigService],
+      useFactory(config: TypedConfigService) {
+        return {
+          bits: config.get('inthash.bits'),
+          prime: config.get('inthash.prime'),
+          inverse: config.get('inthash.inverse'),
+          xor: config.get('inthash.xor'),
         };
       },
     }),

@@ -1,18 +1,17 @@
-import { PingEvent } from '../ping.dto';
+import { getUnixTime } from 'date-fns';
+
+import { PingEvent } from '../ping.interface';
 
 import { Strategy } from './strategy';
 
-import { ConnectionService } from '@/modules/event/connection';
-import { TypedEventEmitter } from '@/utils';
+import { ConnectionID } from '@/modules/event/connections';
 
-export class CommonStrategy implements Strategy<never> {
-  constructor(
-    private readonly connection: ConnectionService,
-    private readonly emitter: TypedEventEmitter<PingEvent.Type>
-  ) {}
-
-  async post<T>(id: string, data: PingEvent.Payload<never, T>['data']) {
-    const response: PingEvent.Response = { from: id, timestamp: Date.now(), data: data.body };
-    this.emitter.emit('send', { id }, response);
+export class CommonStrategy extends Strategy<never> {
+  async post<T>(cid: ConnectionID, data: PingEvent.Payload<never, T>['data']) {
+    this.emitter.emit('send', cid, {
+      from: cid,
+      timestamp: getUnixTime(Date.now()),
+      data: data.body,
+    });
   }
 }
