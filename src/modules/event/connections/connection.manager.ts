@@ -142,7 +142,13 @@ export class ConnectionManager {
 
     connectionMap.delete(cid);
     const key = this.makeCacheKey(channel);
-    await this.cache.set(key, Array.from(connectionMap.values() ?? []));
+    if (connectionMap.size > 0) {
+      await this.cache.set(key, Array.from(connectionMap.values() ?? []));
+    } else {
+      this.channelMap.delete(channel);
+      await this.cache.del(key);
+    }
+
     this.debug(this.delConnection, `Connection deleted (${key}): %s`, cid);
 
     this.debug(this.delConnection, `Current connection pool: %o`, ConnectionManager.pool);
@@ -163,7 +169,13 @@ export class ConnectionManager {
 
     ids.forEach((id) => connectionMap.delete(id));
     const key = this.makeCacheKey(channel);
-    await this.cache.set(key, Array.from(connectionMap.values() ?? []));
+    if (connectionMap.size > 0) {
+      await this.cache.set(key, Array.from(connectionMap.values() ?? []));
+    } else {
+      this.channelMap.delete(channel);
+      await this.cache.del(key);
+    }
+
     this.debug(this.delConnections, `Connections deleted (${key}): %o`, ids);
 
     return true;
@@ -191,7 +203,12 @@ export class ConnectionManager {
 
           connectionMap.delete(id);
           const key = instance.makeCacheKey(channelName);
-          await instance.cache.set(key, Array.from(connectionMap.values() ?? []));
+          if (connectionMap.size > 0) {
+            await instance.cache.set(key, Array.from(connectionMap.values() ?? []));
+          } else {
+            instance.channelMap.delete(channelName);
+            await instance.cache.del(key);
+          }
 
           instance.debug(this.delConnections, `Connection deleted (${key}): %s`, id);
         }

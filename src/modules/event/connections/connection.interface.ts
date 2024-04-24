@@ -26,4 +26,5 @@ export interface ConnectionScope {
 export interface ConnectionCache {
   get<T = any>(key: string): Promise<T | null>;
   set<T = any>(key: string, value: T): Promise<void>;
+  del(key: string): Promise<void>;
 }
