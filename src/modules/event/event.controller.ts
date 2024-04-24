@@ -127,7 +127,7 @@ export class EventController {
       }
     });
 
-    data.param.promiseIds = data.param.promiseIds.map((id) => this.hasher.decode(id));
+    data.param._promiseIds = data.param.promiseIds.map((id) => this.hasher.decode(id));
     return handler.handle(connectionId, data);
   }
 }
