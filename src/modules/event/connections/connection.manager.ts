@@ -17,6 +17,9 @@ import {
 export class ConnectionManager {
   private readonly channelMap: ConnectionChannelMap;
 
+  private static pool: ConnectionEventMap = new Map();
+  private static instances = new Map<ConnectionEvent, ConnectionManager>();
+
   private constructor(
     private readonly event: ConnectionScope['event'],
     private readonly stage: ConnectionScope['stage'],
@@ -25,9 +28,6 @@ export class ConnectionManager {
     this.channelMap = new Map();
     ConnectionManager.pool.set(event, this.channelMap);
   }
-
-  private static pool: ConnectionEventMap = new Map();
-  private static instances = new Map<ConnectionEvent, ConnectionManager>();
 
   static forEvent(event: ConnectionEvent, stage: ConnectionStage, opts: { cache: ConnectionCache }): ConnectionManager {
     let instance = ConnectionManager.instances.get(event);
@@ -44,18 +44,31 @@ export class ConnectionManager {
     return `connection:[${JSON.stringify(scope)}]`;
   }
 
-  private async loadConnections(channel: ConnectionChannel) {
-    const connections = this.channelMap.get(channel) ?? new Map();
-    if (connections.size > 0) return;
+  private loadConnectionPromiseMap: Map<ConnectionChannel, Promise<ConnectionMap>> = new Map();
+  private async loadConnectionMap(channel: ConnectionChannel): Promise<ConnectionMap> {
+    if (this.loadConnectionPromiseMap.has(channel)) {
+      this.debug(this.loadConnectionMap, `Loading connection map (${channel}) is already in progress`);
+      return this.loadConnectionPromiseMap.get(channel)!;
+    }
+
+    const promise = this._loadConnectionMap(channel);
+    this.loadConnectionPromiseMap.set(channel, promise);
+
+    promise.finally(() => {
+      this.loadConnectionPromiseMap.delete(channel);
+    });
+
+    return promise;
+  }
+
+  private async _loadConnectionMap(channel: ConnectionChannel): Promise<ConnectionMap> {
+    const connectionMap = this.channelMap.get(channel);
+    if (connectionMap) return connectionMap;
+
+    this.debug(this.loadConnectionMap, `Loading connection map (${channel})`);
 
     const key = this.makeCacheKey(channel);
     const loadedConnections = await this.cache.get<Connection[]>(key);
-
-    const expiredConnections = R.pipe(loadedConnections ?? [], R.filter(this.expired.bind(this)), R.map(R.prop('cid')));
-    if (expiredConnections.length > 0) {
-      this.debug(this.loadConnections, `Expired Connections (${key}): %o`, expiredConnections);
-      await this.delConnections(expiredConnections, channel);
-    }
 
     const filteredConnectionMap: ConnectionMap = R.pipe(
       loadedConnections ?? [],
@@ -64,20 +77,18 @@ export class ConnectionManager {
       R.map((c) => [c.cid, c] as const),
       (input) => new Map(input)
     );
-    if (filteredConnectionMap.size > 0) {
-      this.channelMap.set(channel, filteredConnectionMap);
-      this.debug(this.loadConnections, `Loaded Connections (${key}): %o`, filteredConnectionMap);
-    }
+    this.channelMap.set(channel, filteredConnectionMap);
+    this.debug(this.loadConnectionMap, `Loaded connection map (${key}): %o`, filteredConnectionMap);
 
-    this.debug(this.loadConnections, `Current connection pool: %o`, ConnectionManager.pool);
+    return filteredConnectionMap;
   }
 
   async getConnection(cid: ConnectionID, channel: ConnectionChannel): Promise<Connection | null> {
-    await this.loadConnections(channel);
+    const connectionMap = await this.loadConnectionMap(channel);
 
     this.debug(this.getConnection, `Getting connection (${channel}): %o`, cid);
 
-    const connection = this.channelMap.get(channel)?.get(cid) ?? null;
+    const connection = connectionMap.get(cid) ?? null;
 
     connection
       ? this.debug(this.getConnection, `Connection found (${channel}): %o`, connection)
@@ -87,11 +98,11 @@ export class ConnectionManager {
   }
 
   async getConnections(channel: ConnectionChannel): Promise<Connection[]> {
-    await this.loadConnections(channel);
+    const connectionMap = await this.loadConnectionMap(channel);
 
     this.debug(this.getConnections, `Getting connections (${channel})`);
 
-    const connections = Array.from(this.channelMap.get(channel)?.values() ?? []);
+    const connections = Array.from(connectionMap.values() ?? []);
 
     connections.length > 0
       ? this.debug(this.getConnections, `Connections found (${channel}): %o`, connections)
@@ -106,19 +117,16 @@ export class ConnectionManager {
     opts?: { ttl?: number }
   ): Promise<boolean> {
     const key = this.makeCacheKey(channel);
-    const exists = await this.getConnection(connection.cid, channel);
+    const { cid, uid } = connection;
+    const exists = await this.exists(connection.cid, channel);
     if (exists) return false;
 
-    this.debug(this.setConnection, `Setting connection (${channel}): %o`, JSON.stringify(connection));
-
-    await this.loadConnections(channel);
-    if (!this.channelMap.has(channel)) this.channelMap.set(channel, new Map());
-    const connectionMap = this.channelMap.get(channel)!;
+    this.debug(this.setConnection, `Setting connection (${channel}): %o`, JSON.stringify({ cid, uid }));
 
     const iat = getUnixTime(new Date());
     const ttl = opts?.ttl ?? 60 * 60 * 24;
-    const { cid, uid } = connection;
     const newConnection: Connection = { cid, uid, iat, exp: iat + ttl };
+    const connectionMap = await this.loadConnectionMap(channel);
     connectionMap.set(cid, newConnection);
 
     await this.cache.set(key, Array.from(connectionMap.values() ?? []));
@@ -130,15 +138,9 @@ export class ConnectionManager {
   }
 
   async delConnection(cid: ConnectionID, channel: ConnectionChannel): Promise<boolean> {
-    this.loadConnections(channel);
+    const connectionMap = await this.loadConnectionMap(channel);
 
     this.debug(this.delConnection, `Deleting connection (${channel}): %s`, cid);
-
-    const connectionMap = this.channelMap.get(channel);
-    if (!connectionMap) {
-      this.debug(this.delConnection, `Connection map not found (${channel})`);
-      return false;
-    }
 
     connectionMap.delete(cid);
     const key = this.makeCacheKey(channel);
@@ -157,15 +159,9 @@ export class ConnectionManager {
   }
 
   async delConnections(ids: ConnectionID[], channel: ConnectionChannel = 'default'): Promise<boolean> {
-    this.loadConnections(channel);
+    const connectionMap = await this.loadConnectionMap(channel);
 
     this.debug(this.delConnections, `Deleting connections (${channel}): %o`, ids);
-
-    const connectionMap = this.channelMap.get(channel);
-    if (!connectionMap) {
-      this.debug(this.delConnections, `Connection map not found (${channel})`);
-      return false;
-    }
 
     ids.forEach((id) => connectionMap.delete(id));
     const key = this.makeCacheKey(channel);
@@ -219,8 +215,10 @@ export class ConnectionManager {
   }
 
   async exists(cid: ConnectionID, channel: ConnectionChannel): Promise<boolean> {
-    await this.loadConnections(channel);
-    const connection = this.channelMap.get(channel)?.get(cid);
+    this.debug(this.exists, `Checking connection exists: %s`, cid);
+    const connectionMap = await this.loadConnectionMap(channel);
+    const connection = connectionMap.get(cid);
+    this.debug(this.exists, `Connection ${connection ? 'exists' : 'not exists'}: %s`, cid);
     return !!connection;
   }
 
