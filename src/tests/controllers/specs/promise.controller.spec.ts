@@ -338,7 +338,7 @@ describe(PromiseController, () => {
           latitude: parseFloat(input.destination.latitude.toString()),
           longitude: parseFloat(input.destination.longitude.toString()),
         },
-        themes: themes.map((theme) => theme.name),
+        themes,
         attendees: [R.pick(host, ['id', 'profileUrl', 'username'])],
       });
     });
@@ -375,7 +375,7 @@ describe(PromiseController, () => {
           longitude: parseFloat(input.destination.longitude.toString()),
         },
         isLatestDestination: true,
-        themes: updatedThemes.map((theme) => theme.name),
+        themes: updatedThemes,
       });
     });
 

@@ -80,7 +80,7 @@ describe(PromiseController, () => {
       completedAt: promise.completedAt ? new Date(promise.completedAt) : null,
       createdAt: expect.toBeString(),
       host: R.pick(host, ['id', 'username', 'profileUrl']),
-      themes: expect.toIncludeSameMembers(themes.map((theme) => theme.name)),
+      themes: expect.toIncludeSameMembers(themes),
       destination: destination
         ? {
             ...R.pick(destination, ['id', 'city', 'district', 'address']),
