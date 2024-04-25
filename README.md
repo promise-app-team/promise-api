@@ -166,7 +166,7 @@ SSH 터널이 열린 터미널을 닫아 SSH 터널을 종료합니다.
 로컬 개발 서버를 실행하기 위해 다음 명령어를 실행합니다.
 
 ```bash
-$ npm run start:dev
+$ npm run dev
 
 # HTTP API      - http://localhost:$PORT
 # WebSocket API - ws://localhost:$PORT
