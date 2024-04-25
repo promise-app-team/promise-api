@@ -32,6 +32,6 @@ export class RedisCacheService implements CacheService {
   }
 
   async del(key: string): Promise<void> {
-    await this.client.del(key);
+    await this.client.unlink(key);
   }
 }
