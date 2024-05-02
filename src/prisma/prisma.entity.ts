@@ -270,6 +270,6 @@ export class MutationLogEntity implements MutationLogPayload {
   statusCode!: number;
   requestBody!: Prisma.JsonValue;
   responseBody!: Prisma.JsonValue;
-  requestAt!: Date;
-  responseAt!: Date;
+  duration: number;
+  createdAt: Date;
 }
