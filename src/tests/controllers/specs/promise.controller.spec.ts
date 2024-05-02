@@ -660,20 +660,6 @@ describe(PromiseController, () => {
     });
   });
 
-  describe(PromiseController.prototype.getThemes, () => {
-    test('should return a list of themes', async () => {
-      const themes = await Promise.all(R.times(3, () => fixture.write.theme.output()));
-      const result = await promiseController.getThemes();
-
-      expect(result).toBeArrayOfSize(3);
-      expect(result).toMatchObject(themes.map((theme) => R.pick(theme, ['id', 'name'])));
-    });
-
-    test('should return an empty list if there are no themes', async () => {
-      await expect(promiseController.getThemes()).resolves.toBeArrayOfSize(0);
-    });
-  });
-
   const deviceId = 'test-device-id';
 
   describe(PromiseController.prototype.enqueuePromise, () => {

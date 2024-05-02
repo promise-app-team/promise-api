@@ -31,7 +31,6 @@ describe(PromiseController, () => {
     updateStartLocation: ':pid(\\d+)/start-location',
     deleteStartLocation: ':pid(\\d+)/start-location',
     getMiddleLocation: ':pid(\\d+)/middle-location',
-    getThemes: 'themes',
     dequeuePromise: 'queue',
     enqueuePromise: 'queue',
   });
@@ -904,18 +903,6 @@ describe(PromiseController, () => {
 
       const pid = hasher.encode(asset.promise.id);
       await http.request.getMiddleLocation({ pid }).get.expect(404);
-    });
-  });
-
-  describe(http.request.getThemes, () => {
-    test('should return themes', async () => {
-      const themes = await fixture.write.themes.output(3);
-      const res = await http.request.getThemes().get.expect(200);
-
-      expect(res.body).toBeArrayOfSize(3);
-      expect(res.body).toEqual(
-        expect.toIncludeSameMembers(themes.map((theme) => ({ id: theme.id, name: theme.name })))
-      );
     });
   });
 

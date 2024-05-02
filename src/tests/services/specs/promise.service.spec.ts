@@ -1075,17 +1075,4 @@ describe(PromiseService, () => {
       expect(result).toMatchObject(userIds.map((attendeeId) => ({ attendeeId })));
     });
   });
-
-  describe(PromiseService.prototype.getThemes, () => {
-    test('should return themes by the promise id', async () => {
-      const theme1 = await fixture.write.theme.output();
-      const theme2 = await fixture.write.theme.output();
-      const theme3 = await fixture.write.theme.output();
-
-      const themes = [theme1, theme2, theme3];
-      await expect(promiseService.getThemes()).resolves.toMatchObject(
-        themes.map((theme) => ({ id: theme.id, name: expect.any(String) }))
-      );
-    });
-  });
 });
