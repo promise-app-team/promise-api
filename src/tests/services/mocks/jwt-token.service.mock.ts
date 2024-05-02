@@ -1,4 +1,4 @@
-import { JsonWebTokenError, TokenExpiredError } from '@nestjs/jwt';
+import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 
 import { JwtAuthTokenPayload } from '@/modules/auth';
 

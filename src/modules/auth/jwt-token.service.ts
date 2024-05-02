@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { sign, verify } from 'jsonwebtoken';
 
 import { TypedConfigService } from '@/config/env';
 
@@ -13,10 +13,7 @@ const issuer = 'api.promise-app.com';
 
 @Injectable()
 export class JwtAuthTokenService {
-  constructor(
-    private readonly config: TypedConfigService,
-    private readonly jwt: JwtService
-  ) {}
+  constructor(private readonly config: TypedConfigService) {}
 
   generateTokens(payload: JwtAuthTokenPayload) {
     return {
@@ -26,9 +23,8 @@ export class JwtAuthTokenService {
   }
 
   generateAccessToken(payload: JwtAuthTokenPayload, expiresIn?: number | string): string {
-    return this.jwt.sign(payload, {
+    return sign(payload, this.config.get('jwt.signKey'), {
       expiresIn: expiresIn ?? this.config.get('jwt.expires.access'),
-      privateKey: this.config.get('jwt.signKey'),
       algorithm,
       audience,
       issuer,
@@ -36,9 +32,8 @@ export class JwtAuthTokenService {
   }
 
   generateRefreshToken(payload: JwtAuthTokenPayload, expiresIn?: number | string): string {
-    return this.jwt.sign(payload, {
+    return sign(payload, this.config.get('jwt.signKey'), {
       expiresIn: expiresIn ?? this.config.get('jwt.expires.refresh'),
-      privateKey: this.config.get('jwt.signKey'),
       algorithm,
       audience,
       issuer: `${issuer}#refresh`,
@@ -46,20 +41,18 @@ export class JwtAuthTokenService {
   }
 
   verifyAccessToken(token: string): JwtAuthTokenPayload {
-    return this.jwt.verify(token, {
-      publicKey: this.config.get('jwt.verifyKey'),
+    return verify(token, this.config.get('jwt.verifyKey'), {
       algorithms: [algorithm],
       audience,
       issuer,
-    });
+    }) as unknown as JwtAuthTokenPayload;
   }
 
   verifyRefreshToken(token: string): JwtAuthTokenPayload {
-    return this.jwt.verify(token, {
-      publicKey: this.config.get('jwt.verifyKey'),
+    return verify(token, this.config.get('jwt.verifyKey'), {
       algorithms: [algorithm],
       audience,
       issuer: `${issuer}#refresh`,
-    });
+    }) as unknown as JwtAuthTokenPayload;
   }
 }
