@@ -48,7 +48,7 @@ export class MutationLogInterceptor implements NestInterceptor {
         const duration = Date.now() - requestTime;
 
         let userId = null;
-        userId ||= guard(() => this.jwt.verifyToken(responseBody.accessToken).sub, null);
+        userId ||= guard(() => this.jwt.verifyAccessToken(responseBody.accessToken).sub, null);
         userId ||= guard(() => (request as any).user.id, null);
         if (!userId) return responseBody;
 

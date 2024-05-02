@@ -40,7 +40,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleConnection(@ConnectedSocket() client: Client, incoming: IncomingMessage) {
     try {
       const authToken = this.getAuthToken(incoming);
-      const payload = authToken ? this.jwt.verifyToken(authToken) : null;
+      const payload = authToken ? this.jwt.verifyAccessToken(authToken) : null;
       if (!payload) throw new Error('Invalid auth token');
 
       Object.assign(client, { cid: uuid(), uid: payload.sub });

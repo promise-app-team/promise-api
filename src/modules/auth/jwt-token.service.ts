@@ -7,6 +7,10 @@ export interface JwtAuthTokenPayload {
   sub: number;
 }
 
+const algorithm = 'ES256';
+const audience = 'promise-app.com';
+const issuer = 'api.promise-app.com';
+
 @Injectable()
 export class JwtAuthTokenService {
   constructor(
@@ -24,16 +28,38 @@ export class JwtAuthTokenService {
   generateAccessToken(payload: JwtAuthTokenPayload, expiresIn?: number | string): string {
     return this.jwt.sign(payload, {
       expiresIn: expiresIn ?? this.config.get('jwt.expires.access'),
+      privateKey: this.config.get('jwt.signKey'),
+      algorithm,
+      audience,
+      issuer,
     });
   }
 
   generateRefreshToken(payload: JwtAuthTokenPayload, expiresIn?: number | string): string {
     return this.jwt.sign(payload, {
       expiresIn: expiresIn ?? this.config.get('jwt.expires.refresh'),
+      privateKey: this.config.get('jwt.signKey'),
+      algorithm,
+      audience,
+      issuer: `${issuer}#refresh`,
     });
   }
 
-  verifyToken(token: string): JwtAuthTokenPayload {
-    return this.jwt.verify(token);
+  verifyAccessToken(token: string): JwtAuthTokenPayload {
+    return this.jwt.verify(token, {
+      publicKey: this.config.get('jwt.verifyKey'),
+      algorithms: [algorithm],
+      audience,
+      issuer,
+    });
+  }
+
+  verifyRefreshToken(token: string): JwtAuthTokenPayload {
+    return this.jwt.verify(token, {
+      publicKey: this.config.get('jwt.verifyKey'),
+      algorithms: [algorithm],
+      audience,
+      issuer: `${issuer}#refresh`,
+    });
   }
 }

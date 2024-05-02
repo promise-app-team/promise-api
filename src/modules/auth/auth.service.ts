@@ -48,7 +48,7 @@ export class AuthService {
    */
   async refresh(token: string): Promise<AuthTokenDTO> {
     try {
-      const payload = this.jwt.verifyToken(token);
+      const payload = this.jwt.verifyRefreshToken(token);
       const node = await this.user.findOneById(payload.sub);
       return this.jwt.generateTokens({ sub: node.id });
     } catch (error) {

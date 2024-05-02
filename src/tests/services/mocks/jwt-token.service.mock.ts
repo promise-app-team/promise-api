@@ -30,7 +30,7 @@ export const mockJwtAuthTokenService = (context: { validId: number; invalidId: n
     return 'token';
   },
 
-  verifyToken(token: string): JwtAuthTokenPayload {
+  verifyAccessToken(token: string): JwtAuthTokenPayload {
     switch (token) {
       case 'valid':
         return { sub: context.validId };
@@ -43,5 +43,9 @@ export const mockJwtAuthTokenService = (context: { validId: number; invalidId: n
       default:
         throw new Error();
     }
+  },
+
+  verifyRefreshToken(token: string): JwtAuthTokenPayload {
+    return this.verifyAccessToken(token);
   },
 });
