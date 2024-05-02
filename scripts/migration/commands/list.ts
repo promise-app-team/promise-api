@@ -27,7 +27,7 @@ export class ListCommand extends Command('list') {
     const columns = (gap: number, messages: string[]) => messages.join(' '.repeat(gap));
 
     logger.info(`${migrations.length} migrations found:`);
-    const nameLength = R.firstBy(migrations, [(m) => m.dirname.length, 'desc'])?.dirname.length ?? 10;
+    const nameLength = R.firstBy(migrations, [(m) => m.name.length, 'desc'])?.name.length ?? 10;
     const sqlLength = 'UP / DOWN'.length;
     const createdLength = R.firstBy(migrations, [(m) => m.createdAt.length, 'desc'])?.createdAt.length ?? 21;
     const appliedLength = R.firstBy(migrations, [(m) => m.appliedAt?.length ?? 21, 'desc'])?.appliedAt?.length ?? 21;
@@ -41,13 +41,13 @@ export class ListCommand extends Command('list') {
         `${chalk.underline('Applied At'.padEnd(appliedLength))}`,
       ])
     );
-    for (const { dirname, createdAt, appliedAt } of migrations) {
+    for (const { name, dirname, createdAt, appliedAt } of migrations) {
       const icon = chalk.bold.gray(`[${appliedAt ? appliedIcon : pendingIcon}]`);
-      const name = chalk.bold.cyanBright(dirname.padEnd(nameLength));
+      const coloredName = chalk.bold.cyanBright(name.padEnd(nameLength));
       const filelink = formatMigrationLink(dirname);
       const createdDate = chalk.grey(createdAt);
       const appliedDate = appliedAt ? chalk.grey(appliedAt) : chalk.red('N/A');
-      logger.log(columns(2, [`${icon}`, `${name}`, filelink, createdDate, appliedDate]));
+      logger.log(columns(2, [`${icon}`, `${coloredName}`, filelink, createdDate, appliedDate]));
     }
 
     const status =
