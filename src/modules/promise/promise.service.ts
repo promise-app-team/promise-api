@@ -6,7 +6,7 @@ import { InputCreatePromiseDTO, InputLocationDTO, InputUpdatePromiseDTO } from '
 import { PromiseStatus, PromiseUserRole } from './promise.enum';
 import { isEqualLocation, makePromiseFilter, makeUniquePromiseFilter } from './promise.utils';
 
-import { PrismaService, LocationModel, ThemeModel, PrismaClientError } from '@/prisma';
+import { PrismaService, LocationModel, PrismaClientError } from '@/prisma';
 
 export enum PromiseServiceError {
   NotFoundPromise = '약속을 찾을 수 없습니다.',
@@ -401,9 +401,5 @@ export class PromiseService {
           throw error;
       }
     }
-  }
-
-  async getThemes(): Promise<ThemeModel[]> {
-    return this.prisma.theme.findMany();
   }
 }

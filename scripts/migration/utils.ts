@@ -99,14 +99,13 @@ export function parseTSV(data: string): Record<string, string>[] {
 
 export function transformMigration(migration: string) {
   const [date, name] = migration.replace(/[^a-z0-9_]/g, '').split(/_(.*)/s);
-  const sanitizedName = name.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
   const up = `${MIGRATION_DIR}/${migration}/migration.sql`;
-  const down = sanitizedName !== 'Init' ? `${MIGRATION_DIR}/${migration}/migration_down.sql` : null;
+  const down = name !== 'init' ? `${MIGRATION_DIR}/${migration}/migration_down.sql` : null;
   const schema = `${MIGRATION_DIR}/${migration}/schema.prisma`;
   return {
     dirname: migration,
     filepath: { up, down, schema },
-    name: sanitizedName,
+    name,
     createdAt: parse(date, 'yyyyMMddHHmmss', new Date()),
   };
 }

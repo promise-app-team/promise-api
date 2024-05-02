@@ -19,8 +19,8 @@ import {
 import { addMinutes, addWeeks, formatISO } from 'date-fns';
 import * as R from 'remeda';
 
-import { LocationDTO } from './location.dto';
-import { ThemeDTO } from './theme.dto';
+import { LocationDTO } from '../locations';
+import { ThemeDTO } from '../themes';
 
 import { IsAfter } from '@/common/decorators';
 import { ApplyDTO } from '@/common/mixins';

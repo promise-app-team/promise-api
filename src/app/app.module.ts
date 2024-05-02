@@ -13,6 +13,7 @@ import { WinstonLoggerService, createWinstonLogger } from '@/customs/winston-log
 import { AuthModule } from '@/modules/auth';
 import { EventModule } from '@/modules/event';
 import { PromiseModule } from '@/modules/promise';
+import { ThemeModule } from '@/modules/themes';
 import { FileUploadModule } from '@/modules/upload';
 import { UserModule } from '@/modules/user';
 import { PrismaModule } from '@/prisma';
@@ -132,9 +133,10 @@ import { PrismaModule } from '@/prisma';
     }),
     AuthModule,
     UserModule,
-    EventModule,
+    ThemeModule,
     PromiseModule,
     FileUploadModule,
+    EventModule,
     CommonModule,
   ],
   controllers: [AppController],

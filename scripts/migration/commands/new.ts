@@ -59,10 +59,10 @@ export class NewCommand extends Command('new') {
     if (!ok) return logger.warn('Aborted.');
 
     logger.info('Generating migration file...');
-    const result = await command.prisma(`migrate dev --create-only --skip-generate --skip-seed --name ${name}`);
-    const [directory] = result.match(`\\d{14}_${name}`) ?? [];
-    if (!directory) throw new Error('Failed to create migration file');
+    const directory = `${new Date().toISOString().replace(/[-:T]/g, '').slice(0, -5)}_${name}`;
 
+    await fs.mkdir(`${MIGRATION_DIR}/${directory}`);
+    await fs.writeFile(`${MIGRATION_DIR}/${directory}/migration.sql`, `${upSql}\n`);
     await fs.writeFile(`${MIGRATION_DIR}/${directory}/migration_down.sql`, `${downSql}\n`);
     await fs.copyFile(`${SCHEMA_FILE}`, `${MIGRATION_DIR}/${directory}/schema.prisma`);
     const filelink = formatMigrationLink(directory, {

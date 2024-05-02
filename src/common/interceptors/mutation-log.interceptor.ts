@@ -9,6 +9,7 @@ import { guard } from '@/utils';
 
 const MUTATION_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 const EXCLUDE_PATHS = ['/event/', '/promises/queue'];
+const REDACTED_KEYS = ['accessToken', 'refreshToken'];
 
 function redact(obj: Record<string, any>, keys: string[], mask = '[REDACTED]'): Record<string, any> {
   const newObj = { ...obj };
@@ -31,7 +32,8 @@ export class MutationLogInterceptor implements NestInterceptor {
   intercept(context: ExecutionContext, next: CallHandler): MaybePromise<Observable<any>> {
     const request = context.switchToHttp().getRequest<Request>();
     const response = context.switchToHttp().getResponse<Response>();
-    const requestTime = new Date();
+    const requestBody = request.body;
+    const requestTime = Date.now();
 
     if (!MUTATION_METHODS.includes(request.method)) {
       return next.handle();
@@ -43,8 +45,10 @@ export class MutationLogInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       map(async (responseBody: any) => {
+        const duration = Date.now() - requestTime;
+
         let userId = null;
-        userId ||= guard(() => this.jwt.verifyToken(responseBody.accessToken).sub, null);
+        userId ||= guard(() => this.jwt.verifyAccessToken(responseBody.accessToken).sub, null);
         userId ||= guard(() => (request as any).user.id, null);
         if (!userId) return responseBody;
 
@@ -56,12 +60,9 @@ export class MutationLogInterceptor implements NestInterceptor {
               method: request.method,
               headers: redact(request.headers, ['authorization']),
               statusCode: response.statusCode,
-              requestBody: Object.keys(request.body).length ? request.body : undefined,
-              responseBody: Object.keys(responseBody).length
-                ? redact(responseBody, ['accessToken', 'refreshToken'])
-                : undefined,
-              requestAt: requestTime,
-              responseAt: new Date(),
+              requestBody: Object.keys(requestBody).length ? redact(requestBody, REDACTED_KEYS) : undefined,
+              responseBody: Object.keys(responseBody).length ? redact(responseBody, REDACTED_KEYS) : undefined,
+              duration,
             },
           })
           .catch((error) => this.logger.error(error));

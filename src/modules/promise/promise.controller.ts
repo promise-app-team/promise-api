@@ -2,7 +2,8 @@ import { Body, Param, Query, Controller } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import * as R from 'remeda';
 
-import { LocationDTO, PointDTO } from './location.dto';
+import { LocationDTO, PointDTO } from '../locations';
+
 import {
   IdentifiableDTO,
   InputCreatePromiseDTO,
@@ -16,7 +17,6 @@ import { PromiseStatus, PromiseUserRole } from './promise.enum';
 import { EncodePromiseID } from './promise.interceptor';
 import { DecodePromisePID } from './promise.pipe';
 import { PromiseService, PromiseServiceError } from './promise.service';
-import { ThemeDTO } from './theme.dto';
 
 import { HttpException } from '@/common/exceptions';
 import { ToArrayOfPipe } from '@/common/pipes';
@@ -306,11 +306,6 @@ export class PromiseController {
           throw HttpException.new(error);
       }
     });
-  }
-
-  @Get('themes', { auth: true, description: '약속 테마 목록을 불러옵니다.' })
-  async getThemes(): Promise<ThemeDTO[]> {
-    return this.promiseService.getThemes().then((themes) => themes.map((theme) => ThemeDTO.from(theme)));
   }
 
   @Post('queue', { description: '약속 대기열에 추가합니다.', exceptions: ['BAD_REQUEST', 'NOT_FOUND'] })
