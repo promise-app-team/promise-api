@@ -27,10 +27,15 @@ import { ApplyDTO } from '@/common/mixins';
 import { DestinationType, LocationShareType, PromiseEntity, UserEntity } from '@/prisma';
 
 export class HostDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl']) {}
+
 export class AttendeeDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl'], (obj) => ({
   hasStartLocation: Boolean(obj.hasStartLocation),
+  attendedAt: obj.attendedAt,
+  leavedAt: obj.leavedAt,
 })) {
   hasStartLocation!: boolean;
+  attendedAt!: Date;
+  leavedAt!: Date | null;
 }
 
 export class PromiseDTO extends ApplyDTO(
@@ -53,8 +58,13 @@ export class PromiseDTO extends ApplyDTO(
     host: HostDTO.from(obj.host),
     themes: R.map(obj.themes, ({ theme }) => ThemeDTO.from(theme)),
     destination: obj.destination ? LocationDTO.from(obj.destination) : null,
-    attendees: R.map(obj.attendees, ({ attendee, startLocationId }) => ({
-      ...AttendeeDTO.from({ ...attendee, hasStartLocation: typeof startLocationId === 'number' }),
+    attendees: R.map(obj.attendees, (promiseUser) => ({
+      ...AttendeeDTO.from({
+        ...promiseUser.attendee,
+        hasStartLocation: typeof promiseUser.startLocationId === 'number',
+        attendedAt: promiseUser.attendedAt,
+        leavedAt: promiseUser.leavedAt,
+      }),
     })),
   })
 ) {

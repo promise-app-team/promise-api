@@ -32,7 +32,12 @@ const promiseInclude: Prisma.PromiseInclude = {
     },
   },
   attendees: {
-    select: { attendee: true, startLocationId: true },
+    select: {
+      attendee: true,
+      startLocationId: true,
+      attendedAt: true,
+      leavedAt: true,
+    },
   },
   themes: {
     select: { theme: true },
@@ -270,7 +275,7 @@ export class PromiseService {
         throw PromiseServiceError.NotFoundStartLocation;
       }
 
-      await this.prisma.location.delete({
+      await this.prisma.location.deleteMany({
         where: { id: promiseUser.startLocationId },
       });
 
@@ -334,7 +339,7 @@ export class PromiseService {
   async leave(id: number, attendeeId: number): Promise<{ id: number }> {
     try {
       const promise = await this.prisma.promise.findUniqueOrThrow({
-        where: makeUniquePromiseFilter({ id, status: PromiseStatus.AVAILABLE }),
+        where: makeUniquePromiseFilter({ id, userId: attendeeId, status: PromiseStatus.AVAILABLE }),
         select: { id: true, hostId: true },
       });
 
@@ -342,8 +347,9 @@ export class PromiseService {
         throw PromiseServiceError.HostCannotLeave;
       }
 
-      await this.prisma.promiseUser.delete({
-        where: { identifier: { attendeeId, promiseId: promise.id } },
+      await this.prisma.promiseUser.updateMany({
+        data: { leavedAt: new Date() },
+        where: { attendeeId, promiseId: promise.id },
       });
 
       return { id: promise.id };
