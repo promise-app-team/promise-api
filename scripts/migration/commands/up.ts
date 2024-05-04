@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import * as R from 'remeda';
 
 import { logger } from '../../utils';
+import { envs } from '../envs';
 import {
   checkHealth,
   command,
@@ -37,8 +38,10 @@ export class UpCommand extends Command('up') {
       process.exit(1);
     });
 
-    const schema = pendingMigrations.slice(-1)[0].filepath.schema;
-    await command.prisma(`generate --schema ${schema}`);
+    if (envs.stage === 'local') {
+      const schema = pendingMigrations.slice(-1)[0].filepath.schema;
+      await command.prisma(`generate --schema ${schema}`);
+    }
 
     const appliedMigrations = R.pipe(
       result.match(/\d{14}_[a-z0-9_]+/g) ?? [],

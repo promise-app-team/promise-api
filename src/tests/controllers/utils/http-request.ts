@@ -70,7 +70,7 @@ function initializeHttpRequest<T>(app: INestApplication | null, routes: Routes<T
     }
 
     Object.defineProperty(operator, 'name', { value: `${path} (${name})` });
-    Object.assign(httpRequest, { [name]: operator });
+    Object.defineProperty(httpRequest, name, { value: operator });
   }
 
   return httpRequest;

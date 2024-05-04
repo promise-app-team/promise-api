@@ -230,16 +230,19 @@ export class PromiseUserEntity implements PromiseUserPayload {
   startLocationId: number | null;
   startLocation!: LocationEntity | null;
 
-  createdAt!: Date;
-  updatedAt!: Date;
+  isMidpointCalculated: boolean;
+
+  attendedAt!: Date;
+  leavedAt!: Date | null;
 }
 
 export class PromiseUserModel extends PickType(PromiseUserEntity, [
   'promiseId',
   'attendeeId',
   'startLocationId',
-  'createdAt',
-  'updatedAt',
+  'isMidpointCalculated',
+  'attendedAt',
+  'leavedAt',
 ]) {}
 
 export class PromiseThemeEntity implements PromiseThemePayload {

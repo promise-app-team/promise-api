@@ -9,16 +9,23 @@ endef
 
 https := $(shell git rev-parse --show-toplevel)/https
 
-init_db:
+start_db:
 	@$(call docker_compose,local) up -d
 
-deinit_db:
+stop_db:
 	@$(call docker_compose,local) down --volumes
 
-init_https:
+clean_db:
+	@rm -rf dockerfile
+
+restart_db: deinit_db init_db
+
+start_https:
 	@./https/scripts/install.sh
 	@$(call docker_compose,https) up -d
 
-deinit_https:
+stop_https:
 	@./https/scripts/uninstall.sh
 	@$(call docker_compose,https) down --rmi=all
+
+restart_https: deinit_https init_https

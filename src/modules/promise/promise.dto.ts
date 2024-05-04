@@ -14,6 +14,7 @@ import {
   Length,
   MaxLength,
   Min,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import { addMinutes, addWeeks, formatISO } from 'date-fns';
@@ -27,10 +28,16 @@ import { ApplyDTO } from '@/common/mixins';
 import { DestinationType, LocationShareType, PromiseEntity, UserEntity } from '@/prisma';
 
 export class HostDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl']) {}
+
 export class AttendeeDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl'], (obj) => ({
   hasStartLocation: Boolean(obj.hasStartLocation),
+  isMidpointCalculated: Boolean(obj.isMidpointCalculated),
+  attendedAt: obj.attendedAt,
+  leavedAt: obj.leavedAt,
 })) {
   hasStartLocation!: boolean;
+  attendedAt!: Date;
+  leavedAt!: Date | null;
 }
 
 export class PromiseDTO extends ApplyDTO(
@@ -53,8 +60,14 @@ export class PromiseDTO extends ApplyDTO(
     host: HostDTO.from(obj.host),
     themes: R.map(obj.themes, ({ theme }) => ThemeDTO.from(theme)),
     destination: obj.destination ? LocationDTO.from(obj.destination) : null,
-    attendees: R.map(obj.attendees, ({ attendee, startLocationId }) => ({
-      ...AttendeeDTO.from({ ...attendee, hasStartLocation: typeof startLocationId === 'number' }),
+    attendees: R.map(obj.attendees, (promiseUser) => ({
+      ...AttendeeDTO.from({
+        ...promiseUser.attendee,
+        hasStartLocation: typeof promiseUser.startLocationId === 'number',
+        isMidpointCalculated: promiseUser.isMidpointCalculated,
+        attendedAt: promiseUser.attendedAt,
+        leavedAt: promiseUser.leavedAt,
+      }),
     })),
   })
 ) {
@@ -139,7 +152,11 @@ export class InputCreatePromiseDTO {
   locationShareEndValue!: number;
 }
 
-export class InputUpdatePromiseDTO extends InputCreatePromiseDTO {}
+export class InputUpdatePromiseDTO extends InputCreatePromiseDTO {
+  @ValidateIf((obj) => obj.destinationType === DestinationType.DYNAMIC && !!obj.destination)
+  @IsNotEmpty({ message: '중간 위치 Ref ID를 입력해주세요.' })
+  middleLocationRef?: string | null;
+}
 
 export class IdentifiableDTO {
   @ApiProperty({ example: 1 })

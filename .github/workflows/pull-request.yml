@@ -20,6 +20,7 @@ jobs:
       JWT_SIGN_KEY: ${{ secrets.JWT_SIGN_KEY }}
       JWT_VERIFY_KEY: ${{ vars.JWT_VERIFY_KEY }}
       INTHASH_KEY: ${{ secrets.INTHASH_KEY }}
+      SQIDS_KEY: ${{ secrets.SQIDS_KEY }}
 
       DB_USER: ${{ vars.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}

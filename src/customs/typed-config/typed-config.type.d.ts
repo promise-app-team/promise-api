@@ -1,6 +1,6 @@
 export type FlattenObjectKeys<T extends Record<string, any>, K = keyof T> = K extends string
   ? T[K] extends Record<string, any>
-    ? `${K}.${FlattenObjectKeys<T[K]>}`
+    ? K | `${K}.${FlattenObjectKeys<T[K]>}`
     : K
   : never;
 

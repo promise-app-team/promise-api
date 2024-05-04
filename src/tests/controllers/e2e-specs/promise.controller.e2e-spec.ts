@@ -75,9 +75,9 @@ describe(PromiseController, () => {
       locationShareStartValue: promise.locationShareStartValue,
       locationShareEndType: promise.locationShareEndType,
       locationShareEndValue: promise.locationShareEndValue,
-      promisedAt: expect.toBeString(),
+      promisedAt: expect.toBeDateString(),
       completedAt: promise.completedAt ? new Date(promise.completedAt) : null,
-      createdAt: expect.toBeString(),
+      createdAt: expect.toBeDateString(),
       host: R.pick(host, ['id', 'username', 'profileUrl']),
       themes: expect.toIncludeSameMembers(themes),
       destination: destination
@@ -94,6 +94,9 @@ describe(PromiseController, () => {
           R.map.indexed((attendee, i) => ({
             ...R.pick(attendee, ['id', 'username', 'profileUrl']),
             hasStartLocation: i === 1,
+            isMidpointCalculated: expect.toBeBoolean(),
+            attendedAt: expect.toBeDateString(),
+            leavedAt: null,
           }))
         )
       ),
@@ -103,27 +106,21 @@ describe(PromiseController, () => {
 
   describe(http.request.getMyPromises, () => {
     test('should return promises', async () => {
-      const assets = R.pipe(
-        await Promise.all(
-          R.times(3, () =>
-            fixture.write.promise.output({
-              host: http.request.auth.user,
-              destination: true,
-              attendees: 3,
-              themes: 3,
-              startLocations: 1,
-            })
-          )
-        ),
-        R.sortBy((asset) => asset.promise.id)
+      const assets = await Promise.all(
+        R.times(3, () =>
+          fixture.write.promise.output({
+            host: http.request.auth.user,
+            destination: true,
+            attendees: 3,
+            themes: 3,
+            startLocations: 1,
+          })
+        )
       );
 
       const res = await http.request.getMyPromises().get.expect(200);
 
-      expect(res.body).toBeArrayOfSize(3);
-      expect(res.body[0]).toEqual(toPromiseDTO(assets[0]));
-      expect(res.body[1]).toEqual(toPromiseDTO(assets[1]));
-      expect(res.body[2]).toEqual(toPromiseDTO(assets[2]));
+      expect(res.body).toIncludeSameMembers(assets.map((asset) => toPromiseDTO(asset)));
     });
   });
 
@@ -210,7 +207,7 @@ describe(PromiseController, () => {
   describe(http.request.updatePromise, () => {
     const input = {
       title: 'updated title',
-      destinationType: DestinationType.DYNAMIC,
+      destinationType: DestinationType.STATIC,
       locationShareStartType: LocationShareType.DISTANCE,
       locationShareStartValue: 1000,
       locationShareEndType: LocationShareType.TIME,
@@ -251,8 +248,8 @@ describe(PromiseController, () => {
       expect(res.body).toEqual(toPromiseDTO({ ...asset, themes }));
     });
 
-    test('should update is_latest_destination if destination is updated', async () => {
-      const asset = await fixture.write.promise.output({
+    test('should update isLatestDestination if destination is updated', async () => {
+      const { promise } = await fixture.write.promise.output({
         host: http.request.auth.user,
         attendees: 3,
         startLocations: 3,
@@ -262,7 +259,7 @@ describe(PromiseController, () => {
         },
       });
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
 
       {
         const res = await http.request
@@ -283,33 +280,150 @@ describe(PromiseController, () => {
       }
     });
 
+    test(`should update isMidpointCalculated to true by attendee if destinationTpe is ${DestinationType.DYNAMIC}`, async () => {
+      const { host, promise, attendees } = await fixture.write.promise.output({
+        host: http.request.auth.user,
+        attendees: 3,
+        startLocations: 3,
+        partial: {
+          destinationType: DestinationType.DYNAMIC,
+        },
+      });
+
+      const pid = hasher.encode(promise.id);
+
+      const res = await http.request
+        .getMiddleLocation({ pid })
+        .get.query({
+          attendeeIds: [attendees[0].id, attendees[2].id],
+        })
+        .expect(200);
+
+      const ref = res.body.ref;
+
+      {
+        const res = await http.request
+          .updatePromise({ pid })
+          .put.send({
+            ...input,
+            destinationType: DestinationType.DYNAMIC,
+            middleLocationRef: ref,
+          })
+          .expect(200);
+
+        expect(res.body.attendees).toIncludeSameMembers(
+          (
+            [
+              [host, false],
+              [attendees[0], true],
+              [attendees[1], false],
+              [attendees[2], true],
+            ] as const
+          ).map(([attendee, isMidpointCalculated]) => ({
+            ...R.pick(attendee, ['id', 'username', 'profileUrl']),
+            isMidpointCalculated,
+            attendedAt: expect.toBeDateString(),
+            hasStartLocation: expect.toBeBoolean(),
+            leavedAt: null,
+          }))
+        );
+      }
+    });
+
+    test(`should reset isMidpointCalculated to false by attendee if destinationType is changed to ${DestinationType.STATIC}`, async () => {
+      const { host, promise, attendees } = await fixture.write.promise.output({
+        host: http.request.auth.user,
+        attendees: 3,
+        startLocations: 3,
+        partial: {
+          destinationType: DestinationType.DYNAMIC,
+        },
+      });
+
+      const pid = hasher.encode(promise.id);
+
+      const res = await http.request
+        .getMiddleLocation({ pid })
+        .get.query({
+          attendeeIds: [attendees[0].id, attendees[2].id],
+        })
+        .expect(200);
+
+      const ref = res.body.ref;
+
+      await http.request
+        .updatePromise({ pid })
+        .put.send({ ...input, destinationType: DestinationType.DYNAMIC, middleLocationRef: ref })
+        .expect(200);
+
+      {
+        const res = await http.request
+          .updatePromise({ pid })
+          .put.send({ ...input, destinationType: DestinationType.STATIC })
+          .expect(200);
+
+        expect(res.body.attendees).toIncludeSameMembers(
+          [host, ...attendees].map((attendee) => ({
+            ...R.pick(attendee, ['id', 'username', 'profileUrl']),
+            isMidpointCalculated: false,
+            attendedAt: expect.toBeDateString(),
+            hasStartLocation: expect.toBeBoolean(),
+            leavedAt: null,
+          }))
+        );
+      }
+    });
+
+    test(`should throw an error if middleLocationRef is empty when destinationType is ${DestinationType.DYNAMIC}`, async () => {
+      const { promise } = await fixture.write.promise.output({
+        host: http.request.auth.user,
+        attendees: 3,
+        startLocations: 3,
+        partial: {
+          destinationType: DestinationType.DYNAMIC,
+        },
+      });
+
+      const pid = hasher.encode(promise.id);
+
+      await http.request
+        .updatePromise({ pid })
+        .put.send({ ...input, destinationType: DestinationType.STATIC })
+        .expect(200);
+
+      await http.request
+        .updatePromise({ pid })
+        .put.send({ ...input, destinationType: DestinationType.DYNAMIC })
+        .expect(400);
+    });
+
     test('should throw an error if promise not found', async () => {
       const pid = hasher.encode(0);
       await http.request.updatePromise({ pid }).put.send(input).expect(404);
     });
 
     test('should throw an error if not host', async () => {
-      const asset = await fixture.write.promise.output();
+      const { promise } = await fixture.write.promise.output();
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.updatePromise({ pid }).put.send(input).expect(403);
     });
   });
 
   describe(http.request.attendPromise, () => {
     test('should attend a promise', async () => {
-      const asset = await fixture.write.promise.output();
+      const { promise } = await fixture.write.promise.output();
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       const res = await http.request.attendPromise({ pid }).post.expect(201);
 
       expect(res.body).toEqual({ pid });
     });
 
     test('should throw an error if already attended', async () => {
-      const asset = await fixture.write.promise.output();
+      const { promise } = await fixture.write.promise.output();
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.attendPromise({ pid }).post.expect(201);
       await http.request.attendPromise({ pid }).post.expect(400);
     });
@@ -320,64 +434,89 @@ describe(PromiseController, () => {
     });
 
     test('should throw an error if promisedAt is in the past', async () => {
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         partial: {
           promisedAt: new Date(yesterday),
         },
       });
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.attendPromise({ pid }).post.expect(404);
     });
 
     test('should throw an error if already completed', async () => {
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         partial: {
           completedAt: new Date(yesterday),
         },
       });
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.attendPromise({ pid }).post.expect(404);
     });
   });
 
   describe(http.request.leavePromise, () => {
     test('should leave a promise', async () => {
-      const asset = await fixture.write.promise.output();
+      const { promise } = await fixture.write.promise.output();
 
-      const pid = hasher.encode(asset.promise.id);
-      await http.request.attendPromise({ pid }).post.expect(201);
-      await http.request.leavePromise({ pid }).delete.expect(200);
+      const pid = hasher.encode(promise.id);
+      {
+        await http.request.attendPromise({ pid }).post.expect(201);
+        const res = await http.request.getPromise({ pid }).get.expect(200);
+        expect(res.body.attendees[0]).toMatchObject({
+          id: http.request.auth.user.id,
+          attendedAt: expect.toBeDateString(),
+          leavedAt: null,
+        });
+      }
+
+      {
+        await http.request.leavePromise({ pid }).delete.expect(200);
+        const res = await http.request.getPromise({ pid }).get.expect(200);
+        expect(res.body.attendees[0]).toMatchObject({
+          id: http.request.auth.user.id,
+          leavedAt: expect.toBeDateString(),
+        });
+      }
     });
 
     test('should throw an error if not attended', async () => {
-      const asset = await fixture.write.promise.output();
+      const { promise } = await fixture.write.promise.output();
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.leavePromise({ pid }).delete.expect(404);
     });
 
     test('should throw an error if promisedAt is in the past', async () => {
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         partial: {
           promisedAt: new Date(yesterday),
         },
       });
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.attendPromise({ pid }).post.expect(404);
     });
 
     test('should throw an error if already completed', async () => {
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         partial: {
           completedAt: new Date(yesterday),
         },
       });
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.attendPromise({ pid }).post.expect(404);
+    });
+
+    test('should throw an error if the user is host', async () => {
+      const { promise } = await fixture.write.promise.output({
+        host: http.request.auth.user,
+      });
+
+      const pid = hasher.encode(promise.id);
+      await http.request.leavePromise({ pid }).delete.expect(400);
     });
 
     test('should throw an error if promise not found', async () => {
@@ -517,11 +656,11 @@ describe(PromiseController, () => {
     });
 
     test('should throw an error if start location not found', async () => {
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         host: http.request.auth.user,
       });
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.getStartLocation({ pid }).get.expect(404);
     });
 
@@ -531,31 +670,31 @@ describe(PromiseController, () => {
     });
 
     test('should throw an error if not attended', async () => {
-      const asset = await fixture.write.promise.output();
+      const { promise } = await fixture.write.promise.output();
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.getStartLocation({ pid }).get.expect(404);
     });
 
     test('should throw an error if promisedAt is in the past', async () => {
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         partial: {
           promisedAt: new Date(yesterday),
         },
       });
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.getStartLocation({ pid }).get.expect(404);
     });
 
     test('should throw an error if already completed', async () => {
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         partial: {
           completedAt: new Date(yesterday),
         },
       });
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.getStartLocation({ pid }).get.expect(404);
     });
   });
@@ -581,11 +720,11 @@ describe(PromiseController, () => {
     });
 
     test('should create start location if not exists', async () => {
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         host: http.request.auth.user,
       });
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
 
       {
         const res = await http.request
@@ -603,7 +742,7 @@ describe(PromiseController, () => {
     });
 
     test('should update is_latest_destination if start location is created', async () => {
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         host: http.request.auth.user,
         destination: true,
         attendees: 2,
@@ -614,9 +753,9 @@ describe(PromiseController, () => {
         },
       });
 
-      expect(asset.promise.isLatestDestination).toBeTrue();
+      expect(promise.isLatestDestination).toBeTrue();
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
 
       await http.request.getStartLocation({ pid }).get.expect(404);
       await http.request.updateStartLocation({ pid }).put.send(input).expect(200);
@@ -625,7 +764,7 @@ describe(PromiseController, () => {
     });
 
     test('should update is_latest_destination if start location is updated', async () => {
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         host: http.request.auth.user,
         destination: true,
         hostStartLocation: true,
@@ -637,9 +776,9 @@ describe(PromiseController, () => {
         },
       });
 
-      expect(asset.promise.isLatestDestination).toBeTrue();
+      expect(promise.isLatestDestination).toBeTrue();
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
 
       await http.request.getStartLocation({ pid }).get.expect(200);
       await http.request.updateStartLocation({ pid }).put.send(input).expect(200);
@@ -677,7 +816,7 @@ describe(PromiseController, () => {
         fixture.write.user.output(),
       ]);
 
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         destination: true,
         attendees,
         startLocations: attendees.length,
@@ -687,9 +826,9 @@ describe(PromiseController, () => {
         },
       });
 
-      expect(asset.promise.isLatestDestination).toBeTrue();
+      expect(promise.isLatestDestination).toBeTrue();
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
 
       const res = await http.request.getStartLocation({ pid }).get.expect(200);
       await http.request.updateStartLocation({ pid }).put.send(res.body).expect(200);
@@ -704,31 +843,31 @@ describe(PromiseController, () => {
     });
 
     test('should throw an error if not attended', async () => {
-      const asset = await fixture.write.promise.output();
+      const { promise } = await fixture.write.promise.output();
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.updateStartLocation({ pid }).put.send(input).expect(404);
     });
 
     test('should throw an error if promise is unavailable', async () => {
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         partial: {
           promisedAt: new Date(yesterday),
         },
       });
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.updateStartLocation({ pid }).put.send(input).expect(404);
     });
 
     test('should throw an error if already completed', async () => {
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         partial: {
           completedAt: new Date(yesterday),
         },
       });
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.updateStartLocation({ pid }).put.send(input).expect(404);
     });
   });
@@ -747,11 +886,11 @@ describe(PromiseController, () => {
     });
 
     test('should throw an error if start location not found', async () => {
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         host: http.request.auth.user,
       });
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.deleteStartLocation({ pid }).delete.expect(404);
     });
 
@@ -761,31 +900,31 @@ describe(PromiseController, () => {
     });
 
     test('should throw an error if not attended', async () => {
-      const asset = await fixture.write.promise.output();
+      const { promise } = await fixture.write.promise.output();
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.deleteStartLocation({ pid }).delete.expect(404);
     });
 
     test('should throw an error if promisedAt is in the past', async () => {
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         partial: {
           promisedAt: new Date(yesterday),
         },
       });
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.deleteStartLocation({ pid }).delete.expect(404);
     });
 
     test('should throw an error if already completed', async () => {
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         partial: {
           completedAt: new Date(yesterday),
         },
       });
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.deleteStartLocation({ pid }).delete.expect(404);
     });
   });
@@ -802,6 +941,7 @@ describe(PromiseController, () => {
       const res = await http.request.getMiddleLocation({ pid }).get.expect(200);
 
       expect(res.body).toEqual({
+        ref: expect.toBeString(),
         latitude: expect.toBeNumber(),
         longitude: expect.toBeNumber(),
       });
@@ -877,31 +1017,31 @@ describe(PromiseController, () => {
     });
 
     test('should throw an error if not attended', async () => {
-      const asset = await fixture.write.promise.output();
+      const { promise } = await fixture.write.promise.output();
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.getMiddleLocation({ pid }).get.expect(404);
     });
 
     test('should throw an error if promisedAt is in the past', async () => {
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         partial: {
           promisedAt: new Date(yesterday),
         },
       });
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.getMiddleLocation({ pid }).get.expect(404);
     });
 
     test('should throw an error if already completed', async () => {
-      const asset = await fixture.write.promise.output({
+      const { promise } = await fixture.write.promise.output({
         partial: {
           completedAt: new Date(yesterday),
         },
       });
 
-      const pid = hasher.encode(asset.promise.id);
+      const pid = hasher.encode(promise.id);
       await http.request.getMiddleLocation({ pid }).get.expect(404);
     });
   });

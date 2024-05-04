@@ -5,7 +5,7 @@ import { InthashService } from './inthash.service';
 
 @Module({})
 export class IntHashModule {
-  static forRoot(options: IntHashModuleOptions): DynamicModule {
+  static register(options: IntHashModuleOptions): DynamicModule {
     return {
       global: options.isGlobal,
       module: IntHashModule,
@@ -20,7 +20,7 @@ export class IntHashModule {
     };
   }
 
-  static forRootAsync(options: IntHashModuleAsyncOptions): DynamicModule {
+  static registerAsync(options: IntHashModuleAsyncOptions): DynamicModule {
     return {
       global: options.isGlobal,
       module: IntHashModule,

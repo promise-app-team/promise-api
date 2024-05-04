@@ -60,6 +60,10 @@ export const env = () => {
       xor,
     },
 
+    sqids: {
+      key: process.env.SQIDS_KEY,
+    },
+
     is: {
       local: process.env.STAGE === 'local',
       test: process.env.STAGE === 'test',

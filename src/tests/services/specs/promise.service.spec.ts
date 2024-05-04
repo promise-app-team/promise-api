@@ -647,7 +647,7 @@ describe(PromiseService, () => {
       const updatedPromiseInput = {
         ...promise.input,
         title: 'updated title',
-        destinationType: DestinationType.DYNAMIC,
+        destinationType: DestinationType.STATIC,
         themeIds: [],
         destination: null,
         promisedAt: tomorrow,
@@ -671,7 +671,7 @@ describe(PromiseService, () => {
       const updatedPromiseInput = {
         ...promise.input,
         title: 'updated title',
-        destinationType: DestinationType.DYNAMIC,
+        destinationType: DestinationType.STATIC,
         themeIds: updatedThemes.map((theme) => theme.id),
         destination: null,
         promisedAt: tomorrow,
@@ -699,7 +699,7 @@ describe(PromiseService, () => {
       const updatedPromiseInput = {
         ...promise.input,
         title: 'updated title',
-        destinationType: DestinationType.DYNAMIC,
+        destinationType: DestinationType.STATIC,
         themeIds: [],
         destination: updatedDestination,
         promisedAt: tomorrow,
@@ -919,10 +919,12 @@ describe(PromiseService, () => {
       await expect(promiseService.leave(promise.id, attendee1.id)).resolves.toEqual({
         id: promise.id,
       });
-      await expect(promiseService.findOne({ id: promise.id })).resolves.toMatchObject({
-        ...promise,
-        attendees: [{ attendee: host }, { attendee: attendee2 }],
-      });
+      const result = await promiseService.findOne({ id: promise.id });
+      expect(result.attendees).toMatchObject([
+        { attendee: { id: host.id }, leavedAt: null },
+        { attendee: { id: attendee1.id }, leavedAt: expect.any(Date) },
+        { attendee: { id: attendee2.id }, leavedAt: null },
+      ]);
     });
 
     test('should throw an error if the promise does not exist', async () => {

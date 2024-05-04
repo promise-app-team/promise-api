@@ -8,6 +8,7 @@ import { schema } from '@/config/validation';
 import { CacheModule, InMemoryCacheService, RedisCacheService } from '@/customs/cache';
 import { IntHashModule } from '@/customs/inthash';
 import { LoggerModule, LoggerService } from '@/customs/logger';
+import { SqidsModule } from '@/customs/sqids/sqids.module';
 import { TypedConfigModule } from '@/customs/typed-config';
 import { WinstonLoggerService, createWinstonLogger } from '@/customs/winston-logger';
 import { AuthModule } from '@/modules/auth';
@@ -119,15 +120,19 @@ import { PrismaModule } from '@/prisma';
         };
       },
     }),
-    IntHashModule.forRootAsync({
+    IntHashModule.registerAsync({
+      isGlobal: true,
+      inject: [TypedConfigService],
+      useFactory(config: TypedConfigService) {
+        return config.get('inthash');
+      },
+    }),
+    SqidsModule.registerAsync({
       isGlobal: true,
       inject: [TypedConfigService],
       useFactory(config: TypedConfigService) {
         return {
-          bits: config.get('inthash.bits'),
-          prime: config.get('inthash.prime'),
-          inverse: config.get('inthash.inverse'),
-          xor: config.get('inthash.xor'),
+          alphabet: config.get('sqids.key'),
         };
       },
     }),

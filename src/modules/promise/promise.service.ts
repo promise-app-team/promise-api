@@ -32,7 +32,13 @@ const promiseInclude: Prisma.PromiseInclude = {
     },
   },
   attendees: {
-    select: { attendee: true, startLocationId: true },
+    select: {
+      attendee: true,
+      startLocationId: true,
+      isMidpointCalculated: true,
+      attendedAt: true,
+      leavedAt: true,
+    },
   },
   themes: {
     select: { theme: true },
@@ -121,10 +127,14 @@ export class PromiseService {
    *
    * @throws {PromiseServiceError.NotFoundPromise}
    */
-  async update(id: number, hostId: number, input: InputUpdatePromiseDTO): Promise<PromiseResult> {
+  async update(
+    id: number,
+    hostId: number,
+    input: InputUpdatePromiseDTO & { refIds?: number[] }
+  ): Promise<PromiseResult> {
     const promise = await this.prisma.promise.findUnique({
       where: { id },
-      select: { id: true, hostId: true, destinationId: true },
+      select: { id: true, hostId: true, destinationId: true, destinationType: true },
     });
 
     if (!promise) {
@@ -143,49 +153,63 @@ export class PromiseService {
       where: { id: promise.destinationId ?? 0 },
     });
 
-    return this.prisma.promise.update({
-      where: { id, hostId },
-      data: {
-        ...R.pick(input, [
-          'title',
-          'destinationType',
-          'locationShareStartType',
-          'locationShareStartValue',
-          'locationShareEndType',
-          'locationShareEndValue',
-          'promisedAt',
-        ]),
-        isLatestDestination: !!input.destination,
-        themes: {
-          deleteMany: {
-            themeId: {
-              in: R.pipe(
-                themes,
-                R.map((theme) => theme.themeId),
-                R.filter(R.isNot(R.isIncludedIn(input.themeIds)))
+    return this.prisma.$transaction(async (prisma) => {
+      await prisma.promiseUser.updateMany({
+        where: { promiseId: id },
+        data: { isMidpointCalculated: false },
+      });
+
+      if (input.refIds?.length) {
+        await prisma.promiseUser.updateMany({
+          where: { attendeeId: { in: input.refIds }, promiseId: id },
+          data: { isMidpointCalculated: true },
+        });
+      }
+
+      return prisma.promise.update({
+        where: { id, hostId },
+        data: {
+          ...R.pick(input, [
+            'title',
+            'destinationType',
+            'locationShareStartType',
+            'locationShareStartValue',
+            'locationShareEndType',
+            'locationShareEndValue',
+            'promisedAt',
+          ]),
+          isLatestDestination: !!input.destination,
+          themes: {
+            deleteMany: {
+              themeId: {
+                in: R.pipe(
+                  themes,
+                  R.map((theme) => theme.themeId),
+                  R.filter(R.isNot(R.isIncludedIn(input.themeIds)))
+                ),
+              },
+            },
+            createMany: {
+              data: R.pipe(
+                input.themeIds,
+                R.filter(R.isNot(R.isIncludedIn(themes.map((theme) => theme.themeId)))),
+                R.map((themeId) => ({ themeId }))
               ),
             },
           },
-          createMany: {
-            data: R.pipe(
-              input.themeIds,
-              R.filter(R.isNot(R.isIncludedIn(themes.map((theme) => theme.themeId)))),
-              R.map((themeId) => ({ themeId }))
-            ),
-          },
-        },
-        destination: input.destination
-          ? {
-              upsert: {
-                create: input.destination,
-                update: input.destination,
+          destination: input.destination
+            ? {
+                upsert: {
+                  create: input.destination,
+                  update: input.destination,
+                },
+              }
+            : {
+                delete: !!destination,
               },
-            }
-          : {
-              delete: !!destination,
-            },
-      },
-      include: promiseInclude,
+        },
+        include: promiseInclude,
+      });
     });
   }
 
@@ -270,7 +294,7 @@ export class PromiseService {
         throw PromiseServiceError.NotFoundStartLocation;
       }
 
-      await this.prisma.location.delete({
+      await this.prisma.location.deleteMany({
         where: { id: promiseUser.startLocationId },
       });
 
@@ -334,7 +358,7 @@ export class PromiseService {
   async leave(id: number, attendeeId: number): Promise<{ id: number }> {
     try {
       const promise = await this.prisma.promise.findUniqueOrThrow({
-        where: makeUniquePromiseFilter({ id, status: PromiseStatus.AVAILABLE }),
+        where: makeUniquePromiseFilter({ id, userId: attendeeId, status: PromiseStatus.AVAILABLE }),
         select: { id: true, hostId: true },
       });
 
@@ -342,8 +366,9 @@ export class PromiseService {
         throw PromiseServiceError.HostCannotLeave;
       }
 
-      await this.prisma.promiseUser.delete({
-        where: { identifier: { attendeeId, promiseId: promise.id } },
+      await this.prisma.promiseUser.updateMany({
+        data: { leavedAt: new Date() },
+        where: { attendeeId, promiseId: promise.id },
       });
 
       return { id: promise.id };
