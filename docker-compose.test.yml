@@ -26,6 +26,7 @@ services:
       JWT_VERIFY_KEY: ${JWT_VERIFY_KEY}
 
       INTHASH_KEY: ${INTHASH_KEY}
+      SQIDS_KEY: ${SQIDS_KEY}
 
       DB_URL: mysql://${DB_USER}:${DB_PASSWORD}@mysql:${DB_PORT}/${DB_NAME}_${STAGE}
 
