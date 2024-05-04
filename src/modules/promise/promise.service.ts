@@ -130,12 +130,11 @@ export class PromiseService {
   async update(
     id: number,
     hostId: number,
-    refIds: number[],
-    input: Omit<InputUpdatePromiseDTO, 'middleLocationRef'>
+    input: InputUpdatePromiseDTO & { refIds?: number[] }
   ): Promise<PromiseResult> {
     const promise = await this.prisma.promise.findUnique({
       where: { id },
-      select: { id: true, hostId: true, destinationId: true },
+      select: { id: true, hostId: true, destinationId: true, destinationType: true },
     });
 
     if (!promise) {
@@ -154,62 +153,63 @@ export class PromiseService {
       where: { id: promise.destinationId ?? 0 },
     });
 
-    if (refIds.length) {
-      await Promise.all([
-        this.prisma.promiseUser.updateMany({
-          where: { promiseId: id },
-          data: { isMidpointCalculated: false },
-        }),
-        this.prisma.promiseUser.updateMany({
-          where: { attendeeId: { in: refIds }, promiseId: id },
-          data: { isMidpointCalculated: true },
-        }),
-      ]);
-    }
+    return this.prisma.$transaction(async (prisma) => {
+      await prisma.promiseUser.updateMany({
+        where: { promiseId: id },
+        data: { isMidpointCalculated: false },
+      });
 
-    return this.prisma.promise.update({
-      where: { id, hostId },
-      data: {
-        ...R.pick(input, [
-          'title',
-          'destinationType',
-          'locationShareStartType',
-          'locationShareStartValue',
-          'locationShareEndType',
-          'locationShareEndValue',
-          'promisedAt',
-        ]),
-        isLatestDestination: !!input.destination,
-        themes: {
-          deleteMany: {
-            themeId: {
-              in: R.pipe(
-                themes,
-                R.map((theme) => theme.themeId),
-                R.filter(R.isNot(R.isIncludedIn(input.themeIds)))
+      if (input.refIds?.length) {
+        await prisma.promiseUser.updateMany({
+          where: { attendeeId: { in: input.refIds }, promiseId: id },
+          data: { isMidpointCalculated: true },
+        });
+      }
+
+      return prisma.promise.update({
+        where: { id, hostId },
+        data: {
+          ...R.pick(input, [
+            'title',
+            'destinationType',
+            'locationShareStartType',
+            'locationShareStartValue',
+            'locationShareEndType',
+            'locationShareEndValue',
+            'promisedAt',
+          ]),
+          isLatestDestination: !!input.destination,
+          themes: {
+            deleteMany: {
+              themeId: {
+                in: R.pipe(
+                  themes,
+                  R.map((theme) => theme.themeId),
+                  R.filter(R.isNot(R.isIncludedIn(input.themeIds)))
+                ),
+              },
+            },
+            createMany: {
+              data: R.pipe(
+                input.themeIds,
+                R.filter(R.isNot(R.isIncludedIn(themes.map((theme) => theme.themeId)))),
+                R.map((themeId) => ({ themeId }))
               ),
             },
           },
-          createMany: {
-            data: R.pipe(
-              input.themeIds,
-              R.filter(R.isNot(R.isIncludedIn(themes.map((theme) => theme.themeId)))),
-              R.map((themeId) => ({ themeId }))
-            ),
-          },
-        },
-        destination: input.destination
-          ? {
-              upsert: {
-                create: input.destination,
-                update: input.destination,
+          destination: input.destination
+            ? {
+                upsert: {
+                  create: input.destination,
+                  update: input.destination,
+                },
+              }
+            : {
+                delete: !!destination,
               },
-            }
-          : {
-              delete: !!destination,
-            },
-      },
-      include: promiseInclude,
+        },
+        include: promiseInclude,
+      });
     });
   }
 

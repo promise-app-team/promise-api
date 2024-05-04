@@ -107,7 +107,7 @@ export class PromiseController {
         : [];
 
     return this.promiseService
-      .update(id, user.id, refIds, input)
+      .update(id, user.id, { ...input, refIds })
       .then((promise) => PublicPromiseDTO.from(promise))
       .catch((error) => {
         switch (error) {
