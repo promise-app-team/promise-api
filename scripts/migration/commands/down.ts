@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import * as R from 'remeda';
 
 import { logger } from '../../utils';
+import { envs } from '../envs';
 import { checkHealth, command, formatMigrationLink, getMigrationStatus, requestContinue } from '../utils';
 
 import { Command } from './command';
@@ -40,8 +41,11 @@ export class DownCommand extends Command('down') {
       const result = await command.prisma(`db execute --file ${filepath.down}`);
       if (result.includes('Error')) return logger.error(result);
       await command.mysql(`DELETE FROM _prisma_migrations WHERE migration_name = "${dirname}"`);
-      const schema = migrations.slice(-i - 2)[0].filepath.schema;
-      await command.prisma(`generate --schema ${schema}`);
+
+      if (envs.stage === 'local') {
+        const schema = migrations.slice(-i - 2)[0].filepath.schema;
+        await command.prisma(`generate --schema ${schema}`);
+      }
     }
 
     logger.success('Migrations reverted successfully.');
