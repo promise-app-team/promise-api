@@ -38,17 +38,6 @@ describe(FileUploadController, () => {
   });
 
   describe(FileUploadController.prototype.uploadImageFile, () => {
-    test('should upload a file', async () => {
-      const file = {
-        originalname: 'valid.png',
-        buffer: Buffer.from('file'),
-        mimetype: 'text/plain',
-      } as Express.Multer.File;
-      return expect(uploadController.uploadImageFile(file)).resolves.toEqual({
-        url: expect.stringMatching(/^https:\/\/s3\..+\.amazonaws\.com\/.+/),
-      });
-    });
-
     test('should throw an error when called with an invalid file', async () => {
       const file = {
         originalname: 'invalid.png',

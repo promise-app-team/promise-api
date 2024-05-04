@@ -35,10 +35,7 @@ describe(ThemeController, () => {
       const themes = await fixture.write.themes.output(3);
       const res = await http.request.getThemes().get.expect(200);
 
-      expect(res.body).toBeArrayOfSize(3);
-      expect(res.body).toEqual(
-        expect.toIncludeSameMembers(themes.map((theme) => ({ id: theme.id, name: theme.name })))
-      );
+      expect(res.body).toIncludeSameMembers(themes.map((theme) => ({ id: theme.id, name: theme.name })));
     });
   });
 });

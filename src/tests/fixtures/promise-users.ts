@@ -7,7 +7,8 @@ export function createPromiseUserBuilder(initialId: number) {
     attendeeId: 0,
     promiseId: 0,
     startLocationId: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    isMidpointCalculated: false,
+    attendedAt: new Date(),
+    leavedAt: null,
   }));
 }

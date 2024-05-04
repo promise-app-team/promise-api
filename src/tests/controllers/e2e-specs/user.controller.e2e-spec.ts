@@ -70,6 +70,18 @@ describe(UserController, () => {
       });
     });
 
+    test('should set a default profileUrl', async () => {
+      const input = { username: 'new username' };
+      const res = await http.request.updateMyProfile().put.send(input).expect(200);
+
+      expect(res.body).toEqual({
+        ...pick(http.request.auth.user, ['id', 'provider']),
+        ...input,
+        profileUrl: expect.any(String),
+        createdAt: expect.any(String),
+      });
+    });
+
     test('should return 401 if user is not found', async () => {
       const accessToken = jwt.generateAccessToken({ sub: 0 });
       const res = await http.request.updateMyProfile().put.auth(accessToken, { type: 'bearer' }).send({}).expect(401);
