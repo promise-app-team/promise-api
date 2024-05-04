@@ -14,6 +14,7 @@ import {
   Length,
   MaxLength,
   Min,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import { addMinutes, addWeeks, formatISO } from 'date-fns';
@@ -30,6 +31,7 @@ export class HostDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl
 
 export class AttendeeDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl'], (obj) => ({
   hasStartLocation: Boolean(obj.hasStartLocation),
+  isMidpointCalculated: Boolean(obj.isMidpointCalculated),
   attendedAt: obj.attendedAt,
   leavedAt: obj.leavedAt,
 })) {
@@ -62,6 +64,7 @@ export class PromiseDTO extends ApplyDTO(
       ...AttendeeDTO.from({
         ...promiseUser.attendee,
         hasStartLocation: typeof promiseUser.startLocationId === 'number',
+        isMidpointCalculated: promiseUser.isMidpointCalculated,
         attendedAt: promiseUser.attendedAt,
         leavedAt: promiseUser.leavedAt,
       }),
@@ -149,7 +152,11 @@ export class InputCreatePromiseDTO {
   locationShareEndValue!: number;
 }
 
-export class InputUpdatePromiseDTO extends InputCreatePromiseDTO {}
+export class InputUpdatePromiseDTO extends InputCreatePromiseDTO {
+  @ValidateIf((obj) => obj.destinationType === DestinationType.DYNAMIC && !!obj.destination)
+  @IsNotEmpty({ message: '중간 위치 Ref ID를 입력해주세요.' })
+  middleLocationRef?: string | null;
+}
 
 export class IdentifiableDTO {
   @ApiProperty({ example: 1 })

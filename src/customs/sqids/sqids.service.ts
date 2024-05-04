@@ -7,8 +7,8 @@ import { SqidsOptions } from './sqids.interface';
 export class SqidsService {
   private readonly sqids: Sqids;
 
-  constructor(options?: SqidsOptions) {
-    this.sqids = new Sqids(options);
+  constructor(private readonly options?: SqidsOptions) {
+    this.sqids = new Sqids(this.options);
   }
 
   encode(ids: number[]): string;

@@ -35,6 +35,7 @@ const promiseInclude: Prisma.PromiseInclude = {
     select: {
       attendee: true,
       startLocationId: true,
+      isMidpointCalculated: true,
       attendedAt: true,
       leavedAt: true,
     },
@@ -126,7 +127,12 @@ export class PromiseService {
    *
    * @throws {PromiseServiceError.NotFoundPromise}
    */
-  async update(id: number, hostId: number, input: InputUpdatePromiseDTO): Promise<PromiseResult> {
+  async update(
+    id: number,
+    hostId: number,
+    refIds: number[],
+    input: Omit<InputUpdatePromiseDTO, 'middleLocationRef'>
+  ): Promise<PromiseResult> {
     const promise = await this.prisma.promise.findUnique({
       where: { id },
       select: { id: true, hostId: true, destinationId: true },
@@ -147,6 +153,19 @@ export class PromiseService {
     const destination = await this.prisma.location.findUnique({
       where: { id: promise.destinationId ?? 0 },
     });
+
+    if (refIds.length) {
+      await Promise.all([
+        this.prisma.promiseUser.updateMany({
+          where: { promiseId: id },
+          data: { isMidpointCalculated: false },
+        }),
+        this.prisma.promiseUser.updateMany({
+          where: { attendeeId: { in: refIds }, promiseId: id },
+          data: { isMidpointCalculated: true },
+        }),
+      ]);
+    }
 
     return this.prisma.promise.update({
       where: { id, hostId },

@@ -23,8 +23,9 @@ import { ToArrayOfPipe } from '@/common/pipes';
 import { TypedConfigService } from '@/config/env';
 import { CacheService } from '@/customs/cache';
 import { Delete, Get, Post, Put } from '@/customs/nest';
+import { SqidsService } from '@/customs/sqids/sqids.service';
 import { AuthUser } from '@/modules/auth';
-import { UserModel } from '@/prisma';
+import { DestinationType, UserModel } from '@/prisma';
 import { Point, findGeometricMedian } from '@/utils';
 
 @ApiTags('Promise')
@@ -34,7 +35,8 @@ export class PromiseController {
   constructor(
     private readonly promiseService: PromiseService,
     private readonly config: TypedConfigService,
-    private readonly cache: CacheService
+    private readonly cache: CacheService,
+    private readonly sqids: SqidsService
   ) {}
 
   @Get('', {
@@ -99,8 +101,13 @@ export class PromiseController {
     @Param('pid', DecodePromisePID) id: number,
     @Body() input: InputUpdatePromiseDTO
   ): Promise<PublicPromiseDTO> {
+    const refIds =
+      input.destinationType === DestinationType.DYNAMIC && input.middleLocationRef
+        ? this.sqids.decode(input.middleLocationRef).slice(0, -1)
+        : [];
+
     return this.promiseService
-      .update(id, user.id, input)
+      .update(id, user.id, refIds, input)
       .then((promise) => PublicPromiseDTO.from(promise))
       .catch((error) => {
         switch (error) {
@@ -262,7 +269,14 @@ export class PromiseController {
       throw HttpException.new('등록된 출발지가 2개 이상 필요합니다.', 'BAD_REQUEST');
     }
 
-    return findGeometricMedian(startLocations);
+    const median = findGeometricMedian(startLocations);
+    const refs = R.map(promiseUsers, R.prop('attendeeId')).concat(Date.now());
+
+    return {
+      ref: this.sqids.encode(refs),
+      latitude: median.latitude,
+      longitude: median.longitude,
+    };
   }
 
   @Put(':pid(\\d+)/delegate', {

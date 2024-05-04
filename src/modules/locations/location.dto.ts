@@ -2,6 +2,7 @@ import { ApplyDTO } from '@/common/mixins';
 import { LocationEntity } from '@/prisma';
 
 export class PointDTO {
+  ref: string;
   latitude: number;
   longitude: number;
 }
