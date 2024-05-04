@@ -647,7 +647,7 @@ describe(PromiseService, () => {
       const updatedPromiseInput = {
         ...promise.input,
         title: 'updated title',
-        destinationType: DestinationType.DYNAMIC,
+        destinationType: DestinationType.STATIC,
         themeIds: [],
         destination: null,
         promisedAt: tomorrow,
@@ -671,7 +671,7 @@ describe(PromiseService, () => {
       const updatedPromiseInput = {
         ...promise.input,
         title: 'updated title',
-        destinationType: DestinationType.DYNAMIC,
+        destinationType: DestinationType.STATIC,
         themeIds: updatedThemes.map((theme) => theme.id),
         destination: null,
         promisedAt: tomorrow,
@@ -699,7 +699,7 @@ describe(PromiseService, () => {
       const updatedPromiseInput = {
         ...promise.input,
         title: 'updated title',
-        destinationType: DestinationType.DYNAMIC,
+        destinationType: DestinationType.STATIC,
         themeIds: [],
         destination: updatedDestination,
         promisedAt: tomorrow,

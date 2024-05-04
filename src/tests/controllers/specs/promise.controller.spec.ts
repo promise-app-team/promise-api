@@ -5,6 +5,7 @@ import { Test } from '@nestjs/testing';
 import { TypedConfigService } from '@/config/env';
 import { CacheModule, InMemoryCacheService } from '@/customs/cache';
 import { InthashService } from '@/customs/inthash';
+import { SqidsService } from '@/customs/sqids/sqids.service';
 import { JwtAuthTokenService } from '@/modules/auth';
 import { PromiseController, PromiseService, EncodePromiseID } from '@/modules/promise';
 import { UserService } from '@/modules/user';
@@ -29,6 +30,7 @@ describe(PromiseController, () => {
         EncodePromiseID,
         TypedConfigService,
         ConfigService,
+        { provide: SqidsService, useValue: new SqidsService() },
         { provide: PrismaService, useValue: prisma },
         { provide: InthashService, useValue: {} },
         { provide: JwtAuthTokenService, useValue: {} },

@@ -94,6 +94,7 @@ describe(PromiseController, () => {
           R.map.indexed((attendee, i) => ({
             ...R.pick(attendee, ['id', 'username', 'profileUrl']),
             hasStartLocation: i === 1,
+            isMidpointCalculated: expect.toBeBoolean(),
             attendedAt: expect.toBeDateString(),
             leavedAt: null,
           }))
@@ -206,7 +207,7 @@ describe(PromiseController, () => {
   describe(http.request.updatePromise, () => {
     const input = {
       title: 'updated title',
-      destinationType: DestinationType.DYNAMIC,
+      destinationType: DestinationType.STATIC,
       locationShareStartType: LocationShareType.DISTANCE,
       locationShareStartValue: 1000,
       locationShareEndType: LocationShareType.TIME,
@@ -247,7 +248,7 @@ describe(PromiseController, () => {
       expect(res.body).toEqual(toPromiseDTO({ ...asset, themes }));
     });
 
-    test('should update is_latest_destination if destination is updated', async () => {
+    test('should update isLatestDestination if destination is updated', async () => {
       const { promise } = await fixture.write.promise.output({
         host: http.request.auth.user,
         attendees: 3,
@@ -277,6 +278,123 @@ describe(PromiseController, () => {
 
         expect(res.body.isLatestDestination).toBeFalse();
       }
+    });
+
+    test(`should update isMidpointCalculated to true by attendee if destinationTpe is ${DestinationType.DYNAMIC}`, async () => {
+      const { host, promise, attendees } = await fixture.write.promise.output({
+        host: http.request.auth.user,
+        attendees: 3,
+        startLocations: 3,
+        partial: {
+          destinationType: DestinationType.DYNAMIC,
+        },
+      });
+
+      const pid = hasher.encode(promise.id);
+
+      const res = await http.request
+        .getMiddleLocation({ pid })
+        .get.query({
+          attendeeIds: [attendees[0].id, attendees[2].id],
+        })
+        .expect(200);
+
+      const ref = res.body.ref;
+
+      {
+        const res = await http.request
+          .updatePromise({ pid })
+          .put.send({
+            ...input,
+            destinationType: DestinationType.DYNAMIC,
+            middleLocationRef: ref,
+          })
+          .expect(200);
+
+        expect(res.body.attendees).toIncludeSameMembers(
+          (
+            [
+              [host, false],
+              [attendees[0], true],
+              [attendees[1], false],
+              [attendees[2], true],
+            ] as const
+          ).map(([attendee, isMidpointCalculated]) => ({
+            ...R.pick(attendee, ['id', 'username', 'profileUrl']),
+            isMidpointCalculated,
+            attendedAt: expect.toBeDateString(),
+            hasStartLocation: expect.toBeBoolean(),
+            leavedAt: null,
+          }))
+        );
+      }
+    });
+
+    test(`should reset isMidpointCalculated to false by attendee if destinationType is changed to ${DestinationType.STATIC}`, async () => {
+      const { host, promise, attendees } = await fixture.write.promise.output({
+        host: http.request.auth.user,
+        attendees: 3,
+        startLocations: 3,
+        partial: {
+          destinationType: DestinationType.DYNAMIC,
+        },
+      });
+
+      const pid = hasher.encode(promise.id);
+
+      const res = await http.request
+        .getMiddleLocation({ pid })
+        .get.query({
+          attendeeIds: [attendees[0].id, attendees[2].id],
+        })
+        .expect(200);
+
+      const ref = res.body.ref;
+
+      await http.request
+        .updatePromise({ pid })
+        .put.send({ ...input, destinationType: DestinationType.DYNAMIC, middleLocationRef: ref })
+        .expect(200);
+
+      {
+        const res = await http.request
+          .updatePromise({ pid })
+          .put.send({ ...input, destinationType: DestinationType.STATIC })
+          .expect(200);
+
+        expect(res.body.attendees).toIncludeSameMembers(
+          [host, ...attendees].map((attendee) => ({
+            ...R.pick(attendee, ['id', 'username', 'profileUrl']),
+            isMidpointCalculated: false,
+            attendedAt: expect.toBeDateString(),
+            hasStartLocation: expect.toBeBoolean(),
+            leavedAt: null,
+          }))
+        );
+      }
+    });
+
+    test(`should throw an error if middleLocationRef is empty when destinationType is ${DestinationType.DYNAMIC}`, async () => {
+      const { promise } = await fixture.write.promise.output({
+        host: http.request.auth.user,
+        attendees: 3,
+        startLocations: 3,
+        partial: {
+          destinationType: DestinationType.DYNAMIC,
+        },
+      });
+
+      const pid = hasher.encode(promise.id);
+
+      await http.request
+        .updatePromise({ pid })
+        .put.send({ ...input, destinationType: DestinationType.STATIC })
+        .expect(200);
+
+      await http.request
+        .updatePromise({ pid })
+        .put.send({ ...input, destinationType: DestinationType.DYNAMIC })
+        .expect(400);
     });
 
     test('should throw an error if promise not found', async () => {
@@ -823,6 +941,7 @@ describe(PromiseController, () => {
       const res = await http.request.getMiddleLocation({ pid }).get.expect(200);
 
       expect(res.body).toEqual({
+        ref: expect.toBeString(),
         latitude: expect.toBeNumber(),
         longitude: expect.toBeNumber(),
       });
