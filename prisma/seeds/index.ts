@@ -1,12 +1,12 @@
 import { parseArgs } from 'node:util';
 
-import { Provider, DestinationType, LocationShareType, PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import chalk from 'chalk';
-import { addHours, subHours } from 'date-fns';
-import { sample, times } from 'remeda';
 
 import { logger } from '../../scripts/utils';
-import { random } from '../../src/utils/random';
+
+import { clean } from './helpers/clean';
+import { seed } from './helpers/seed';
 
 const environment = process.env.NODE_ENV || 'local';
 
@@ -35,7 +35,7 @@ async function main() {
     await clean(prisma);
 
     if (['local', 'development'].includes(environment)) {
-      await mock(prisma);
+      await seed(prisma);
     }
   });
 }
@@ -44,118 +44,3 @@ main().catch((e) => {
   console.error(e);
   process.exit(1);
 });
-
-///////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////// Helpers ///////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////
-
-async function clean(prisma: PrismaClient) {
-  await Promise.all([
-    prisma.promiseTheme.deleteMany(),
-    prisma.promiseUser.deleteMany(),
-    prisma.location.deleteMany(),
-    prisma.promise.deleteMany(),
-    // prisma.theme.deleteMany(),
-    prisma.user.deleteMany(),
-  ]);
-
-  await Promise.all([
-    prisma.$queryRaw`ALTER TABLE pm_locations AUTO_INCREMENT = 1`,
-    prisma.$queryRaw`ALTER TABLE pm_promises AUTO_INCREMENT = 1`,
-    // prisma.$queryRaw`ALTER TABLE pm_themes AUTO_INCREMENT = 1`,
-    prisma.$queryRaw`ALTER TABLE pm_users AUTO_INCREMENT = 1`,
-  ]);
-}
-
-async function mock(prisma: PrismaClient) {
-  const MAX_USERS = 50;
-  const MAX_PROMISES = 100;
-
-  const constant = {
-    providers: Object.values(Provider),
-    destinationTypes: Object.values(DestinationType),
-    locationShareTypes: Object.values(LocationShareType),
-  };
-
-  await prisma.user.createMany({
-    data: times(MAX_USERS, (num) => ({
-      username: `user${num + 1}`,
-      profileUrl: `${random(1, 9)}`,
-      provider: num === 0 ? Provider.KAKAO : random(constant.providers),
-      providerId: `${num + 1}`,
-    })),
-  });
-
-  const users = await prisma.user.findMany();
-  const themes = await prisma.theme.findMany();
-
-  const randomAttendeeMap = times(MAX_PROMISES, () => sample(users, random(0, 5)));
-  const randomDestinationTypeMap = times(MAX_PROMISES, () => random(constant.destinationTypes));
-  const randomStartLocationsMap = await Promise.all(
-    randomAttendeeMap.map((attendees) =>
-      Promise.all(
-        attendees.map(async () => {
-          if (random(constant.destinationTypes) === DestinationType.STATIC) return null;
-
-          return prisma.location
-            .create({
-              data: {
-                city: `Start Location City`,
-                district: `Start Location District`,
-                address: `Start Location Address`,
-                latitude: 37.5665 + Math.random() * 0.1,
-                longitude: 126.978 + Math.random() * 0.1,
-              },
-            })
-            .then(({ id }) => id);
-        })
-      )
-    )
-  );
-  const randomDestinationMap = await Promise.all(
-    randomDestinationTypeMap.map((destinationType) => {
-      if (destinationType === DestinationType.DYNAMIC) return null;
-
-      return prisma.location.create({
-        data: {
-          city: `Destination City`,
-          district: `Destination District`,
-          address: `Destination Address`,
-          latitude: 37.5665 + Math.random() * 0.1,
-          longitude: 126.978 + Math.random() * 0.1,
-        },
-      });
-    })
-  );
-
-  await Promise.all(
-    times(MAX_PROMISES, (num) => {
-      return prisma.promise.create({
-        data: {
-          title: `promise ${num}`,
-          hostId: random(users).id,
-          themes: {
-            createMany: {
-              data: sample(themes, random(1, 5)).map((theme) => ({ themeId: theme.id })),
-            },
-          },
-          attendees: {
-            createMany: {
-              data: randomAttendeeMap[num].map((user, index) => ({
-                attendeeId: user.id,
-                startLocationId: randomStartLocationsMap[num][index],
-              })),
-            },
-          },
-          destinationType: randomDestinationTypeMap[num],
-          destinationId: randomDestinationMap[num]?.id,
-          locationShareStartType: random(constant.locationShareTypes),
-          locationShareStartValue: Math.floor(Math.random() * 100),
-          locationShareEndType: random(constant.locationShareTypes),
-          locationShareEndValue: Math.floor(Math.random() * 100),
-          promisedAt: random(subHours(new Date(), 24 * 30), addHours(new Date(), 24 * 30)),
-        },
-      });
-    })
-  );
-}
