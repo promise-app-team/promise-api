@@ -2,7 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as R from 'remeda';
 
-import { InputCreatePromiseDTO, InputLocationDTO, InputUpdatePromiseDTO } from './promise.dto';
+import { InputLocationDTO } from '../locations';
+
+import { InputCreatePromiseDTO, InputUpdatePromiseDTO } from './promise.dto';
 import { PromiseStatus, PromiseUserRole } from './promise.enum';
 import { isEqualLocation, makePromiseFilter, makeUniquePromiseFilter } from './promise.utils';
 
@@ -32,13 +34,7 @@ const promiseInclude: Prisma.PromiseInclude = {
     },
   },
   attendees: {
-    select: {
-      attendee: true,
-      startLocationId: true,
-      isMidpointCalculated: true,
-      attendedAt: true,
-      leavedAt: true,
-    },
+    include: { attendee: true },
   },
   themes: {
     select: { theme: true },

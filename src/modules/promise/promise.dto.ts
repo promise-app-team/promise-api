@@ -1,17 +1,13 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Prisma } from '@prisma/client';
+import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
   IsEnum,
   IsInt,
   IsISO8601,
-  IsLatitude,
-  IsLongitude,
   IsNotEmpty,
   IsOptional,
   IsString,
-  Length,
   MaxLength,
   Min,
   ValidateIf,
@@ -20,7 +16,7 @@ import {
 import { addMinutes, addWeeks, formatISO } from 'date-fns';
 import * as R from 'remeda';
 
-import { LocationDTO } from '../locations';
+import { InputLocationDTO, LocationDTO } from '../locations';
 import { ThemeDTO } from '../themes';
 
 import { IsAfter } from '@/common/decorators';
@@ -78,32 +74,6 @@ export class PromiseDTO extends ApplyDTO(
 }
 
 export class PublicPromiseDTO extends PromiseDTO {}
-
-export class InputLocationDTO {
-  @IsString({ message: '시/도 이름을 입력해주세요.' })
-  @Length(2, 50, { message: '시/도 이름을 2자 이상 50자 이하로 입력해주세요.' })
-  @ApiProperty({ example: '서울' })
-  city!: string;
-
-  @IsString({ message: '구/군 이름을 입력해주세요.' })
-  @Length(2, 50, { message: '구/군 이름을 2자 이상 50자 이하로 입력해주세요.' })
-  @ApiProperty({ example: '강남구' })
-  district!: string;
-
-  @IsOptional()
-  @IsString({ message: '상세 주소를 입력해주세요.' })
-  @MaxLength(100, { message: '상세 주소는 최대 100자까지 입력 가능합니다.' })
-  @ApiPropertyOptional({ example: '강남대로 123' })
-  address!: string | null;
-
-  @IsLatitude({ message: '위도 값을 입력해주세요.' })
-  @ApiProperty({ type: Number, example: 37.123456 })
-  latitude!: number | string | Prisma.Decimal;
-
-  @IsLongitude({ message: '경도 값을 입력해주세요.' })
-  @ApiProperty({ type: Number, example: 127.123456 })
-  longitude!: number | string | Prisma.Decimal;
-}
 
 export class InputCreatePromiseDTO {
   @IsString({ message: '약속 제목을 입력해주세요.' })

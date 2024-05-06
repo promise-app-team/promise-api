@@ -1,7 +1,8 @@
 import { Prisma } from '@prisma/client';
 import * as R from 'remeda';
 
-import { InputLocationDTO } from './promise.dto';
+import { InputLocationDTO } from '../locations';
+
 import { PromiseStatus, PromiseUserRole } from './promise.enum';
 
 import { createQueryBuilder } from '@/prisma/utils';
@@ -76,7 +77,8 @@ export function isEqualLocation<Location extends InputLocationDTO>(
   return (
     l1.city === l2.city &&
     l1.district === l2.district &&
-    l1.address === l2.address &&
+    l1.address1 === l2.address1 &&
+    l1.address2 === l2.address2 &&
     l1.latitude === l2.latitude &&
     l1.longitude === l2.longitude
   );
