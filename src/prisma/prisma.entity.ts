@@ -193,7 +193,8 @@ export class LocationEntity implements LocationPayload {
   id!: number;
   city: string;
   district: string;
-  address: string | null;
+  address1: string;
+  address2: string | null;
   latitude: Prisma.Decimal;
   longitude: Prisma.Decimal;
 
@@ -213,7 +214,8 @@ export class LocationModel extends PickType(LocationEntity, [
   'id',
   'city',
   'district',
-  'address',
+  'address1',
+  'address2',
   'latitude',
   'longitude',
   'createdAt',

@@ -2,12 +2,11 @@ import { Body, Param, Query, Controller } from '@nestjs/common';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import * as R from 'remeda';
 
-import { LocationDTO, PointDTO } from '../locations';
+import { InputLocationDTO, LocationDTO, PointDTO } from '../locations';
 
 import {
   IdentifiableDTO,
   InputCreatePromiseDTO,
-  InputLocationDTO,
   InputUpdatePromiseDTO,
   PromiseDTO,
   PromiseIdentifiableDTO,

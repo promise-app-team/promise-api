@@ -9,7 +9,8 @@ import { AppModule } from '@/app';
 import { InthashService } from '@/customs/inthash';
 import { configure } from '@/main';
 import { JwtAuthTokenService } from '@/modules/auth';
-import { PromiseController, InputCreatePromiseDTO, InputLocationDTO, InputUpdatePromiseDTO } from '@/modules/promise';
+import { InputLocationDTO } from '@/modules/locations';
+import { PromiseController, InputCreatePromiseDTO, InputUpdatePromiseDTO } from '@/modules/promise';
 import { DestinationType, LocationShareType } from '@/prisma';
 import { createHttpRequest } from '@/tests/controllers/utils/http-request';
 import { createTestFixture } from '@/tests/fixtures';
@@ -82,7 +83,7 @@ describe(PromiseController, () => {
       themes: expect.toIncludeSameMembers(themes),
       destination: destination
         ? {
-            ...R.pick(destination, ['id', 'city', 'district', 'address']),
+            ...R.pick(destination, ['id', 'city', 'district', 'address1', 'address2']),
             latitude: expect.toBeDecimalLike(destination.latitude),
             longitude: expect.toBeDecimalLike(destination.longitude),
           }
@@ -213,9 +214,10 @@ describe(PromiseController, () => {
       locationShareEndType: LocationShareType.TIME,
       locationShareEndValue: 60,
       destination: {
-        city: 'updated city',
-        district: 'updated district',
-        address: 'updated address',
+        city: R.randomString(5),
+        district: R.randomString(5),
+        address1: R.randomString(5),
+        address2: R.randomString(5),
         latitude: 37.5665,
         longitude: 127.0365,
       },
@@ -703,7 +705,8 @@ describe(PromiseController, () => {
     const input = {
       city: '서울',
       district: '강남구',
-      address: '테헤란로 427',
+      address1: '테헤란로 427',
+      address2: '11층',
       latitude: 37.5665,
       longitude: 127.0365,
     } satisfies InputLocationDTO;

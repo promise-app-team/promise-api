@@ -3,9 +3,9 @@ import { Promise as PromiseModel, User as UserModel } from '@prisma/client';
 import { formatISO } from 'date-fns';
 import * as R from 'remeda';
 
+import { InputLocationDTO } from '@/modules/locations';
 import {
   InputCreatePromiseDTO,
-  InputLocationDTO,
   InputUpdatePromiseDTO,
   PromiseStatus,
   PromiseUserRole,
@@ -779,7 +779,7 @@ describe(PromiseService, () => {
       const startLocation = fixture.input.location();
       const result = await promiseService.updateStartLocation(promise.id, host.id, startLocation);
       expect(result).toMatchObject({
-        ...R.pick(startLocation, ['city', 'district', 'address']),
+        ...R.pick(startLocation, ['city', 'district', 'address1', 'address2']),
         latitude: expect.toBeDecimalLike(startLocation.latitude),
         longitude: expect.toBeDecimalLike(startLocation.longitude),
       });
@@ -795,7 +795,7 @@ describe(PromiseService, () => {
       const startLocation = fixture.input.location();
       const result = await promiseService.updateStartLocation(promise.id, attendee.id, startLocation);
       expect(result).toMatchObject({
-        ...R.pick(startLocation, ['city', 'district', 'address']),
+        ...R.pick(startLocation, ['city', 'district', 'address1', 'address2']),
         latitude: expect.toBeDecimalLike(startLocation.latitude),
         longitude: expect.toBeDecimalLike(startLocation.longitude),
       });
@@ -805,7 +805,7 @@ describe(PromiseService, () => {
       const { host, promise } = await fixture.write.promise.output();
       const startLocation = fixture.input.location();
       await expect(promiseService.updateStartLocation(promise.id, host.id, startLocation)).resolves.toMatchObject({
-        ...R.pick(startLocation, ['city', 'district', 'address']),
+        ...R.pick(startLocation, ['city', 'district', 'address1', 'address2']),
         latitude: expect.toBeDecimalLike(startLocation.latitude),
         longitude: expect.toBeDecimalLike(startLocation.longitude),
       });
@@ -818,7 +818,7 @@ describe(PromiseService, () => {
       });
       const input = fixture.input.location();
       await expect(promiseService.updateStartLocation(promise.id, attendee.id, input)).resolves.toMatchObject({
-        ...R.pick(input, ['city', 'district', 'address']),
+        ...R.pick(input, ['city', 'district', 'address1', 'address2']),
         latitude: expect.toBeDecimalLike(input.latitude),
         longitude: expect.toBeDecimalLike(input.longitude),
       });

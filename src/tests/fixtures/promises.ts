@@ -1,4 +1,5 @@
 import { addHours } from 'date-fns';
+import { randomString } from 'remeda';
 
 import { createModelBuilder } from './builder';
 
@@ -7,7 +8,7 @@ import { DestinationType, LocationShareType, PromiseModel } from '@/prisma';
 export function createPromiseBuilder(initialId: number) {
   return createModelBuilder<Omit<PromiseModel, 'pid'>, 'hostId'>(initialId, (id) => ({
     id,
-    title: `title ${id}`,
+    title: randomString(10),
     hostId: 0,
     destinationType: DestinationType.STATIC,
     destinationId: null,
