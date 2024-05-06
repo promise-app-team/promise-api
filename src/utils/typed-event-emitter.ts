@@ -1,43 +1,77 @@
-export interface TypedEventListener<TEvents extends Record<string, any> = Record<string, any>> {
+export interface TypedEvents {
+  [event: string]: any;
+}
+
+export interface TypedEventListener<TEvents extends TypedEvents> {
   (...args: TEvents[keyof TEvents]): void | Promise<void>;
 }
 
 export interface TypedEventListenerMap<
-  TEvents extends Record<string, any> = Record<string, any>,
+  TEvents extends TypedEvents = TypedEvents,
   TEventListener extends TypedEventListener<TEvents>[] = TypedEventListener<TEvents>[],
 > {
   get(event: keyof TEvents): TEventListener | undefined;
   set(event: keyof TEvents, listener: TEventListener): void;
+  del(event: keyof TEvents): void;
 }
 
-export class TypedEventEmitter<TEvents extends Record<string, any>> {
-  constructor(
-    private readonly listenerMap: TypedEventListenerMap<TEvents, TypedEventListener<TEvents>[]> = new Map()
-  ) {}
+const map = {
+  map: new Map(),
+  get(event: string) {
+    return this.map.get(event);
+  },
+  set(event: string, listener: any[]) {
+    this.map.set(event, listener);
+  },
+  del(event: string) {
+    this.map.delete(event);
+  },
+};
 
-  on<K extends keyof TEvents & string>(event: K, listener: TypedEventListener<TEvents>) {
+export class TypedEventEmitter<TEvents extends TypedEvents> {
+  constructor(private readonly listenerMap: TypedEventListenerMap<TEvents, TypedEventListener<TEvents>[]> = map) {}
+
+  public on<K extends keyof TEvents>(event: K, listener: TypedEventListener<TEvents>): this {
     const listeners = this.listenerMap.get(event) || [];
     listeners.push(listener);
     this.listenerMap.set(event, listeners);
+    return this;
   }
 
-  off<K extends keyof TEvents & string>(event: K, listener: TypedEventListener<TEvents>) {
-    const listeners = this.listenerMap.get(event) || [];
-    const index = listeners.indexOf(listener);
-    if (index !== -1) listeners.splice(index, 1);
-    this.listenerMap.set(event, listeners);
-  }
-
-  once<K extends keyof TEvents & string>(event: K, listener: TypedEventListener<TEvents>) {
-    const onceListener: TypedEventListener<TEvents> = (...args) => {
+  public once<K extends keyof TEvents>(event: K, listener: TypedEventListener<TEvents>): this {
+    const onceListener: TypedEventListener<TEvents> = async (...args) => {
       this.off(event, onceListener);
-      listener(...args);
+      await listener(...args);
     };
-    this.on(event, onceListener);
+
+    return this.on(event, onceListener);
   }
 
-  async emit<K extends keyof TEvents & string>(event: K, ...args: TEvents[K]) {
-    const listeners = this.listenerMap.get(event) || [];
+  public off<K extends keyof TEvents>(event: K): this;
+  public off<K extends keyof TEvents>(event: K, listener: TypedEventListener<TEvents>): this;
+  public off<K extends keyof TEvents>(event: K, listener?: TypedEventListener<TEvents>): this {
+    if (!listener) return this.listenerMap.del(event), this;
+
+    const listeners = this.listenerMap.get(event);
+    if (!listeners) return this;
+
+    const index = listeners.indexOf(listener);
+    if (index < 0) return this;
+
+    listeners.splice(index, 1);
+    if (listeners.length) {
+      this.listenerMap.set(event, listeners);
+    } else {
+      this.listenerMap.del(event);
+    }
+
+    return this;
+  }
+
+  public async emit<K extends keyof TEvents>(event: K, ...args: TEvents[K]): Promise<boolean> {
+    const listeners = this.listenerMap.get(event);
+    if (!listeners) return false;
     await Promise.all(listeners.map((listener) => listener(...args)));
+    return true;
   }
 }

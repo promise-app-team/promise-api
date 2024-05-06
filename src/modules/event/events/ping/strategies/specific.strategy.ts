@@ -13,7 +13,8 @@ export class SpecificStrategy extends Strategy<PingEvent.Strategy.Specific> {
 
     if (!data.param?.to) {
       const error = `Strategy 'specific' requires a 'to' parameter`;
-      return this.emitter.emit('send', cid, response({ body: { error } }));
+      await this.emitter.emit('send', cid, response({ body: { error } }));
+      return;
     }
 
     const to = await this.connection.getConnection(data.param.to, 'default');
