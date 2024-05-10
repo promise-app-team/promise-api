@@ -32,6 +32,7 @@ export class AttendeeDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profil
   leavedAt: obj.leavedAt,
 })) {
   hasStartLocation!: boolean;
+  isMidpointCalculated!: boolean;
   attendedAt!: Date;
   leavedAt!: Date | null;
 }
