@@ -16,9 +16,11 @@ stop_db:
 	@$(call docker_compose,local) down --volumes
 
 clean_db:
-	@rm -rf dockerfile
+	@rm -rf dockerdata
 
-restart_db: deinit_db init_db
+restart_db: stop_db start_db
+
+reset_db: stop_db clean_db start_db
 
 start_https:
 	@./https/scripts/install.sh
@@ -28,4 +30,4 @@ stop_https:
 	@./https/scripts/uninstall.sh
 	@$(call docker_compose,https) down --rmi=all
 
-restart_https: deinit_https init_https
+restart_https: stop_https start_https
