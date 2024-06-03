@@ -22,7 +22,7 @@ export async function prompt(message: string): Promise<string> {
     output: process.stdout,
   });
 
-  const question = `${chalk.bold.blue('???')} ${chalk.bold.gray(message)} `;
+  const question = `${chalk.bold.blue('???')} ${chalk.bold(message)} `;
   return new Promise((res) => {
     rl.question(question, (answer) => {
       rl.close();
