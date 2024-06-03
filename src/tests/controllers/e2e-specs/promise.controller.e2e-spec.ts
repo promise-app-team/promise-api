@@ -83,7 +83,7 @@ describe(PromiseController, () => {
       themes: expect.toIncludeSameMembers(themes),
       destination: destination
         ? {
-            ...R.pick(destination, ['id', 'city', 'district', 'address1', 'address2']),
+            ...R.pick(destination, ['id', 'name', 'city', 'district', 'address1', 'address2']),
             latitude: expect.toBeDecimalLike(destination.latitude),
             longitude: expect.toBeDecimalLike(destination.longitude),
           }
@@ -214,6 +214,7 @@ describe(PromiseController, () => {
       locationShareEndType: LocationShareType.TIME,
       locationShareEndValue: 60,
       destination: {
+        name: R.randomString(5),
         city: R.randomString(5),
         district: R.randomString(5),
         address1: R.randomString(5),
@@ -703,6 +704,7 @@ describe(PromiseController, () => {
 
   describe(http.request.updateStartLocation, () => {
     const input = {
+      name: '장소',
       city: '서울',
       district: '강남구',
       address1: '테헤란로 427',

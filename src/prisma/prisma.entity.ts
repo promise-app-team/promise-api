@@ -191,6 +191,7 @@ export class PromiseModel extends PickType(PromiseEntity, [
 
 export class LocationEntity implements LocationPayload {
   id!: number;
+  name!: string | null;
   city: string;
   district: string;
   address1: string;
@@ -212,6 +213,7 @@ export class LocationEntity implements LocationPayload {
 
 export class LocationModel extends PickType(LocationEntity, [
   'id',
+  'name',
   'city',
   'district',
   'address1',

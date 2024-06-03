@@ -13,7 +13,7 @@ export class PointDTO {
 
 export class LocationDTO extends ApplyDTO(
   LocationEntity,
-  ['id', 'city', 'district', 'address1', 'address2'],
+  ['id', 'name', 'city', 'district', 'address1', 'address2'],
   (obj) => ({
     latitude: parseFloat(`${obj.latitude}`),
     longitude: parseFloat(`${obj.longitude}`),
@@ -24,6 +24,12 @@ export class LocationDTO extends ApplyDTO(
 }
 
 export class InputLocationDTO {
+  @IsOptional()
+  @IsString({ message: '장소 이름을 입력해주세요.' })
+  @MaxLength(20, { message: '장소 이름을 20자 이하로 입력해주세요.' })
+  @ApiPropertyOptional({ example: '강남역' })
+  name!: string | null;
+
   @IsString({ message: '시/도 이름을 입력해주세요.' })
   @Length(2, 10, { message: '시/도 이름을 10자 이하로 입력해주세요.' })
   @ApiProperty({ example: '서울' })

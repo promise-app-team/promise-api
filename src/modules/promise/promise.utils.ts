@@ -75,6 +75,7 @@ export function isEqualLocation<Location extends InputLocationDTO>(
   );
 
   return (
+    l1.name === l2.name &&
     l1.city === l2.city &&
     l1.district === l2.district &&
     l1.address1 === l2.address1 &&
