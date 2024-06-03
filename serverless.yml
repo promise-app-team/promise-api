@@ -74,7 +74,7 @@ provider:
     NO_COLOR: ${env:NO_COLOR}
 
     JWT_SIGN_KEY: ${env:JWT_SIGN_KEY}
-    JWT_VERIFY_KEY: ${env:JWT_VERIFY_KEY}s
+    JWT_VERIFY_KEY: ${env:JWT_VERIFY_KEY}
     INTHASH_KEY: ${env:INTHASH_KEY}
     SQIDS_KEY: ${env:SQIDS_KEY}
 

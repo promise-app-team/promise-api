@@ -32,12 +32,13 @@ interface Operator {
 type HttpRequest<T> = Record<OperatorName<T>, Operator> & {
   auth: Auth;
   close: INestApplication['close'];
-  authorize(token: string): void;
-  authorize<U extends User>(user: U, options: { jwt: JwtAuthTokenService }): void;
+  authorize(user: User, options: { jwt: JwtAuthTokenService }): void;
   unauthorize(): void;
+  prepare(app: INestApplication): void;
 };
 
-function initializeHttpRequest<T>(app: INestApplication | null, routes: Routes<T>): HttpRequest<T> {
+function createRequestInstance<T>(routes: Routes<T>): HttpRequest<T> {
+  let app: INestApplication | null = null;
   let auth: Auth;
 
   const httpRequest = {
@@ -55,6 +56,9 @@ function initializeHttpRequest<T>(app: INestApplication | null, routes: Routes<T
     },
     unauthorize() {
       auth = null as any;
+    },
+    prepare(_app) {
+      app = _app;
     },
   } as HttpRequest<T>;
 
@@ -83,15 +87,12 @@ export type HttpServer<T> = {
 
 export function createHttpRequest<T>(prefix: string, routes: Routes<T>): HttpServer<T> {
   const normalizedRoutes = normalizeRoutes(prefix, routes);
-
-  let request = initializeHttpRequest<T>(null, normalizedRoutes);
+  const request = createRequestInstance<T>(normalizedRoutes);
 
   return {
-    get request() {
-      return request;
-    },
-    prepare(app: INestApplication) {
-      request = initializeHttpRequest<T>(app, normalizedRoutes);
+    request,
+    prepare(app) {
+      request.prepare(app);
     },
   };
 }
