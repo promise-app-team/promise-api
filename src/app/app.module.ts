@@ -59,6 +59,7 @@ import { PrismaModule } from '@/prisma';
                       'RoutesResolver',
                       'RouterExplorer',
                       'WebSocketsController',
+                      'ConditionalModule',
                     ].includes(context)
                   ) {
                     return false;
@@ -146,7 +147,7 @@ import { PrismaModule } from '@/prisma';
     EventModule,
     CommonModule,
 
-    ConditionalModule.registerWhen(DevModule, ({ STAGE }) => ['local', 'dev'].includes(STAGE || '')),
+    ConditionalModule.registerWhen(DevModule, ({ STAGE }) => !['prod'].includes(STAGE || '')),
   ],
   controllers: [AppController],
 })
