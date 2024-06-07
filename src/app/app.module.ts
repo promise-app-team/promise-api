@@ -1,4 +1,5 @@
 import { Module, Scope } from '@nestjs/common';
+import { ConditionalModule } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 
 import { AppController } from '@/app/app.controller';
@@ -145,7 +146,7 @@ import { PrismaModule } from '@/prisma';
     EventModule,
     CommonModule,
 
-    DevModule,
+    ConditionalModule.registerWhen(DevModule, ({ STAGE }) => ['local', 'dev'].includes(STAGE || '')),
   ],
   controllers: [AppController],
 })
