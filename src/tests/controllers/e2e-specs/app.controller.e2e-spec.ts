@@ -24,7 +24,7 @@ describe(AppController, () => {
 
       expect(response.body).toMatchObject({
         message: 'pong',
-        env: 'test',
+        env: 'development',
         tz: 'UTC',
       });
       expect(/^\d+?\.\d+?\.\d+?$/.test(response.body.version)).toBeTrue();

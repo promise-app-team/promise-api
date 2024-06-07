@@ -27,6 +27,6 @@ export class HelpCommand extends Command('help') {
     logger.log(chalk.gray(`    - ${chalk.yellow('seed')}                        seed the database`));
     logger.log(chalk.gray(`    - ${chalk.yellow('help')}                        display this help message`));
     logger.log(chalk.bold('======================================================================='));
-    logger.log(chalk.bold(`Your current environment: ${chalk.cyan.bold(envs.node.env)}`));
+    logger.log(chalk.bold(`Current stage: ${chalk.cyan.bold(envs.stage)}`));
   }
 }

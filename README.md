@@ -42,9 +42,17 @@ $ npm run init
 프로젝트 루트 디렉터리에 위치한 `.env.local` 파일을 열어 환경 변수를 설정합니다.
 
 - 문자 사이에 공백이 있지 않는 한, 환경변수의 값 주변에 공백 혹은 따옴표를 감싸지 않아야 합니다.
-- `STAGE` 환경 변수는 다른 단어와 결합할 때 사용합니다. `local`, `test`, `dev`, `prod` 을 사용합니다.
-- `NODE_ENV` 환경 변수는 단독으로 사용합니다. `local`, `test`, `development`, `production` 을 사용합니다.
 - 생성 가능한 환경 변수의 경우 자동 생성되어 설정되어 있습니다. 확인 후 필요하다면 설정을 변경합니다.
+
+**STAGE vs. NODE_ENV**
+
+|STAGE| NODE_ENV |
+|---|----------|
+|`local`|`development`|
+|`test`|`development`|
+|`dev`|`production`|
+|`prod`|`production`|
+
 
 ### 데이터베이스 설정
 

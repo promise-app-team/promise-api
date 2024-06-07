@@ -10,11 +10,11 @@ export const env = () => {
   const env = {
     tz: process.env.TZ || 'UTC',
     stage: (process.env.STAGE || 'local') as 'local' | 'dev' | 'test' | 'prod',
-    env: (process.env.NODE_ENV || 'local') as 'local' | 'development' | 'test' | 'production',
+    env: (process.env.NODE_ENV || 'development') as 'development' | 'production',
     port: +(process.env.PORT || 8080),
     build: BUILD,
     deploy: formatISO(process.env.NOW || new Date()),
-    version: '0.0.0', // TODO: versioning
+    version: process.env.npm_package_version!,
     colorize: !process.env.NO_COLOR,
 
     debug: {
