@@ -43,9 +43,7 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_S3_BUCKET_NAME: ${{ vars.AWS_S3_BUCKET_NAME }}
 
-      SERVERLESS_ACCESS_KEY: ${{ secrets.SLS_ACCESS_KEY }}
-
-      PRISMA_CLI_BINARY_TARGETS: '["native","rhel-openssl-1.0.x"]'
+      SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -80,7 +78,7 @@ jobs:
           provenance: false
           build-args: |
             NOW=${{ env.NOW }}
-            PRISMA_CLI_BINARY_TARGETS=${{ env.PRISMA_CLI_BINARY_TARGETS }}
+            PRISMA_CLI_BINARY_TARGETS=rhel-openssl-3.0.x
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -89,7 +87,9 @@ jobs:
           cache: 'npm'
 
       - name: Install Serverless Framework and Plugins
-        run: npm install --loglevel notice --save-dev serverless serverless-domain-manager serverless-prune-plugin
+        run: npm install --global serverless@3 serverless-prune-plugin serverless-domain-manager
 
       - name: Deploy to AWS Lambda
-        run: npx serverless deploy --verbose
+        run: |
+          serverless --version
+          serverless deploy --verbose
