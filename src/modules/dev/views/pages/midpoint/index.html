@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="/favicon.ico" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@unocss/reset/tailwind.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@unocss/runtime/uno.global.js"></script>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <link rel="stylesheet" href="/dev/style.css">
+  <script src="/dev/script.js"></script>
+
+  <title>Promise API | 중간 위치 계산 시뮬레이션</title>
+</head>
+
+<body class="container py-20 px-4 mx-auto">
+  <header class="mb-10 flex gap-2 items-end">
+    <h1 class="font-semibold text-3xl">중간 위치 계산 시뮬레이션</h1>
+    <a href="/dev" class="font-bold hover:underline text-gray-400">돌아가기</a>
+  </header>
+
+  <main class="relative">
+    <div class="absolute -top-6 w-full flex justify-between">
+      <div></div>
+      <div>
+        <button id="reset" class="text-red-500 font-bold text-xs">RESET</button>
+      </div>
+    </div>
+    <div class="flex bg-white rounded border overflow-hidden h-[70vh]">
+      <section class="flex flex-col w-100">
+        <form class="grid grid-cols-7 gap-1 p-2 border-b">
+          <input type="number" name="latitude" required min="-90" max="90" placeholder="위도 Latitude"
+            class="border rounded-sm pl-1 col-span-3" />
+          <input type="number" name="longitude" required min="-180" max="180" placeholder="경도 Longitude"
+            class="border rounded-sm pl-1 col-span-3" />
+          <button type="submit" class="bg-slate-700! text-white text-sm rounded-sm col-span-1">추가</button>
+        </form>
+        <div class="relative flex-grow overflow-y-scroll">
+          <ul id="locations"
+            class="peer absolute w-full text-sm [&_li]:p-2 [&_li]:grid [&_li]:grid-cols-7 [&_li]:cursor-pointer [&_li:hover]:bg-slate-100 [&_li>span]:col-span-3 [&_li>button]:col-span-1 [&_li:not(:last-child)]:border-b [&_li>button]:text-red-500 [&_li>button]:rounded [&_li>button]:font-bold [&_li>button:hover]:bg-slate-200"
+            onclick="">
+          </ul>
+          <div class="absolute peer-[:not(:empty)]:hidden text-slate-400 font-bold text-lg w-full text-center mt-2">
+            지도에 표시할 위치를 추가해주세요.
+          </div>
+        </div>
+        <div id="midpoint" class="flex justify-between items-center border-t hover:bg-slate-100 cursor-pointer">
+          <span class="text-sm text-slate-500 font-semibold p-2 border-r">MIDPOINT</span>
+          <span class="text-sm text-slate-800 font-bold p-2 flex-grow grid grid-cols-[2rem_1fr] place-items-end">
+            <span class="text-slate-700">위도</span>
+            <span id="midpoint-lat">NaN</span>
+            <span class="text-slate-700">경도</span>
+            <span id="midpoint-lng">NaN</span>
+          </span>
+        </div>
+      </section>
+      <section class="w-full relative">
+        <div id="map" class="w-full h-full"></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="./script.js"></script>
+</body>
+
+</html>
