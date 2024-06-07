@@ -3,16 +3,16 @@ import { join } from 'node:path';
 import { Module } from '@nestjs/common';
 import { ServeStaticModule } from '@nestjs/serve-static';
 
-import { DevController } from './dev.controller';
+import { DevelopController } from './develop.controller';
 
 @Module({
   imports: [
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, 'views'),
-      renderPath: '/dev',
-      serveRoot: '/dev',
+      renderPath: '/develop',
+      serveRoot: '/develop',
     }),
   ],
-  controllers: [DevController],
+  controllers: [DevelopController],
 })
-export class DevModule {}
+export class DevelopModule {}

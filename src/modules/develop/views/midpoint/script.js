@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (points.length > 1) {
-      const { latitude, longitude } = await fetch('/dev/midpoint', {
+      const { latitude, longitude } = await fetch('/develop/midpoint', {
         method: 'POST',
         body: JSON.stringify({ points }),
         headers: {

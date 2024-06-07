@@ -13,7 +13,7 @@ import { SqidsModule } from '@/customs/sqids/sqids.module';
 import { TypedConfigModule } from '@/customs/typed-config';
 import { WinstonLoggerService, createWinstonLogger } from '@/customs/winston-logger';
 import { AuthModule } from '@/modules/auth';
-import { DevModule } from '@/modules/dev';
+import { DevelopModule } from '@/modules/develop';
 import { EventModule } from '@/modules/event';
 import { PromiseModule } from '@/modules/promise';
 import { ThemeModule } from '@/modules/themes';
@@ -147,7 +147,7 @@ import { PrismaModule } from '@/prisma';
     EventModule,
     CommonModule,
 
-    ConditionalModule.registerWhen(DevModule, ({ STAGE }) => !['prod'].includes(STAGE || '')),
+    ConditionalModule.registerWhen(DevelopModule, ({ STAGE }) => !['prod'].includes(STAGE || '')),
   ],
   controllers: [AppController],
 })

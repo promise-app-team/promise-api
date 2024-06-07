@@ -1,6 +1,6 @@
 service: promise-api
 
-frameworkVersion: '4'
+frameworkVersion: '3'
 
 plugins:
   - serverless-domain-manager

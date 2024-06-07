@@ -92,4 +92,4 @@ jobs:
         run: npm install --loglevel notice --save-dev serverless serverless-domain-manager serverless-prune-plugin
 
       - name: Deploy to AWS Lambda
-        run: npx serverless deploy --verbose
+        run: npx serverless deploy --verbose --force
