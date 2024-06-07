@@ -78,7 +78,6 @@ jobs:
           provenance: false
           build-args: |
             NOW=${{ env.NOW }}
-            PRISMA_CLI_BINARY_TARGETS=rhel-openssl-3.0.x
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
