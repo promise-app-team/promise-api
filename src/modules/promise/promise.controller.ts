@@ -268,13 +268,13 @@ export class PromiseController {
       throw HttpException.new('등록된 출발지가 2개 이상 필요합니다.', 'BAD_REQUEST');
     }
 
-    const median = findGeometricMidpoint(startLocations);
+    const midpoint = findGeometricMidpoint(startLocations);
     const refs = R.map(promiseUsers, R.prop('attendeeId')).concat(Date.now());
 
     return {
       ref: this.sqids.encode(refs),
-      latitude: median.latitude,
-      longitude: median.longitude,
+      latitude: midpoint.latitude,
+      longitude: midpoint.longitude,
     };
   }
 
