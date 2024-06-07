@@ -23,13 +23,13 @@ export const createWinstonLogger = memoize((options: WinstonLoggerOptions = {}):
       const magenta = '\x1b[35m';
       const yellow = '\x1b[33m';
       const green = '\x1b[32m';
-      const gray = '\x1b[90m';
+      const defaultColor = '\x1b[0m';
       return highlight(message, {
         colors: {
           keyword: blue,
           function: magenta,
           number: green,
-          string: gray,
+          string: defaultColor,
           special: yellow,
           bracket: green,
           comment: '\x1b[2m\x1b[90m',

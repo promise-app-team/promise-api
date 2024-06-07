@@ -1,8 +1,5 @@
 export const envs = {
   stage: process.env.STAGE,
-  node: {
-    env: process.env.NODE_ENV || 'unknown',
-  },
   database: {
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,

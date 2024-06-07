@@ -8,7 +8,7 @@ import { logger } from '../../scripts/utils';
 import { clean } from './helpers/clean';
 import { seed } from './helpers/seed';
 
-const environment = process.env.NODE_ENV || 'local';
+const stage = process.env.STAGE || 'local';
 
 async function main() {
   const { values } = parseArgs({
@@ -34,7 +34,7 @@ async function main() {
   }).$transaction(async (prisma: any) => {
     await clean(prisma);
 
-    if (['local', 'development'].includes(environment)) {
+    if (['local', 'dev'].includes(stage)) {
       await seed(prisma);
     }
   });

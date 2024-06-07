@@ -51,10 +51,10 @@ _strong_password() {
 }
 
 declare -A envMap=(
-  [local]=local
-  [test]=test
-  [dev]=development
-  [ttt]=ttt
+  [local]=development
+  [test]=development
+  [dev]=production
+  [prod]=production
 )
 
 for stage in ${!envMap[@]}; do
@@ -82,7 +82,7 @@ for stage in ${!envMap[@]}; do
       sub(/DB_PASSWORD=.+?/, "DB_PASSWORD='$db_password'")
       sub(/REDIS_PASSWORD=.+?/, "REDIS_PASSWORD='$redis_password'")
 
-      if (stage == "dev") {
+      if (stage == "dev" || stage == "prod") {
         sub(/DB_PORT=.+?/, "DB_PORT=63306")
       }
     }1' >$env_file

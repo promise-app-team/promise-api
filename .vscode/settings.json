@@ -20,6 +20,7 @@
     "inno",
     "inthash",
     "kakao",
+    "latlng",
     "loglevel",
     "mikro",
     "nestjs",
@@ -30,12 +31,10 @@
     "uncolorize",
     "websockets"
   ],
-
   "editor.codeActionsOnSave": {
     "source.fixAll": "explicit"
   },
   "editor.formatOnSave": true,
-
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": {
     "package.json": "package-lock.json, yarn.lock, bun.lockb",
@@ -43,7 +42,6 @@
     ".env-cmdrc.example.js": ".env-cmdrc, .env-cmdrc.*",
     "*.ts": "${capture}.js, ${capture}.d.ts, ${capture}.mock.ts, ${capture}.spec.ts"
   },
-
   "material-icon-theme.activeIconPack": "nest",
   "material-icon-theme.files.associations": {
     "*.entity.ts": "nest-pipe",
@@ -58,17 +56,17 @@
     "*.schema.ts": "nest-pipe",
     "*.mock.ts": "test-ts"
   },
-
   "material-icon-theme.folders.associations": {
     "e2e-specs": "test"
   },
-
   "[json]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.json-language-features"
   },
   "[jsonc]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
+    "editor.defaultFormatter": "vscode.json-language-features"
   },
-
+  "[html]": {
+    "editor.defaultFormatter": "vscode.html-language-features"
+  },
   "typescript.tsdk": "node_modules/typescript/lib"
 }

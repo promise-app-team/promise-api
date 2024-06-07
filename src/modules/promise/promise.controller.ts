@@ -25,7 +25,7 @@ import { Delete, Get, Post, Put } from '@/customs/nest';
 import { SqidsService } from '@/customs/sqids/sqids.service';
 import { AuthUser } from '@/modules/auth';
 import { DestinationType, UserModel } from '@/prisma';
-import { Point, findGeometricMedian } from '@/utils';
+import { Location, findGeometricMidpoint } from '@/utils';
 
 @ApiTags('Promise')
 @ApiBearerAuth()
@@ -254,7 +254,7 @@ export class PromiseController {
 
     const promiseUsers = await this.promiseService.getAttendees(id, attendeeIds);
 
-    const startLocations: Point[] = R.pipe(
+    const startLocations: Location[] = R.pipe(
       promiseUsers,
       R.map(({ startLocation }) => startLocation),
       R.filter(R.isTruthy),
@@ -268,13 +268,13 @@ export class PromiseController {
       throw HttpException.new('등록된 출발지가 2개 이상 필요합니다.', 'BAD_REQUEST');
     }
 
-    const median = findGeometricMedian(startLocations);
+    const midpoint = findGeometricMidpoint(startLocations);
     const refs = R.map(promiseUsers, R.prop('attendeeId')).concat(Date.now());
 
     return {
       ref: this.sqids.encode(refs),
-      latitude: median.latitude,
-      longitude: median.longitude,
+      latitude: midpoint.latitude,
+      longitude: midpoint.longitude,
     };
   }
 

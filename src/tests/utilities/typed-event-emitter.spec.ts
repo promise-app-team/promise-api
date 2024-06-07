@@ -82,8 +82,30 @@ describe(TypedEventEmitter, () => {
     expect(() => emitter.off('foo', fooListener)).not.toThrow();
   });
 
+  test('should remove only the specified event', async () => {
+    const emitter = new TypedEventEmitter<{
+      foo: [string];
+      bar: [string];
+    }>();
+
+    const fooListener = jest.fn();
+    const barListener = jest.fn();
+
+    emitter.on('foo', fooListener);
+    emitter.on('bar', barListener);
+    emitter.off('foo');
+
+    await emitter.emit('foo', 'hello');
+    await emitter.emit('bar', 'world');
+
+    expect(fooListener).not.toHaveBeenCalled();
+    expect(barListener).toHaveBeenCalled();
+  });
+
   test('should remove only the specified listener', async () => {
-    const emitter = new TypedEventEmitter<{ foo: [string] }>();
+    const emitter = new TypedEventEmitter<{
+      foo: [string];
+    }>();
     const fooListener1 = jest.fn();
     const fooListener2 = jest.fn();
 
@@ -95,6 +117,25 @@ describe(TypedEventEmitter, () => {
 
     expect(fooListener1).not.toHaveBeenCalled();
     expect(fooListener2).toHaveBeenCalled();
+  });
+
+  test('should remove only the specified listener from the specified event', async () => {
+    const emitter = new TypedEventEmitter<{
+      foo: [string];
+      bar: [string];
+    }>();
+    const fooListener = jest.fn();
+    const barListener = jest.fn();
+
+    emitter.on('foo', fooListener);
+    emitter.on('bar', barListener);
+    emitter.off('foo', fooListener);
+
+    await emitter.emit('foo', 'hello');
+    await emitter.emit('bar', 'world');
+
+    expect(fooListener).not.toHaveBeenCalled();
+    expect(barListener).toHaveBeenCalled();
   });
 
   test('should remove once listeners after being called', async () => {

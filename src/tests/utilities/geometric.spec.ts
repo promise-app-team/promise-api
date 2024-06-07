@@ -1,6 +1,6 @@
-import { findGeometricMedian } from '../../utils/geometric';
+import { findGeometricMidpoint } from '../../utils/geometric';
 
-describe(findGeometricMedian, () => {
+describe(findGeometricMidpoint, () => {
   const randomLatitude = () => Math.random() * 180 - 90;
   const randomLongitude = () => Math.random() * 360 - 180;
 
@@ -10,33 +10,18 @@ describe(findGeometricMedian, () => {
       { latitude: 1, longitude: 1 },
       { latitude: 2, longitude: 2 },
     ];
-    const result = findGeometricMedian(points);
-    expect(result).toEqual({ latitude: 1, longitude: 1 });
-  });
-
-  test('should return the geometric median of a list of points with precision', () => {
-    const points = [
-      { latitude: 0, longitude: 0 },
-      { latitude: 1, longitude: 1 },
-      { latitude: 2, longitude: 2 },
-    ];
-    const result = findGeometricMedian(points, { precision: 1e-3 });
-    expect(result).toEqual({ latitude: 1, longitude: 1 });
+    const result = findGeometricMidpoint(points);
+    expect(result.latitude).toBeCloseTo(1.0);
+    expect(result.longitude).toBeCloseTo(1.0);
   });
 
   test('should throw an error when the list of points is empty', () => {
-    expect(() => findGeometricMedian([])).toThrow('Cannot find the geometric median of an empty list of points');
+    expect(() => findGeometricMidpoint([])).toThrow('No locations provided');
   });
 
   test('should return the single point when the list of points has only one element', () => {
     const points = [{ latitude: 0, longitude: 0 }];
-    const result = findGeometricMedian(points);
-    expect(result).toEqual({ latitude: 0, longitude: 0 });
-  });
-
-  test('should return the single point when the list of points has only one element with precision', () => {
-    const points = [{ latitude: 0, longitude: 0 }];
-    const result = findGeometricMedian(points, { precision: 1e-3 });
+    const result = findGeometricMidpoint(points);
     expect(result).toEqual({ latitude: 0, longitude: 0 });
   });
 
@@ -49,7 +34,8 @@ describe(findGeometricMedian, () => {
       { latitude, longitude },
       { latitude, longitude },
     ];
-    const result = findGeometricMedian(points);
-    expect(result).toEqual({ latitude, longitude });
+    const result = findGeometricMidpoint(points);
+    expect(result.latitude).toBeCloseTo(latitude, 6);
+    expect(result.longitude).toBeCloseTo(longitude, 6);
   });
 });

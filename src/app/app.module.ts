@@ -1,4 +1,5 @@
 import { Module, Scope } from '@nestjs/common';
+import { ConditionalModule } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 
 import { AppController } from '@/app/app.controller';
@@ -12,6 +13,7 @@ import { SqidsModule } from '@/customs/sqids/sqids.module';
 import { TypedConfigModule } from '@/customs/typed-config';
 import { WinstonLoggerService, createWinstonLogger } from '@/customs/winston-logger';
 import { AuthModule } from '@/modules/auth';
+import { DevModule } from '@/modules/dev';
 import { EventModule } from '@/modules/event';
 import { PromiseModule } from '@/modules/promise';
 import { ThemeModule } from '@/modules/themes';
@@ -57,6 +59,7 @@ import { PrismaModule } from '@/prisma';
                       'RoutesResolver',
                       'RouterExplorer',
                       'WebSocketsController',
+                      'ConditionalModule',
                     ].includes(context)
                   ) {
                     return false;
@@ -143,6 +146,8 @@ import { PrismaModule } from '@/prisma';
     FileUploadModule,
     EventModule,
     CommonModule,
+
+    ConditionalModule.registerWhen(DevModule, ({ STAGE }) => !['prod'].includes(STAGE || '')),
   ],
   controllers: [AppController],
 })

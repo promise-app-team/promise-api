@@ -27,7 +27,6 @@ export async function configure(app: NestExpressApplication) {
   app.useLogger(logger);
 
   app
-    .useStaticAssets(join(__dirname, 'assets'), { prefix: '/' })
     .useGlobalPipes(
       new ValidationPipe({
         transform: true,
@@ -61,6 +60,11 @@ async function initializeApp<App extends NestExpressApplication>() {
   }).then(configure);
 
   const config = app.get(TypedConfigService);
+
+  app
+    .useStaticAssets(join(__dirname, 'public'), { prefix: '/' })
+    .useStaticAssets(join(__dirname, 'assets'), { prefix: '/assets' });
+
   const openApiConfig = new DocumentBuilder()
     .setTitle('Promise API')
     .setVersion(`${config.get('version')}`)
@@ -72,7 +76,7 @@ async function initializeApp<App extends NestExpressApplication>() {
   SwaggerModule.setup('api', app, document, {
     customSiteTitle: 'Promise API',
     customfavIcon: '/favicon.ico',
-    customCssUrl: '/css/swagger.css',
+    customCssUrl: '/assets/css/swagger.css',
     swaggerOptions: {
       docExpansion: 'none',
       persistAuthorization: true,
