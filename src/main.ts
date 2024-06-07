@@ -54,8 +54,8 @@ export async function configure(app: NestExpressApplication) {
   return app;
 }
 
-async function initializeApp<App extends NestExpressApplication>() {
-  const app = await NestFactory.create<App>(AppModule, {
+async function initializeApp() {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
   }).then(configure);
 
@@ -63,20 +63,29 @@ async function initializeApp<App extends NestExpressApplication>() {
 
   app
     .useStaticAssets(join(__dirname, 'public'), { prefix: '/' })
-    .useStaticAssets(join(__dirname, 'assets'), { prefix: '/assets' });
+    .useStaticAssets(join(__dirname, 'assets'), { prefix: '/assets' })
+    .setBaseViewsDir(join(__dirname, 'views'))
+    .setViewEngine('hbs');
 
   const openApiConfig = new DocumentBuilder()
     .setTitle('Promise API')
     .setVersion(`${config.get('version')}`)
     .addSecurity('bearer', { type: 'http', scheme: 'bearer' })
-    .setExternalDoc('OpenAPI Specification (JSON)', `/api-json`)
+    .setDescription(
+      [
+        '<div><b>Promise API Documentation for Developers</b></div>',
+        '<hr/>',
+        '<span>OpenAPI Specification [<a href="/api-json">JSON</a>|<a href="/api-yaml">YAML</a>]</span>',
+        '| <a href="/dev">For Developers</a>',
+      ].join('\n')
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, openApiConfig);
   SwaggerModule.setup('api', app, document, {
     customSiteTitle: 'Promise API',
     customfavIcon: '/favicon.ico',
-    customCssUrl: '/assets/css/swagger.css',
+    customCssUrl: '/assets/swagger/custom.css',
     swaggerOptions: {
       docExpansion: 'none',
       persistAuthorization: true,

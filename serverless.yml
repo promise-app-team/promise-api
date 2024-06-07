@@ -1,10 +1,10 @@
 service: promise-api
 
-frameworkVersion: '4'
+frameworkVersion: '3'
 
 plugins:
-  - serverless-domain-manager
   - serverless-prune-plugin
+  - serverless-domain-manager
 
 custom:
   prune:
@@ -32,7 +32,7 @@ custom:
 
 provider:
   name: aws
-  runtime: nodejs18.x
+  runtime: nodejs20.x
   deploymentBucket:
     name: ${self:service}-${self:provider.stage}-deployment
     versioning: true

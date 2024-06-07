@@ -6,6 +6,8 @@ export type Path = string | string[];
 
 export interface HttpAPIOptions {
   auth?: boolean;
+  hidden?: boolean;
+  render?: string;
   summary?: string;
   description?: string;
   response?: Type;

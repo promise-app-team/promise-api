@@ -11,7 +11,7 @@ export class LoggerMiddleware implements NestMiddleware {
     const requestedAt = Date.now();
 
     res.on('finish', () => {
-      if (['/dev'].some((path) => req.baseUrl.startsWith(path))) return;
+      if (['/dev'].some((path) => req.baseUrl.startsWith(path) || req.url.startsWith(path))) return;
       this.logger.log(undefined, { request: req, response: res, ms: Date.now() - requestedAt }, 'HTTP');
     });
 
