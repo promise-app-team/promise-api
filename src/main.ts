@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 
 import serverlessExpress from '@codegenie/serverless-express';
-import { ClassSerializerInterceptor, INestApplication, Logger, ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';
 import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
@@ -71,7 +71,14 @@ async function initializeApp() {
     .setTitle('Promise API')
     .setVersion(`${config.get('version')}`)
     .addSecurity('bearer', { type: 'http', scheme: 'bearer' })
-    .setExternalDoc('OpenAPI Specification (JSON)', `/api-json`)
+    .setDescription(
+      [
+        '<div><b>Promise API Documentation for Developers</b></div>',
+        '<hr/>',
+        '<span>OpenAPI Specification [<a href="/api-json">JSON</a>|<a href="/api-yaml">YAML</a>]</span>',
+        '| <a href="/dev">For Developers</a>',
+      ].join('\n')
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, openApiConfig);

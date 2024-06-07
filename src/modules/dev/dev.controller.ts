@@ -1,4 +1,4 @@
-import { Body, Controller, Render } from '@nestjs/common';
+import { Body, Controller } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { DevPointDTO, InputMidpointDTO } from './dev.dto';
@@ -6,22 +6,20 @@ import { DevPointDTO, InputMidpointDTO } from './dev.dto';
 import { Get, Post } from '@/customs/nest';
 import { findGeometricMidpoint } from '@/utils/geometric';
 
-@ApiTags('Development')
+@ApiTags('For Developers')
 @Controller('dev')
 export class DevController {
-  @Get()
-  @Render('dev')
+  @Get('', { hidden: true, render: 'dev' })
   renderRoot() {}
 
-  @Get('midpoint')
-  @Render('dev/midpoint')
+  @Get('midpoint', { hidden: true, render: 'dev/midpoint' })
   renderMidpoint() {}
 
   @Post('midpoint', {
-    description: 'Find the midpoint between two or more points',
+    description: '여러 지점의 위도/경도 정보를 받아 중간 위치를 계산합니다. <a href="/dev/midpoint"><b>테스트</b></a>',
     exceptions: ['BAD_REQUEST'],
   })
-  midpoint(@Body() input: InputMidpointDTO): DevPointDTO {
+  devMidpoint(@Body() input: InputMidpointDTO): DevPointDTO {
     return findGeometricMidpoint(input.points);
   }
 }

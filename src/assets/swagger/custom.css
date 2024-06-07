@@ -13,3 +13,7 @@
 .view-line-link {
   transition: none !important;
 }
+
+#external-links a {
+  text-decoration: none !important;
+}
