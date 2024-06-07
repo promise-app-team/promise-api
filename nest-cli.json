@@ -5,7 +5,7 @@
     "assets": [
       "assets/**",
       "public/**",
-      "**/views/**"
+      "views/**"
     ],
     "deleteOutDir": true,
     "plugins": [

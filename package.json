@@ -50,6 +50,7 @@
     "cli-highlight": "^2.1.11",
     "date-fns": "^3.6.0",
     "express": "^4.19.2",
+    "hbs": "^4.2.0",
     "inthash": "^3.0.4",
     "ioredis": "^5.4.1",
     "joi": "^17.13.1",

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 
 import serverlessExpress from '@codegenie/serverless-express';
-import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, INestApplication, Logger, ValidationPipe } from '@nestjs/common';
 import { HttpAdapterHost, NestFactory, Reflector } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { WsAdapter } from '@nestjs/platform-ws';
@@ -54,8 +54,8 @@ export async function configure(app: NestExpressApplication) {
   return app;
 }
 
-async function initializeApp<App extends NestExpressApplication>() {
-  const app = await NestFactory.create<App>(AppModule, {
+async function initializeApp() {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
   }).then(configure);
 
@@ -63,7 +63,9 @@ async function initializeApp<App extends NestExpressApplication>() {
 
   app
     .useStaticAssets(join(__dirname, 'public'), { prefix: '/' })
-    .useStaticAssets(join(__dirname, 'assets'), { prefix: '/assets' });
+    .useStaticAssets(join(__dirname, 'assets'), { prefix: '/assets' })
+    .setBaseViewsDir(join(__dirname, 'views'))
+    .setViewEngine('hbs');
 
   const openApiConfig = new DocumentBuilder()
     .setTitle('Promise API')
@@ -76,7 +78,7 @@ async function initializeApp<App extends NestExpressApplication>() {
   SwaggerModule.setup('api', app, document, {
     customSiteTitle: 'Promise API',
     customfavIcon: '/favicon.ico',
-    customCssUrl: '/assets/css/swagger.css',
+    customCssUrl: '/assets/swagger/custom.css',
     swaggerOptions: {
       docExpansion: 'none',
       persistAuthorization: true,
