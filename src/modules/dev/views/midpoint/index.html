@@ -27,11 +27,9 @@
   </header>
 
   <main class="relative">
-    <div class="absolute -top-6 w-full flex justify-between">
-      <div></div>
-      <div>
-        <button id="reset" class="text-red-500 font-bold text-xs">RESET</button>
-      </div>
+    <div class="absolute -top-5 w-full flex justify-between font-bold text-sm px-1">
+      <span class="text-slate-600">지도에 표시할 위치를 직접 추가하거나 지도를 클릭하세요.</span>
+      <button id="reset" class="text-red-500 text-xs">RESET</button>
     </div>
     <div class="flex bg-white rounded border overflow-hidden h-[70vh]">
       <section class="flex flex-col w-100">
@@ -54,9 +52,9 @@
         <div id="midpoint" class="flex justify-between items-center border-t hover:bg-slate-100 cursor-pointer">
           <span class="text-sm text-slate-500 font-semibold p-2 border-r">MIDPOINT</span>
           <span class="text-sm text-slate-800 font-bold p-2 flex-grow grid grid-cols-[2rem_1fr] place-items-end">
-            <span class="text-slate-700">위도</span>
+            <span class="text-slate-600">위도</span>
             <span id="midpoint-lat">NaN</span>
-            <span class="text-slate-700">경도</span>
+            <span class="text-slate-600">경도</span>
             <span id="midpoint-lng">NaN</span>
           </span>
         </div>

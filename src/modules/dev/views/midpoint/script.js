@@ -4,10 +4,7 @@ const POINTS = 'points';
 
 document.addEventListener('DOMContentLoaded', () => {
   const map = L.map('map')
-    .setView(
-      JSON.parse(localStorage.getItem(ZOOM_CENTER)) || [37.5665, 126.978],
-      +localStorage.getItem(ZOOM_LEVEL) || 13
-    )
+    .setView(JSON.parse(localStorage.getItem(ZOOM_CENTER)) || [37.55, 126.98], +localStorage.getItem(ZOOM_LEVEL) || 13)
     .whenReady(() => setTimeout(() => map.invalidateSize(), 100));
 
   L.control.scale().addTo(map);
