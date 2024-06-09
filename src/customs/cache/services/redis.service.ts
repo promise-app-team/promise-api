@@ -1,6 +1,6 @@
 import { Redis, RedisOptions } from 'ioredis';
 
-import { CacheService, CacheServiceOptions } from './cache.service';
+import type { CacheService, CacheServiceOptions } from './cache.service';
 
 export { RedisOptions };
 

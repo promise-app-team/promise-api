@@ -1,10 +1,10 @@
 import { Controller } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { EntryDTO } from './app.dto';
-
 import { TypedConfigService } from '@/config/env';
 import { Get } from '@/customs/nest';
+
+import { EntryDTO } from './app.dto';
 
 @ApiTags('App')
 @Controller()

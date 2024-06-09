@@ -1,12 +1,12 @@
 import { getUnixTime } from 'date-fns';
 
-import { Connection, ConnectionID } from '../../connections';
-import { EventHandler } from '../event.handler';
-
-import { ShareLocationEvent } from './share-location.interface';
-
 import { PromiseStatus, PromiseUserRole } from '@/modules/promise';
 import { makePromiseFilter } from '@/modules/promise/promise.utils';
+
+import { EventHandler } from '../event.handler';
+
+import type { ShareLocationEvent } from './share-location.interface';
+import type { Connection, ConnectionID } from '../../connections';
 
 export class ShareLocationHandler extends EventHandler<ShareLocationEvent> {
   private channel = (pid: number | string) => `promise_${pid}`;

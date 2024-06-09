@@ -1,10 +1,11 @@
-import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
-
-import { createHttpRequest } from '../utils/http-request';
 
 import { AppController, AppModule } from '@/app';
 import { configure } from '@/main';
+
+import { createHttpRequest } from '../utils/http-request';
+
+import type { NestExpressApplication } from '@nestjs/platform-express';
 
 describe(AppController, () => {
   const http = createHttpRequest<AppController>('/', { ping: '' });

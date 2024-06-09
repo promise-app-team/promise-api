@@ -1,20 +1,15 @@
 import { Test } from '@nestjs/testing';
-import { Promise as PromiseModel, User as UserModel } from '@prisma/client';
 import { formatISO } from 'date-fns';
 import * as R from 'remeda';
 
-import { InputLocationDTO } from '@/modules/locations';
-import {
-  InputCreatePromiseDTO,
-  InputUpdatePromiseDTO,
-  PromiseStatus,
-  PromiseUserRole,
-  PromiseService,
-  PromiseServiceError,
-} from '@/modules/promise';
+import { PromiseStatus, PromiseUserRole, PromiseService, PromiseServiceError } from '@/modules/promise';
 import { DestinationType, PrismaService } from '@/prisma';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';
+
+import type { InputLocationDTO } from '@/modules/locations';
+import type { InputCreatePromiseDTO, InputUpdatePromiseDTO } from '@/modules/promise';
+import type { Promise as PromiseModel, User as UserModel } from '@prisma/client';
 
 describe(PromiseService, () => {
   let promiseService: PromiseService;

@@ -1,8 +1,5 @@
-import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import { pick } from 'remeda';
-
-import { createHttpRequest } from '../utils/http-request';
 
 import { AppModule } from '@/app';
 import { configure } from '@/main';
@@ -10,6 +7,10 @@ import { JwtAuthTokenService } from '@/modules/auth';
 import { UserController } from '@/modules/user';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';
+
+import { createHttpRequest } from '../utils/http-request';
+
+import type { NestExpressApplication } from '@nestjs/platform-express';
 
 describe(UserController, () => {
   const prisma = createPrismaClient();

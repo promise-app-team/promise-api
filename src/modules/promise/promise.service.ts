@@ -2,13 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as R from 'remeda';
 
+import { PrismaService, LocationModel, PrismaClientError } from '@/prisma';
+
 import { InputLocationDTO } from '../locations';
 
 import { InputCreatePromiseDTO, InputUpdatePromiseDTO } from './promise.dto';
 import { PromiseStatus, PromiseUserRole } from './promise.enum';
 import { isEqualLocation, makePromiseFilter, makeUniquePromiseFilter } from './promise.utils';
-
-import { PrismaService, LocationModel, PrismaClientError } from '@/prisma';
 
 export enum PromiseServiceError {
   NotFoundPromise = '약속을 찾을 수 없습니다.',

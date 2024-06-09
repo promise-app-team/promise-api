@@ -1,6 +1,7 @@
-import { Type } from '@nestjs/common';
 import { PickType } from '@nestjs/swagger';
 import { pick } from 'remeda';
+
+import type { Type } from '@nestjs/common';
 
 export function ApplyDTO<T, K extends keyof T, A extends Record<string, any>>(
   classRef: Type<T>,

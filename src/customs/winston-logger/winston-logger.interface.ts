@@ -1,4 +1,4 @@
-import { Logger } from 'winston';
+import type { Logger } from 'winston';
 
 export interface FilterArgs {
   level: string;

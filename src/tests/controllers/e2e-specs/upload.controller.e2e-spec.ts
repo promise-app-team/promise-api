@@ -1,6 +1,5 @@
 import path from 'node:path';
 
-import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 
 import { AppModule } from '@/app';
@@ -10,6 +9,8 @@ import { FileUploadController } from '@/modules/upload';
 import { createHttpRequest } from '@/tests/controllers/utils/http-request';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';
+
+import type { NestExpressApplication } from '@nestjs/platform-express';
 
 describe(FileUploadController, () => {
   const prisma = createPrismaClient({ logging: false });

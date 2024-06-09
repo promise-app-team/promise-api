@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { formatISO } from 'date-fns';
 
 import { TypedConfigServiceBuilder } from '@/customs/typed-config';
@@ -6,6 +9,7 @@ const BUILD = formatISO(new Date());
 
 export const env = () => {
   const [bits, prime, inverse, xor] = (process.env.INTHASH_KEY ?? '').split('.');
+  const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf-8'));
 
   const env = {
     tz: process.env.TZ || 'UTC',
@@ -14,7 +18,7 @@ export const env = () => {
     port: +(process.env.PORT || 8080),
     build: BUILD,
     deploy: formatISO(process.env.NOW || new Date()),
-    version: process.env.npm_package_version!,
+    version: pkg.version as string,
     colorize: !process.env.NO_COLOR,
 
     debug: {
@@ -23,11 +27,12 @@ export const env = () => {
     },
 
     db: {
-      host: process.env.DB_HOST,
+      url: process.env.DB_URL!,
+      host: process.env.DB_HOST!,
       port: +(process.env.DB_PORT || 3306),
-      name: process.env.DB_NAME,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
+      name: process.env.DB_NAME!,
+      user: process.env.DB_USER!,
+      password: process.env.DB_PASSWORD!,
     },
 
     redis: {

@@ -1,4 +1,4 @@
-import { DecimalLike } from '../setups/setupAfterEnv';
+import type { DecimalLike } from '../setups/setupAfterEnv';
 import 'jest-extended';
 
 export {};

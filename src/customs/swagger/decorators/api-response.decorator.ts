@@ -1,8 +1,10 @@
-import { HttpStatus, Type } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
 import { ApiResponse as BaseApiResponse } from '@nestjs/swagger';
 import { unique } from 'remeda';
 
 import { HttpException, isExceptionStatus } from '@/common/exceptions';
+
+import type { Type } from '@nestjs/common';
 
 export type UsableStatus = Extract<
   keyof typeof HttpStatus,

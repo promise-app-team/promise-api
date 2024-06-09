@@ -1,9 +1,9 @@
 import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
 
+import { PrismaService } from '@/prisma';
+
 import { ConnectionID } from '../../connections';
 import { AbstractEvent } from '../event.interface';
-
-import { PrismaService } from '@/prisma';
 
 export module ShareLocationEvent {
   export interface Body {

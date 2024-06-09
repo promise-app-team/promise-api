@@ -2,11 +2,12 @@ import * as nest from '@nestjs/common';
 import * as swagger from '@nestjs/swagger';
 import { ApiInternalServerErrorResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
 
-import { Path, HttpAPIOptions } from '../types';
-
 import { HttpException } from '@/common/exceptions';
-import { ApiOperation, ApiResponse, UsableStatus } from '@/customs/swagger';
+import { ApiOperation, ApiResponse } from '@/customs/swagger';
 import { AuthGuard } from '@/modules/auth/auth.guard';
+
+import type { Path, HttpAPIOptions } from '../types';
+import type { UsableStatus } from '@/customs/swagger';
 
 function template(
   decorator: (path?: Path) => MethodDecorator,

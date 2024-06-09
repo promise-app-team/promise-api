@@ -5,8 +5,8 @@ import { CommonStrategy } from './common.strategy';
 import { SelfStrategy } from './self.strategy';
 import { SpecificStrategy } from './specific.strategy';
 
-import { ConnectionManager } from '@/modules/event/connections';
-import { TypedEventEmitter } from '@/utils';
+import type { ConnectionManager } from '@/modules/event/connections';
+import type { TypedEventEmitter } from '@/utils';
 
 interface StrategyMap {
   [PingEvent.Strategy.Self]: SelfStrategy;

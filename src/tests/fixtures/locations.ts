@@ -1,10 +1,11 @@
 import { Prisma } from '@prisma/client';
 import { randomString } from 'remeda';
 
+import { random } from '@/utils';
+
 import { createModelBuilder } from './builder';
 
-import { LocationModel } from '@/prisma';
-import { random } from '@/utils';
+import type { LocationModel } from '@/prisma';
 
 export function createLocationBuilder(initialId: number) {
   return createModelBuilder<LocationModel>(initialId, (id) => ({

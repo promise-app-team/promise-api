@@ -1,12 +1,13 @@
 import { getUnixTime } from 'date-fns';
 
-import { ConnectionID, ConnectionScope } from '../../connections';
 import { EventHandler } from '../event.handler';
 
-import { PingEvent } from './ping.interface';
-import { Strategy, StrategyManager } from './strategies';
+import { StrategyManager } from './strategies';
 
-import { CacheService } from '@/customs/cache';
+import type { PingEvent } from './ping.interface';
+import type { Strategy } from './strategies';
+import type { ConnectionID, ConnectionScope } from '../../connections';
+import type { CacheService } from '@/customs/cache';
 
 export class PingEventHandler extends EventHandler<PingEvent> {
   private readonly strategy: StrategyManager;

@@ -1,6 +1,5 @@
-import { HasherOptions } from 'inthash';
-
-import { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
+import type { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
+import type { HasherOptions } from 'inthash';
 
 interface _IntHashModuleOptions extends HasherOptions {}
 

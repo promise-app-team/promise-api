@@ -1,6 +1,6 @@
 import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
 
-import { JwtAuthTokenPayload } from '@/modules/auth';
+import type { JwtAuthTokenPayload } from '@/modules/auth';
 
 export const mockJwtAuthTokenService = (context: { validId: number; invalidId: number }) => ({
   generateTokens(payload: JwtAuthTokenPayload) {
