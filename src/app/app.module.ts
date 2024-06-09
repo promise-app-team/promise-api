@@ -91,8 +91,9 @@ import { PrismaModule } from '@/prisma';
               ],
         });
 
-        const tableName = `${config.get('db.name')}_${config.get('stage')}`;
+        const tableName = config.get('db.url').split('/').pop() ?? '';
         prisma.$on('query', ({ query, params, duration }) => {
+          if (query.includes('pm_mutation_log')) return;
           const sanitizedQuery = query
             .replace(/^SELECT\s+(.*?)\s+FROM/, 'SELECT * FROM')
             .replace(new RegExp(`\`${tableName}\`\.`, 'g'), '')
