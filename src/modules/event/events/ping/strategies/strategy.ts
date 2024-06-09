@@ -1,7 +1,6 @@
-import { PingEvent } from '../ping.interface';
-
-import { ConnectionID, ConnectionManager } from '@/modules/event/connections';
-import { TypedEventEmitter } from '@/utils';
+import type { PingEvent } from '../ping.interface';
+import type { ConnectionID, ConnectionManager } from '@/modules/event/connections';
+import type { TypedEventEmitter } from '@/utils';
 
 export abstract class Strategy<S extends PingEvent.Strategy = PingEvent.Strategy> {
   constructor(

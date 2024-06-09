@@ -1,11 +1,11 @@
 import { Prisma } from '@prisma/client';
 import * as R from 'remeda';
 
-import { InputLocationDTO } from '../locations';
+import { createQueryBuilder } from '@/prisma/utils';
 
 import { PromiseStatus, PromiseUserRole } from './promise.enum';
 
-import { createQueryBuilder } from '@/prisma/utils';
+import type { InputLocationDTO } from '../locations';
 
 export type FilterOptions = {
   id?: number;

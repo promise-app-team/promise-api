@@ -1,6 +1,5 @@
-import { NestInterceptor, Type } from '@nestjs/common';
-
-import { ExceptionStatus } from '@/common/exceptions';
+import type { ExceptionStatus } from '@/common/exceptions';
+import type { NestInterceptor, Type } from '@nestjs/common';
 
 export type Path = string | string[];
 

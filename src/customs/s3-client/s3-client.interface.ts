@@ -1,6 +1,5 @@
-import { S3Client } from '@aws-sdk/client-s3';
-
-import { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
+import type { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
+import type { S3Client } from '@aws-sdk/client-s3';
 
 export interface _S3ClientModuleOptions {
   s3options?: ConstructorParameters<typeof S3Client>[0];

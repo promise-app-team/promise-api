@@ -1,10 +1,9 @@
 import { getUnixTime } from 'date-fns';
 
-import { PingEvent } from '../ping.interface';
-
 import { Strategy } from './strategy';
 
-import { ConnectionID } from '@/modules/event/connections';
+import type { PingEvent } from '../ping.interface';
+import type { ConnectionID } from '@/modules/event/connections';
 
 export class SpecificStrategy extends Strategy<PingEvent.Strategy.Specific> {
   async post(cid: ConnectionID, data: PingEvent.Payload<PingEvent.Strategy.Specific>['data']) {

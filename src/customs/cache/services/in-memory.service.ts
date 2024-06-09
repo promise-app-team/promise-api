@@ -1,4 +1,4 @@
-import { CacheService, CacheServiceOptions } from './cache.service';
+import type { CacheService, CacheServiceOptions } from './cache.service';
 
 export class InMemoryCacheService implements CacheService {
   private readonly cache = new Map<string, string>();

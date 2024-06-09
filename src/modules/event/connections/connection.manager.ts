@@ -1,7 +1,7 @@
 import { getUnixTime } from 'date-fns';
 import * as R from 'remeda';
 
-import {
+import type {
   Connection,
   ConnectionID,
   ConnectionCache,
@@ -10,19 +10,19 @@ import {
   ConnectionStage,
   ConnectionChannel,
   ConnectionMap,
-  ConnectionEventMap,
+  ConnectionPool,
   ConnectionChannelMap,
 } from './connection.interface';
 
 export class ConnectionManager {
   private readonly channelMap: ConnectionChannelMap;
 
-  private static pool: ConnectionEventMap = new Map();
+  private static pool: ConnectionPool = new Map();
   private static instances = new Map<ConnectionEvent, ConnectionManager>();
 
   private constructor(
-    private readonly event: ConnectionScope['event'],
-    private readonly stage: ConnectionScope['stage'],
+    private readonly event: ConnectionEvent,
+    private readonly stage: ConnectionStage,
     private readonly cache: ConnectionCache
   ) {
     this.channelMap = new Map();

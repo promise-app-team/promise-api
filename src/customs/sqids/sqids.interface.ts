@@ -1,6 +1,5 @@
-import Sqids from 'sqids';
-
-import { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
+import type { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
+import type Sqids from 'sqids';
 
 export type SqidsOptions = NonNullable<ConstructorParameters<typeof Sqids>[0]>;
 

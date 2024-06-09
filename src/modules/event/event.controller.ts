@@ -2,13 +2,6 @@ import { ApiGatewayManagementApi } from '@aws-sdk/client-apigatewaymanagementapi
 import { Controller, Query } from '@nestjs/common';
 import { ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 
-import { AuthUser } from '../auth';
-
-import { EventHandler, EventManager, Events } from './events';
-import { AbstractEvent } from './events/event.interface';
-import { PingEvent } from './events/ping';
-import { ShareLocationEvent } from './events/share-location';
-
 import { ParsedBody } from '@/common/decorators';
 import { HttpException } from '@/common/exceptions';
 import { TypedConfigService } from '@/config/env';
@@ -16,6 +9,13 @@ import { InthashService } from '@/customs/inthash';
 import { LoggerService } from '@/customs/logger';
 import { Get, Post } from '@/customs/nest';
 import { UserModel } from '@/prisma';
+
+import { AuthUser } from '../auth';
+
+import { EventHandler, EventManager, Events } from './events';
+import { AbstractEvent } from './events/event.interface';
+import { PingEvent } from './events/ping';
+import { ShareLocationEvent } from './events/share-location';
 
 @ApiTags('Event')
 @Controller('event')

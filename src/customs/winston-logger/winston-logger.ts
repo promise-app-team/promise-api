@@ -1,10 +1,12 @@
 import { formatISO } from 'date-fns';
 import { highlight } from 'sql-highlight';
-import { format, createLogger, transports, Logger } from 'winston';
+import { format, createLogger, transports } from 'winston';
+
+import { ifs, memoize } from '@/utils';
 
 import { createColorMap } from './color';
 
-import { ifs, memoize } from '@/utils';
+import type { Logger } from 'winston';
 
 export interface WinstonLoggerOptions {
   colorize?: boolean;

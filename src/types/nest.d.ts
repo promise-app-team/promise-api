@@ -1,4 +1,4 @@
-import { FactoryProvider } from '@nestjs/common';
+import type { FactoryProvider } from '@nestjs/common';
 
 export interface BaseModuleOptions {
   scope?: Scope;

@@ -1,6 +1,6 @@
 import { createModelBuilder } from './builder';
 
-import { PromiseUserModel } from '@/prisma';
+import type { PromiseUserModel } from '@/prisma';
 
 export function createPromiseUserBuilder(initialId: number) {
   return createModelBuilder<PromiseUserModel, 'attendeeId' | 'promiseId'>(initialId, () => ({

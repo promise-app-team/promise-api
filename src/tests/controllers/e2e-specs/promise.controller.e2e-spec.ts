@@ -1,20 +1,22 @@
-import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
 import * as R from 'remeda';
-
-import { mockGlobalFn } from '../mocks';
 
 import { AppModule } from '@/app';
 import { InthashService } from '@/customs/inthash';
 import { configure } from '@/main';
 import { JwtAuthTokenService } from '@/modules/auth';
-import { InputLocationDTO } from '@/modules/locations';
-import { PromiseController, InputCreatePromiseDTO, InputUpdatePromiseDTO } from '@/modules/promise';
+import { PromiseController } from '@/modules/promise';
 import { DestinationType, LocationShareType } from '@/prisma';
 import { createHttpRequest } from '@/tests/controllers/utils/http-request';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';
+
+import { mockGlobalFn } from '../mocks';
+
+import type { InputLocationDTO } from '@/modules/locations';
+import type { InputCreatePromiseDTO, InputUpdatePromiseDTO } from '@/modules/promise';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 
 describe(PromiseController, () => {
   const prisma = createPrismaClient({ logging: false });

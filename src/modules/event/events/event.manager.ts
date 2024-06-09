@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
 
-import { PingEventHandler } from './ping';
-import { ShareLocationHandler } from './share-location';
-
 import { TypedConfigService } from '@/config/env';
 import { CacheService } from '@/customs/cache';
 import { PrismaService } from '@/prisma';
+
+import { PingEventHandler } from './ping';
+import { ShareLocationHandler } from './share-location';
 
 export interface Events {
   ping: PingEventHandler;

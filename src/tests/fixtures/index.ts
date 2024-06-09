@@ -1,11 +1,3 @@
-import {
-  PrismaClient,
-  User as PrismaUser,
-  Location as PrismaLocation,
-  Theme as PrismaTheme,
-  Promise as PrismaPromise,
-  User,
-} from '@prisma/client';
 import { addDays, formatISO, subDays } from 'date-fns';
 import * as R from 'remeda';
 
@@ -17,7 +9,14 @@ import { createPromiseBuilder } from './promises';
 import { createThemeBuilder } from './themes';
 import { createUserBuilder } from './users';
 
-import { LocationModel, PromiseModel, ThemeModel, UserModel } from '@/prisma';
+import type { LocationModel, PromiseModel, ThemeModel, UserModel } from '@/prisma';
+import type {
+  PrismaClient,
+  User as PrismaUser,
+  Location as PrismaLocation,
+  Theme as PrismaTheme,
+  Promise as PrismaPromise,
+} from '@prisma/client';
 
 type RequiredOption<I, O> = O | Result<I, O>;
 type OptionalOption<I, O> = O | Result<I, O> | boolean;
@@ -303,8 +302,8 @@ export function createTestFixture(
     return createOutputFunction(writePromise)(options) as any;
   };
 
-  let authUser: User | null = null;
-  async function configure(options: { authUser?: User }) {
+  let authUser: PrismaUser | null = null;
+  async function configure(options: { authUser?: PrismaUser }) {
     authUser = options.authUser ?? null;
   }
 

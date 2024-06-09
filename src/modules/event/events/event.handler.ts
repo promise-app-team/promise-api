@@ -1,9 +1,11 @@
-import { Connection, ConnectionID, ConnectionManager, ConnectionScope } from '../connections';
+import { TypedEventEmitter } from '@/utils';
 
-import { AbstractEvent } from './event.interface';
+import { ConnectionManager } from '../connections';
 
-import { CacheService } from '@/customs/cache';
-import { TypedEventEmitter, TypedEventListener } from '@/utils';
+import type { AbstractEvent } from './event.interface';
+import type { Connection, ConnectionID, ConnectionScope } from '../connections';
+import type { CacheService } from '@/customs/cache';
+import type { TypedEventListener } from '@/utils';
 
 export abstract class EventHandler<TEvent extends AbstractEvent> {
   protected readonly connection: ConnectionManager;

@@ -10,17 +10,17 @@ import {
 import { v4 as uuid } from 'uuid';
 import { WebSocket } from 'ws';
 
+import { HttpException } from '@/common/exceptions';
+import { InthashService } from '@/customs/inthash';
+import { LoggerService } from '@/customs/logger';
+import { random } from '@/utils';
+
 import { JwtAuthTokenService } from '../auth';
 
 import { Connection } from './connections';
 import { EventHandler, EventManager, Events } from './events';
 import { PingEvent } from './events/ping';
 import { ShareLocationEvent } from './events/share-location';
-
-import { HttpException } from '@/common/exceptions';
-import { InthashService } from '@/customs/inthash';
-import { LoggerService } from '@/customs/logger';
-import { random } from '@/utils';
 
 type Client = WebSocket & Pick<Connection, 'cid' | 'uid'>;
 

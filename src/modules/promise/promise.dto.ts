@@ -16,12 +16,12 @@ import {
 import { addMinutes, addWeeks, formatISO } from 'date-fns';
 import * as R from 'remeda';
 
-import { InputLocationDTO, LocationDTO } from '../locations';
-import { ThemeDTO } from '../themes';
-
 import { IsAfter } from '@/common/decorators';
 import { ApplyDTO } from '@/common/mixins';
 import { DestinationType, LocationShareType, PromiseEntity, UserEntity } from '@/prisma';
+
+import { InputLocationDTO, LocationDTO } from '../locations';
+import { ThemeDTO } from '../themes';
 
 export class HostDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl']) {}
 

@@ -1,6 +1,5 @@
-import { CacheService } from './services';
-
-import { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
+import type { CacheService } from './services';
+import type { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
 
 interface _CacheModuleOptions {
   service: CacheService;

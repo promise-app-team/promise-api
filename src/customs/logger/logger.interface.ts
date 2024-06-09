@@ -1,6 +1,5 @@
-import { LoggerService } from './logger.service';
-
-import { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
+import type { LoggerService } from './logger.service';
+import type { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
 
 interface _LoggerModuleOptions {
   logger?: LoggerService;

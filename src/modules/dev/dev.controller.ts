@@ -1,10 +1,10 @@
 import { Body, Controller } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
-import { DevPointDTO, InputMidpointDTO } from './dev.dto';
-
 import { Get, Post } from '@/customs/nest';
 import { findGeometricMidpoint } from '@/utils/geometric';
+
+import { DevPointDTO, InputMidpointDTO } from './dev.dto';
 
 @ApiTags('For Developers')
 @Controller('dev')

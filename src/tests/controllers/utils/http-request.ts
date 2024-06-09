@@ -1,13 +1,13 @@
 import path from 'node:path';
 
-import { INestApplication } from '@nestjs/common';
-import { User } from '@prisma/client';
 import { compile } from 'path-to-regexp';
 import { mapValues } from 'remeda';
 import request from 'supertest';
 
-import { JwtAuthTokenService } from '@/modules/auth';
-import { Methods } from '@/types';
+import type { JwtAuthTokenService } from '@/modules/auth';
+import type { Methods } from '@/types';
+import type { INestApplication } from '@nestjs/common';
+import type { User } from '@prisma/client';
 
 type HttpMethod = keyof Pick<request.SuperTest, 'get' | 'post' | 'put' | 'patch' | 'delete'>;
 type Param = string | number | boolean | null | undefined;

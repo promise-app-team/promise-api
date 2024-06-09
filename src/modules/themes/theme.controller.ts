@@ -1,10 +1,10 @@
 import { Controller } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+import { Get } from '@/customs/nest';
+
 import { ThemeDTO } from './theme.dto';
 import { ThemeService } from './theme.service';
-
-import { Get } from '@/customs/nest';
 
 @ApiTags('Theme')
 @ApiBearerAuth()

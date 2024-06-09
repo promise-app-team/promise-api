@@ -1,13 +1,13 @@
 import { Body, Controller } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+import { HttpException } from '@/common/exceptions';
+import { Post } from '@/customs/nest';
+
 import { InputCreateUserDTO, UserService } from '../user';
 
 import { AuthTokenDTO, InputRefreshTokenDTO } from './auth.dto';
 import { AuthService, AuthServiceError } from './auth.service';
-
-import { HttpException } from '@/common/exceptions';
-import { Post } from '@/customs/nest';
 
 @ApiTags('Auth')
 @ApiBearerAuth()

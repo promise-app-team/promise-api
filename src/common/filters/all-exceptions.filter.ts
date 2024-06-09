@@ -1,8 +1,8 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpServer } from '@nestjs/common';
 
-import { HttpException } from '../exceptions/http.exception';
-
 import { LoggerService } from '@/customs/logger';
+
+import { HttpException } from '../exceptions/http.exception';
 
 function isHttpException(exception: any): exception is HttpException {
   try {

@@ -1,4 +1,4 @@
-import { User } from '@prisma/client';
+import type { User } from '@prisma/client';
 
 export type ConnectionID = string;
 export type ConnectionEvent = string;
@@ -8,7 +8,7 @@ export type ConnectionTimestamp = number;
 
 export type ConnectionMap = Map<ConnectionID, Connection>;
 export type ConnectionChannelMap = Map<ConnectionChannel, ConnectionMap>;
-export type ConnectionEventMap = Map<ConnectionEvent, ConnectionChannelMap>;
+export type ConnectionPool = Map<ConnectionEvent, ConnectionChannelMap>;
 
 export interface Connection {
   cid: ConnectionID;

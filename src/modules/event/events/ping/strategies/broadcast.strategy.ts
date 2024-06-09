@@ -1,11 +1,10 @@
 import { getUnixTime } from 'date-fns';
 import * as R from 'remeda';
 
-import { PingEvent } from '../ping.interface';
-
 import { Strategy } from './strategy';
 
-import { ConnectionID } from '@/modules/event/connections';
+import type { PingEvent } from '../ping.interface';
+import type { ConnectionID } from '@/modules/event/connections';
 
 export class BroadcastStrategy extends Strategy<PingEvent.Strategy.Broadcast> {
   async post<T>(cid: ConnectionID, data: PingEvent.Payload<PingEvent.Strategy.Broadcast, T>['data']) {

@@ -1,6 +1,5 @@
-import { PrismaClient } from '@prisma/client';
-
-import { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
+import type { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
+import type { PrismaClient } from '@prisma/client';
 
 interface _PrismaModuleOptions {
   prisma?: PrismaClient;
