@@ -63,6 +63,8 @@ export class EventController {
     @Query('connectionId') connectionId: string,
     @ParsedBody('data') data: PingEvent.Data
   ): Promise<AbstractEvent.DTO.EventResponse> {
+    if (this.config.get('is.prod')) throw HttpException.new('Forbidden', 'FORBIDDEN');
+
     this.logger.debug(`Client sent message: ${connectionId} with ${JSON.stringify(data)}`);
     const handler = this.event.get('ping');
 

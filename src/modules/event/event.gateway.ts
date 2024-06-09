@@ -11,6 +11,7 @@ import { v4 as uuid } from 'uuid';
 import { WebSocket } from 'ws';
 
 import { HttpException } from '@/common/exceptions';
+import { TypedConfigService } from '@/config/env';
 import { InthashService } from '@/customs/inthash';
 import { LoggerService } from '@/customs/logger';
 import { random } from '@/utils';
@@ -32,7 +33,8 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly event: EventManager,
     private readonly jwt: JwtAuthTokenService,
     private readonly hasher: InthashService,
-    private readonly logger: LoggerService
+    private readonly logger: LoggerService,
+    private readonly config: TypedConfigService
   ) {
     logger.setContext(EventGateway.name);
   }
@@ -65,6 +67,8 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('ping')
   async handlePingEvent(client: Client, data: PingEvent.Data) {
+    if (this.config.get('is.prod')) throw HttpException.new('Forbidden', 'FORBIDDEN');
+
     const handler = this.event.get('ping');
 
     handler.on('send', async (cid, data) => {
