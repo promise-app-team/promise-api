@@ -349,7 +349,7 @@ export class PromiseController {
   }
 
   #makeDeviceKey(deviceId: string) {
-    const env = this.config.get('env');
-    return `device:${deviceId}:${env}`;
+    const stage = this.config.get('stage');
+    return `device:${deviceId}:${stage}`;
   }
 }
