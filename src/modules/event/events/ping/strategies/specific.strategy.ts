@@ -6,7 +6,7 @@ import type { PingEvent } from '../ping.interface';
 import type { ConnectionID } from '@/modules/event/connections';
 
 export class SpecificStrategy extends Strategy<PingEvent.Strategy.Specific> {
-  async post(cid: ConnectionID, data: PingEvent.Payload<PingEvent.Strategy.Specific>['data']) {
+  async post<T>(cid: ConnectionID, data: PingEvent.Payload<PingEvent.Strategy.Specific, T>['data']) {
     const response = (data: PingEvent.Payload<PingEvent.Strategy.Specific>['data']) =>
       ({ from: cid, timestamp: getUnixTime(Date.now()), data: data.body }) satisfies PingEvent.Message;
 
