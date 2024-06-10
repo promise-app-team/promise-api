@@ -1,6 +1,8 @@
 import { isDate, isValid } from 'date-fns';
 import { mapValues } from 'remeda';
 
+import type { IfNever } from 'type-fest';
+
 export class Result<Input = any, Output = Input> {
   input!: Input;
   output!: Output;
@@ -13,9 +15,11 @@ export class Result<Input = any, Output = Input> {
   }
 }
 
-type Param<T extends Record<string, any>, R extends keyof T = never> = [R] extends [never]
-  ? Partial<T>
-  : Partial<T> & Required<Pick<T, R>>;
+type Param<T extends Record<string, any>, R extends keyof T = never> = IfNever<
+  R,
+  Partial<T>,
+  Partial<T> & Required<Pick<T, R>>
+>;
 
 interface RequiredModuleBuilder<T extends Record<string, any>, R extends keyof T, P = Param<T, R>> {
   (partial: P): T;
