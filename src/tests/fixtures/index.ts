@@ -237,7 +237,7 @@ export function createTestFixture(
 
     const attendeeIds = R.pipe(
       users,
-      R.zip.strict(locations),
+      R.zip(locations),
       R.filter(([attendee]) => R.isTruthy(attendee)),
       R.map(([attendee, startLocation]) => ({
         attendeeId: attendee.output.id,

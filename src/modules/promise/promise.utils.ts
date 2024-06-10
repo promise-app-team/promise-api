@@ -1,4 +1,3 @@
-import { Prisma } from '@prisma/client';
 import * as R from 'remeda';
 
 import { createQueryBuilder } from '@/prisma/utils';
@@ -6,6 +5,7 @@ import { createQueryBuilder } from '@/prisma/utils';
 import { PromiseStatus, PromiseUserRole } from './promise.enum';
 
 import type { InputLocationDTO } from '../locations';
+import type { Prisma } from '@prisma/client';
 
 export type FilterOptions = {
   id?: number;
@@ -66,13 +66,11 @@ export function isEqualLocation<Location extends InputLocationDTO>(
 ): boolean {
   if (!loc1 || !loc2) return false;
 
-  const [l1, l2] = R.map(
-    [loc1, loc2],
-    R.piped(
-      (loc) => R.set(loc, 'latitude', new Prisma.Decimal(loc.latitude).toFixed(6)),
-      (loc) => R.set(loc, 'longitude', new Prisma.Decimal(loc.longitude).toFixed(6))
-    )
-  );
+  const [l1, l2] = [loc1, loc2].map((loc) => ({
+    ...loc,
+    latitude: Number(loc.latitude).toFixed(6),
+    longitude: Number(loc.longitude).toFixed(6),
+  }));
 
   return (
     l1.name === l2.name &&
