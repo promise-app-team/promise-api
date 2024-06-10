@@ -105,6 +105,7 @@
     "ts-loader": "^9.5.1",
     "tsconfig-paths": "4.2.0",
     "tsx": "^4.13.2",
+    "type-fest": "^4.20.0",
     "typescript": "5.4"
   },
   "prisma": {

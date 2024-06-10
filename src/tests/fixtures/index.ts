@@ -17,6 +17,7 @@ import type {
   Theme as PrismaTheme,
   Promise as PrismaPromise,
 } from '@prisma/client';
+import type { IsEqual, IsUnknown, Or } from 'type-fest';
 
 type RequiredOption<I, O> = O | Result<I, O>;
 type OptionalOption<I, O> = O | Result<I, O> | boolean;
@@ -35,7 +36,8 @@ type PromiseCompleteOptions = {
   partial?: Partial<Omit<PromiseModel, 'pid'>>;
 };
 
-type IsNotExist<T> = Or<IsFalse<T>, IsUnknown<T>, IsUndefined<T>>;
+type IsUndefined<T> = undefined extends T ? true : false;
+type IsNotExist<T> = Or<IsEqual<T, false>, Or<IsUnknown<T>, IsUndefined<T>>>;
 type RequiredStrictResult<T, U> = T extends U ? Result<U, T> : Result<U>;
 type OptionalStrictResult<T, U> = IsNotExist<T> extends true ? never : T extends U ? Result<U, T> : Result<U>;
 type ArrayStrictResult<T, U> = T extends U[] ? Result<U, T[number]>[] : Result<U, U>[];
