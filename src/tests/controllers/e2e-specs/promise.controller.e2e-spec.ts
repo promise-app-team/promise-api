@@ -94,7 +94,7 @@ describe(PromiseController, () => {
         R.pipe(
           [host, ...attendees],
           R.sortBy((attendee) => attendee.id),
-          R.map.indexed((attendee, i) => ({
+          R.map((attendee, i) => ({
             ...R.pick(attendee, ['id', 'username', 'profileUrl']),
             hasStartLocation: i === 1,
             isMidpointCalculated: expect.toBeBoolean(),

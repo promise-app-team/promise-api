@@ -94,7 +94,7 @@ export async function getMigrationStatus() {
 
 export function parseTSV(data: string): Record<string, string>[] {
   const [header, ...rows] = data.split('\n').map((row) => row.split('\t'));
-  return rows.map((row) => R.fromEntries.strict(R.zip(header, row)));
+  return rows.map((row) => R.fromEntries(R.zip(header, row)));
 }
 
 export function transformMigration(migration: string) {

@@ -1,4 +1,4 @@
-type Type<T> = { new (...args: any[]): T };
+import type { Constructor } from 'type-fest';
 
 abstract class BaseCommand {
   static alias: string;
@@ -6,7 +6,7 @@ abstract class BaseCommand {
   abstract execute(...args: string[]): Promise<void>;
 }
 
-export function Command(name: string): Type<BaseCommand> {
+export function Command(name: string): Constructor<BaseCommand> {
   return class {
     static alias = name;
   } as any;

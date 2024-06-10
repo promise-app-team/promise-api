@@ -9,11 +9,13 @@ export class ToArrayOfPipe<T> implements PipeTransform<any, T[]> {
   ) {}
 
   transform(value: unknown, _metadata: ArgumentMetadata) {
+    const unique = this.options?.unique ?? false;
+
     return R.pipe(
       R.isArray(value) ? value : [value],
       R.map((v) => this.type(v)),
       R.filter(R.isTruthy),
-      this.options?.unique ?? false ? R.unique() : R.identity
+      unique ? R.unique() : R.identity()
     );
   }
 }
