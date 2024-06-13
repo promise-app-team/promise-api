@@ -17,7 +17,7 @@ import { AuthModule } from '@/modules/auth';
 import { DevModule } from '@/modules/dev';
 import { EventModule } from '@/modules/event';
 import { PromiseModule } from '@/modules/promise';
-import { ThemeModule } from '@/modules/themes';
+import { ThemeModule } from '@/modules/theme';
 import { FileUploadModule } from '@/modules/upload';
 import { UserModule } from '@/modules/user';
 import { PrismaModule } from '@/prisma';

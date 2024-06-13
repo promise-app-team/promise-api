@@ -12,7 +12,7 @@ import { AuthUser } from '@/modules/auth';
 import { DestinationType, UserModel } from '@/prisma';
 import { Location, findGeometricMidpoint } from '@/utils';
 
-import { InputLocationDTO, LocationDTO, PointDTO } from '../locations';
+import { InputLocationDTO, LocationDTO, PointDTO } from '../location';
 
 import {
   IdentifiableDTO,

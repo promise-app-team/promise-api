@@ -14,7 +14,7 @@ import { createPrismaClient } from '@/tests/setups/prisma';
 
 import { mockGlobalFn } from '../mocks';
 
-import type { InputLocationDTO } from '@/modules/locations';
+import type { InputLocationDTO } from '@/modules/location';
 import type { InputCreatePromiseDTO, InputUpdatePromiseDTO } from '@/modules/promise';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 

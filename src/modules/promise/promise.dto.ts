@@ -20,8 +20,8 @@ import { IsAfter } from '@/common/decorators';
 import { ApplyDTO } from '@/common/mixins';
 import { DestinationType, LocationShareType, PromiseEntity, UserEntity } from '@/prisma';
 
-import { InputLocationDTO, LocationDTO } from '../locations';
-import { ThemeDTO } from '../themes';
+import { InputLocationDTO, LocationDTO } from '../location';
+import { ThemeDTO } from '../theme';
 
 export class HostDTO extends ApplyDTO(UserEntity, ['id', 'username', 'profileUrl']) {}
 

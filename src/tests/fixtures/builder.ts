@@ -7,8 +7,6 @@ export class Result<Input = any, Output = Input> {
   input!: Input;
   output!: Output;
 
-  constructor(input: Input);
-  constructor(input: Input, output: Output);
   constructor(input: Input, output?: Output) {
     this.input = input;
     this.output = output ?? (input as any);
