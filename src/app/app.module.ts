@@ -1,6 +1,7 @@
 import { Module, Scope } from '@nestjs/common';
 import { ConditionalModule } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
+import { mapValues } from 'remeda';
 
 import { AppController } from '@/app/app.controller';
 import { CommonModule } from '@/common/modules';
@@ -154,4 +155,16 @@ import { PrismaModule } from '@/prisma';
   ],
   controllers: [AppController],
 })
-export class AppModule {}
+export class AppModule {
+  constructor(
+    private readonly logger: LoggerService,
+    private readonly config: TypedConfigService
+  ) {
+    if (this.config.get('debug.memory')) {
+      setInterval(() => {
+        const memoryUsage = mapValues(process.memoryUsage(), (bytes) => `${(bytes / 1024 / 1024).toFixed(2)} MB`);
+        this.logger.debug(JSON.stringify(memoryUsage), 'MemoryUsage');
+      }, 60_000);
+    }
+  }
+}
