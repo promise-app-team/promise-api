@@ -80,4 +80,4 @@ export const env = () => {
   return env;
 };
 
-export class TypedConfigService extends TypedConfigServiceBuilder<ReturnType<typeof env>> {}
+export class TypedConfigService extends TypedConfigServiceBuilder(env) {}

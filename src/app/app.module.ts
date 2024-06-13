@@ -4,7 +4,7 @@ import { PrismaClient } from '@prisma/client';
 
 import { AppController } from '@/app/app.controller';
 import { CommonModule } from '@/common/modules';
-import { TypedConfigService, env } from '@/config/env';
+import { TypedConfigService } from '@/config/env';
 import { schema } from '@/config/validation';
 import { CacheModule, InMemoryCacheService, RedisCacheService } from '@/customs/cache';
 import { IntHashModule } from '@/customs/inthash';
@@ -24,15 +24,16 @@ import { PrismaModule } from '@/prisma';
 @Module({
   imports: [
     TypedConfigModule.register({
-      isGlobal: true,
-      load: [env],
-      envFilePath: ['.env.local'],
-      validationSchema: schema,
-      expandVariables: true,
-      config: TypedConfigService,
+      global: true,
+      provider: TypedConfigService,
+      options: {
+        envFilePath: ['.env.local'],
+        validationSchema: schema,
+        expandVariables: true,
+      },
     }),
     LoggerModule.registerAsync({
-      isGlobal: true,
+      global: true,
       scope: Scope.TRANSIENT,
       inject: [TypedConfigService],
       useFactory(config: TypedConfigService) {
@@ -73,7 +74,7 @@ import { PrismaModule } from '@/prisma';
       },
     }),
     PrismaModule.registerAsync({
-      isGlobal: true,
+      global: true,
       inject: [LoggerService, TypedConfigService],
       useFactory(logger: LoggerService, config: TypedConfigService) {
         const prisma = new PrismaClient({
@@ -110,7 +111,7 @@ import { PrismaModule } from '@/prisma';
       },
     }),
     CacheModule.registerAsync({
-      isGlobal: true,
+      global: true,
       inject: [TypedConfigService],
       useFactory(config: TypedConfigService) {
         return {
@@ -125,14 +126,14 @@ import { PrismaModule } from '@/prisma';
       },
     }),
     IntHashModule.registerAsync({
-      isGlobal: true,
+      global: true,
       inject: [TypedConfigService],
       useFactory(config: TypedConfigService) {
         return config.get('inthash');
       },
     }),
     SqidsModule.registerAsync({
-      isGlobal: true,
+      global: true,
       inject: [TypedConfigService],
       useFactory(config: TypedConfigService) {
         return {
@@ -140,6 +141,7 @@ import { PrismaModule } from '@/prisma';
         };
       },
     }),
+
     AuthModule,
     UserModule,
     ThemeModule,

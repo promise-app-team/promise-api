@@ -5,13 +5,13 @@ import { InthashService } from './inthash.service';
 
 @Module({})
 export class IntHashModule {
-  static register(options: IntHashModuleOptions): DynamicModule {
+  static register({ global, scope, ...options }: IntHashModuleOptions): DynamicModule {
     return {
-      global: options.isGlobal,
+      global,
       module: IntHashModule,
       providers: [
         {
-          scope: options.scope,
+          scope,
           provide: InthashService,
           useValue: new InthashService(options),
         },
@@ -20,17 +20,17 @@ export class IntHashModule {
     };
   }
 
-  static registerAsync(options: IntHashModuleAsyncOptions): DynamicModule {
+  static registerAsync({ global, scope, inject, useFactory }: IntHashModuleAsyncOptions): DynamicModule {
     return {
-      global: options.isGlobal,
+      global,
       module: IntHashModule,
       providers: [
         {
-          scope: options.scope,
+          scope,
+          inject,
           provide: InthashService,
-          inject: options.inject,
           async useFactory(...args) {
-            const opts = await options.useFactory(...args);
+            const opts = await useFactory(...args);
             return new InthashService(opts);
           },
         },

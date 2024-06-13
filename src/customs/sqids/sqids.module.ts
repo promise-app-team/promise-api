@@ -8,13 +8,13 @@ import { SqidsService } from './sqids.service';
   exports: [SqidsService],
 })
 export class SqidsModule {
-  static register(options?: SqidsModuleOptions): DynamicModule {
+  static register({ global, scope, ...options }: SqidsModuleOptions): DynamicModule {
     return {
-      global: options?.isGlobal,
+      global,
       module: SqidsModule,
       providers: [
         {
-          scope: options?.scope,
+          scope,
           provide: SqidsService,
           useValue: new SqidsService(options),
         },
@@ -23,17 +23,17 @@ export class SqidsModule {
     };
   }
 
-  static registerAsync(options: SqidsModuleAsyncOptions): DynamicModule {
+  static registerAsync({ global, scope, inject, useFactory }: SqidsModuleAsyncOptions): DynamicModule {
     return {
-      global: options.isGlobal,
+      global,
       module: SqidsModule,
       providers: [
         {
-          scope: options.scope,
+          scope,
           provide: SqidsService,
-          inject: options.inject,
+          inject,
           async useFactory(...args) {
-            const opts = await options.useFactory(...args);
+            const opts = await useFactory(...args);
             return new SqidsService(opts);
           },
         },

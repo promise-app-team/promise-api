@@ -1,9 +1,9 @@
 import type { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
 import type { HasherOptions } from 'inthash';
+import type { Simplify } from 'type-fest';
 
-interface _IntHashModuleOptions extends HasherOptions {}
+interface InternalIntHashModuleOptions extends HasherOptions {}
+interface InternalIntHashModuleAsyncOptions extends BaseFactoryProvider<InternalIntHashModuleOptions> {}
 
-interface _IntHashModuleAsyncOptions extends BaseFactoryProvider<_IntHashModuleOptions> {}
-
-export type IntHashModuleOptions = _IntHashModuleOptions & BaseModuleOptions;
-export type IntHashModuleAsyncOptions = _IntHashModuleAsyncOptions & BaseModuleOptions;
+export type IntHashModuleOptions = Simplify<InternalIntHashModuleOptions & BaseModuleOptions>;
+export type IntHashModuleAsyncOptions = Simplify<InternalIntHashModuleAsyncOptions & BaseModuleOptions>;
