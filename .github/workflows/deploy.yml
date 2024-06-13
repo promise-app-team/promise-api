@@ -70,7 +70,7 @@ jobs:
         with:
           push: true
           context: .
-          file: deploy.Dockerfile
+          file: docker/deploy.dockerfile
           tags: ${{ steps.ecr.outputs.registry }}/promise-api-${{ env.STAGE }}:appimage
           cache-from: type=gha
           cache-to: type=gha,mode=max

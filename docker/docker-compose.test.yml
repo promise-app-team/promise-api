@@ -1,12 +1,13 @@
 services:
   test:
-    build:
-      context: .
-      dockerfile: dev.Dockerfile
-    ports:
-      - ${PORT}:${PORT}
     image: promise-api:test
     container_name: promise-api.test
+    pull_policy: never
+    build:
+      context: ..
+      dockerfile: docker/build.dockerfile
+    ports:
+      - ${PORT}:${PORT}
     networks:
       - test
     depends_on:

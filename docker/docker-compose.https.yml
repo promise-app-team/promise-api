@@ -1,12 +1,13 @@
 services:
   https:
+    image: promise-api:https
+    container_name: promise-api.https
+    pull_policy: never
     build:
       context: https
       args:
         - PORT=${PORT}
         - HTTPS=${HTTPS}
-    image: promise-api:https
-    container_name: promise-api.https
     networks:
       - https
     ports:
