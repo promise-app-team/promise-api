@@ -25,6 +25,7 @@ describe(AppController, () => {
 
       expect(response.body).toMatchObject({
         message: 'pong',
+        stage: 'test',
         env: 'development',
         tz: 'UTC',
       });

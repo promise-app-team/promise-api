@@ -14,6 +14,9 @@ export class EntryDTO {
   @ApiProperty({ example: formatISO(new Date()) })
   deploy!: string;
 
+  @ApiProperty({ example: 'prod' })
+  stage!: string;
+
   @ApiProperty({ example: process.env.NODE_ENV })
   env!: string;
 
