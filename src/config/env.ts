@@ -5,7 +5,7 @@ import { formatISO } from 'date-fns';
 
 import { TypedConfigServiceBuilder } from '@/customs/typed-config';
 
-const BUILD = formatISO(new Date());
+const build = formatISO(new Date());
 
 export const env = () => {
   const [bits, prime, inverse, xor] = (process.env.INTHASH_KEY ?? '').split('.');
@@ -17,7 +17,7 @@ export const env = () => {
     stage,
     env: (process.env.NODE_ENV || 'development') as 'development' | 'production',
     port: +(process.env.PORT || 8080),
-    build: BUILD,
+    build,
     deploy: formatISO(process.env.NOW || new Date()),
     version: pkg.version as string,
     colorize: !process.env.NO_COLOR,

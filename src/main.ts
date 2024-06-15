@@ -102,6 +102,9 @@ async function startLocalServer() {
   const config = app.get(TypedConfigService);
   await app.listen(`${config.get('port')}`, '0.0.0.0');
   Logger.log(`🌈 Server running on ${await app.getUrl()}`, 'Bootstrap');
+
+  const logger = await app.resolve(LoggerService);
+  process.on('unhandledRejection', (reason) => logger.fatal(undefined, reason as string, 'UnhandledRejection'));
 }
 
 async function startServerless() {

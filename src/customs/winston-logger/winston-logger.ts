@@ -104,10 +104,12 @@ export const createWinstonLogger = memoize((options: WinstonLoggerOptions = {}):
 
             if (error instanceof Error) {
               const errorMessage = (error.stack ?? error.message) || `${error}`;
-              const stack = colorize('yellow', errorMessage);
+              const color = level.includes('FATAL') ? 'red' : 'yellow';
+              const stack = colorize(color, errorMessage);
               return msg ? build(msg, `\n${stack}`) : build(stack);
             } else if (typeof error === 'string') {
-              const stack = colorize('yellow', error);
+              const color = level.includes('FATAL') ? 'red' : 'yellow';
+              const stack = colorize(color, error);
               return msg ? build(`${msg} ${stack}`) : build(stack);
             }
 
