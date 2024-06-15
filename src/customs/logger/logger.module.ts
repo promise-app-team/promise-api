@@ -5,38 +5,38 @@ import { LoggerService } from './logger.service';
 
 @Module({})
 export class LoggerModule {
-  static register(options?: LoggerModuleOptions): DynamicModule {
+  static register({ global, scope, logger }: LoggerModuleOptions): DynamicModule {
     return {
-      global: options?.isGlobal,
+      global,
       module: LoggerModule,
       providers: [
         {
-          scope: options?.scope,
+          scope,
           provide: LoggerService,
-          useValue: options?.logger ?? new ConsoleLogger(),
+          useValue: logger ?? new ConsoleLogger(),
         },
       ],
       exports: [LoggerService],
     };
   }
 
-  static registerAsync(options: LoggerModuleAsyncOptions): DynamicModule {
+  static registerAsync({ global, scope, inject, useFactory }: LoggerModuleAsyncOptions): DynamicModule {
     return {
-      global: options.isGlobal,
+      global,
       module: LoggerModule,
       providers: [
-        options.useFactory
+        useFactory
           ? {
-              scope: options.scope,
+              scope,
+              inject,
               provide: LoggerService,
-              inject: options.inject ?? [],
               async useFactory(...args) {
-                const opts = await options.useFactory?.(...args);
+                const opts = await useFactory?.(...args);
                 return opts?.logger ?? new ConsoleLogger();
               },
             }
           : {
-              scope: options.scope,
+              scope,
               provide: LoggerService,
               useClass: ConsoleLogger,
             },

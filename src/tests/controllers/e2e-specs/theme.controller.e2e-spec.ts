@@ -3,7 +3,7 @@ import { Test } from '@nestjs/testing';
 import { AppModule } from '@/app';
 import { configure } from '@/main';
 import { JwtAuthTokenService } from '@/modules/auth';
-import { ThemeController } from '@/modules/themes';
+import { ThemeController } from '@/modules/theme';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';
 

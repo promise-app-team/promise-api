@@ -18,6 +18,7 @@ export class AppController {
       version: this.config.get('version'),
       build: this.config.get('build'),
       deploy: this.config.get('deploy'),
+      stage: this.config.get('stage'),
       env: this.config.get('env'),
       tz: this.config.get('tz'),
     };

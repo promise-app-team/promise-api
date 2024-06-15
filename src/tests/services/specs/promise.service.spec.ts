@@ -7,7 +7,7 @@ import { DestinationType, PrismaService } from '@/prisma';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';
 
-import type { InputLocationDTO } from '@/modules/locations';
+import type { InputLocationDTO } from '@/modules/location';
 import type { InputCreatePromiseDTO, InputUpdatePromiseDTO } from '@/modules/promise';
 import type { Promise as PromiseModel, User as UserModel } from '@prisma/client';
 

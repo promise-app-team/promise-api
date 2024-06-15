@@ -1,10 +1,11 @@
-import { Module, Scope } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, Scope } from '@nestjs/common';
 import { ConditionalModule } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
+import { mapValues } from 'remeda';
 
 import { AppController } from '@/app/app.controller';
-import { CommonModule } from '@/common/modules';
-import { TypedConfigService, env } from '@/config/env';
+import { LoggerMiddleware, TrimMiddleware } from '@/common/middlewares';
+import { TypedConfigService } from '@/config/env';
 import { schema } from '@/config/validation';
 import { CacheModule, InMemoryCacheService, RedisCacheService } from '@/customs/cache';
 import { IntHashModule } from '@/customs/inthash';
@@ -16,7 +17,7 @@ import { AuthModule } from '@/modules/auth';
 import { DevModule } from '@/modules/dev';
 import { EventModule } from '@/modules/event';
 import { PromiseModule } from '@/modules/promise';
-import { ThemeModule } from '@/modules/themes';
+import { ThemeModule } from '@/modules/theme';
 import { FileUploadModule } from '@/modules/upload';
 import { UserModule } from '@/modules/user';
 import { PrismaModule } from '@/prisma';
@@ -24,15 +25,16 @@ import { PrismaModule } from '@/prisma';
 @Module({
   imports: [
     TypedConfigModule.register({
-      isGlobal: true,
-      load: [env],
-      envFilePath: ['.env.local'],
-      validationSchema: schema,
-      expandVariables: true,
-      config: TypedConfigService,
+      global: true,
+      provider: TypedConfigService,
+      options: {
+        envFilePath: ['.env.local'],
+        validationSchema: schema,
+        expandVariables: true,
+      },
     }),
     LoggerModule.registerAsync({
-      isGlobal: true,
+      global: true,
       scope: Scope.TRANSIENT,
       inject: [TypedConfigService],
       useFactory(config: TypedConfigService) {
@@ -73,7 +75,7 @@ import { PrismaModule } from '@/prisma';
       },
     }),
     PrismaModule.registerAsync({
-      isGlobal: true,
+      global: true,
       inject: [LoggerService, TypedConfigService],
       useFactory(logger: LoggerService, config: TypedConfigService) {
         const prisma = new PrismaClient({
@@ -110,7 +112,7 @@ import { PrismaModule } from '@/prisma';
       },
     }),
     CacheModule.registerAsync({
-      isGlobal: true,
+      global: true,
       inject: [TypedConfigService],
       useFactory(config: TypedConfigService) {
         return {
@@ -125,14 +127,14 @@ import { PrismaModule } from '@/prisma';
       },
     }),
     IntHashModule.registerAsync({
-      isGlobal: true,
+      global: true,
       inject: [TypedConfigService],
       useFactory(config: TypedConfigService) {
         return config.get('inthash');
       },
     }),
     SqidsModule.registerAsync({
-      isGlobal: true,
+      global: true,
       inject: [TypedConfigService],
       useFactory(config: TypedConfigService) {
         return {
@@ -140,16 +142,33 @@ import { PrismaModule } from '@/prisma';
         };
       },
     }),
+
     AuthModule,
     UserModule,
     ThemeModule,
     PromiseModule,
     FileUploadModule,
     EventModule,
-    CommonModule,
 
     ConditionalModule.registerWhen(DevModule, ({ STAGE }) => !['prod'].includes(STAGE || '')),
   ],
   controllers: [AppController],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  constructor(
+    private readonly logger: LoggerService,
+    private readonly config: TypedConfigService
+  ) {
+    if (this.config.get('debug.memory')) {
+      setInterval(() => {
+        const memoryUsage = mapValues(process.memoryUsage(), (bytes) => `${(bytes / 1024 / 1024).toFixed(2)} MB`);
+        this.logger.debug(JSON.stringify(memoryUsage), 'MemoryUsage');
+      }, 60_000);
+    }
+  }
+
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(TrimMiddleware).forRoutes('*');
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}

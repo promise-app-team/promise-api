@@ -1,13 +1,9 @@
 .*
-_*
+-*
 Makefile
-*.Dockerfile
-docker-compose.*
 serverless.yml
 node_modules
-dockerdata
 coverage
 scripts
-https
-mysql
+docker
 dist

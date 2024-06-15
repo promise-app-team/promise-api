@@ -25,6 +25,7 @@ describe(AppController, () => {
       version: 'version',
       build: 'build',
       deploy: 'deploy',
+      stage: 'stage',
       env: 'env',
       tz: 'tz',
     };

@@ -1,5 +1,6 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
+import * as R from 'remeda';
 
 @Injectable()
 export class TrimMiddleware implements NestMiddleware {
@@ -9,16 +10,12 @@ export class TrimMiddleware implements NestMiddleware {
   }
 
   private transform(data: any): any {
-    if (typeof data === 'string') {
-      return data.trim();
-    } else if (Array.isArray(data)) {
-      return data.map(this.transform.bind(this));
-    } else if (typeof data === 'object') {
-      for (const key in data) {
-        if (!data.hasOwnProperty(key)) continue;
-        data[key] = this.transform(data[key]);
-      }
-    }
-    return data;
+    return R.conditional(
+      data,
+      [R.isString, (data) => data.trim()],
+      [R.isArray, R.map(this.transform.bind(this))],
+      [R.isPlainObject, R.mapValues(this.transform.bind(this))],
+      R.conditional.defaultCase(R.identity())
+    );
   }
 }

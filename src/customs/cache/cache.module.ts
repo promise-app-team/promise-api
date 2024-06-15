@@ -5,32 +5,32 @@ import { CacheService } from './services';
 
 @Module({})
 export class CacheModule {
-  static register(options: CacheModuleOptions): DynamicModule {
+  static register({ global, scope, service }: CacheModuleOptions): DynamicModule {
     return {
-      global: options.isGlobal,
+      global,
       module: CacheModule,
       providers: [
         {
-          scope: options.scope,
+          scope,
           provide: CacheService,
-          useValue: options.service,
+          useValue: service,
         },
       ],
       exports: [CacheService],
     };
   }
 
-  static registerAsync(options: CacheModuleAsyncOptions): DynamicModule {
+  static registerAsync({ global, scope, inject, useFactory }: CacheModuleAsyncOptions): DynamicModule {
     return {
-      global: options.isGlobal,
+      global,
       module: CacheModule,
       providers: [
         {
-          scope: options.scope,
+          scope,
+          inject,
           provide: CacheService,
-          inject: options.inject,
           async useFactory(...args) {
-            const opts = await options.useFactory(...args);
+            const opts = await useFactory(...args);
             return opts.service;
           },
         },

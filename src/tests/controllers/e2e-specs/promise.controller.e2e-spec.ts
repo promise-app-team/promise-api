@@ -1,5 +1,6 @@
 import { Test } from '@nestjs/testing';
 import { Prisma } from '@prisma/client';
+import { addMinutes } from 'date-fns';
 import * as R from 'remeda';
 
 import { AppModule } from '@/app';
@@ -14,7 +15,7 @@ import { createPrismaClient } from '@/tests/setups/prisma';
 
 import { mockGlobalFn } from '../mocks';
 
-import type { InputLocationDTO } from '@/modules/locations';
+import type { InputLocationDTO } from '@/modules/location';
 import type { InputCreatePromiseDTO, InputUpdatePromiseDTO } from '@/modules/promise';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 
@@ -204,6 +205,32 @@ describe(PromiseController, () => {
       } satisfies InputCreatePromiseDTO;
 
       await http.request.createPromise().post.send(input).expect(400);
+    });
+
+    test('should throw an error if promisedAt is in after 10 minutes', async () => {
+      const themes = await fixture.write.themes.output(3);
+      const destination = fixture.input.location();
+      const promise = fixture.input.promise({
+        hostId: http.request.auth.user.id,
+      });
+
+      const input = {
+        ...R.pick(promise, [
+          'title',
+          'destinationType',
+          'locationShareStartType',
+          'locationShareStartValue',
+          'locationShareEndType',
+          'locationShareEndValue',
+        ]),
+        destination,
+        promisedAt: addMinutes(new Date(), 9).toISOString(),
+        themeIds: themes.map((theme) => theme.id),
+      } satisfies InputCreatePromiseDTO;
+
+      const res = await http.request.createPromise().post.send(input);
+      expect(res.body.statusCode).toBe(400);
+      expect(res.body.message).toBe('약속 시간은 현재 시간보다 10분 이후로 입력해주세요.');
     });
   });
 

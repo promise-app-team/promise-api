@@ -4,7 +4,7 @@ import * as R from 'remeda';
 
 import { PrismaService, LocationModel, PrismaClientError } from '@/prisma';
 
-import { InputLocationDTO } from '../locations';
+import { InputLocationDTO } from '../location';
 
 import { InputCreatePromiseDTO, InputUpdatePromiseDTO } from './promise.dto';
 import { PromiseStatus, PromiseUserRole } from './promise.enum';

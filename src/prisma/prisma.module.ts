@@ -5,32 +5,32 @@ import { PrismaService } from './prisma.service';
 
 @Module({})
 export class PrismaModule {
-  static register(options: PrismaModuleOptions): DynamicModule {
+  static register({ global, scope, prisma }: PrismaModuleOptions): DynamicModule {
     return {
-      global: options.isGlobal,
+      global,
       module: PrismaModule,
       providers: [
         {
-          scope: options.scope,
+          scope,
           provide: PrismaService,
-          useValue: options.prisma,
+          useValue: prisma,
         },
       ],
       exports: [PrismaService],
     };
   }
 
-  static registerAsync(options: PrismaModuleAsyncOptions): DynamicModule {
+  static registerAsync({ global, scope, inject, useFactory }: PrismaModuleAsyncOptions): DynamicModule {
     return {
-      global: options.isGlobal,
+      global,
       module: PrismaModule,
       providers: [
         {
-          scope: options.scope,
+          scope,
           provide: PrismaService,
-          inject: options.inject,
+          inject,
           async useFactory(...args: any[]) {
-            const { prisma } = await options.useFactory(...args);
+            const { prisma } = await useFactory(...args);
             return prisma ?? new PrismaService();
           },
         },

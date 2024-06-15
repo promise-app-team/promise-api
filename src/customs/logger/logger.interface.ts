@@ -1,11 +1,12 @@
 import type { LoggerService } from './logger.service';
 import type { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
+import type { Simplify } from 'type-fest';
 
-interface _LoggerModuleOptions {
+interface InternalLoggerModuleOptions {
   logger?: LoggerService;
 }
 
-interface _LoggerModuleAsyncOptions extends BaseFactoryProvider<_LoggerModuleOptions> {}
+interface InternalLoggerModuleAsyncOptions extends BaseFactoryProvider<InternalLoggerModuleOptions> {}
 
-export type LoggerModuleOptions = _LoggerModuleOptions & BaseModuleOptions;
-export type LoggerModuleAsyncOptions = _LoggerModuleAsyncOptions & BaseModuleOptions;
+export type LoggerModuleOptions = Simplify<InternalLoggerModuleOptions & BaseModuleOptions>;
+export type LoggerModuleAsyncOptions = Simplify<InternalLoggerModuleAsyncOptions & BaseModuleOptions>;

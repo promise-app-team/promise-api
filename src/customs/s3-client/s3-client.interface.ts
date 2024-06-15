@@ -1,11 +1,14 @@
 import type { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
 import type { S3Client } from '@aws-sdk/client-s3';
+import type { Simplify } from 'type-fest';
 
-export interface _S3ClientModuleOptions {
-  s3options?: ConstructorParameters<typeof S3Client>[0];
+export type S3ClientConfig = ConstructorParameters<typeof S3Client>[0];
+
+interface InternalS3ClientModuleOptions {
+  s3options?: S3ClientConfig;
 }
 
-export interface _S3ClientModuleAsyncOptions extends BaseFactoryProvider<_S3ClientModuleOptions> {}
+interface InternalS3ClientModuleAsyncOptions extends BaseFactoryProvider<InternalS3ClientModuleOptions> {}
 
-export type S3ClientModuleOptions = _S3ClientModuleOptions & BaseModuleOptions;
-export type S3ClientModuleAsyncOptions = _S3ClientModuleAsyncOptions & BaseModuleOptions;
+export type S3ClientModuleOptions = Simplify<InternalS3ClientModuleOptions & BaseModuleOptions>;
+export type S3ClientModuleAsyncOptions = Simplify<InternalS3ClientModuleAsyncOptions & BaseModuleOptions>;

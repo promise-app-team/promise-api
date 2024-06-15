@@ -5,26 +5,22 @@ import { formatISO } from 'date-fns';
 
 import { TypedConfigServiceBuilder } from '@/customs/typed-config';
 
-const BUILD = formatISO(new Date());
+const build = formatISO(new Date());
 
 export const env = () => {
   const [bits, prime, inverse, xor] = (process.env.INTHASH_KEY ?? '').split('.');
   const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf-8'));
+  const stage = process.env.STAGE || ('local' as 'local' | 'dev' | 'test' | 'prod');
 
   const env = {
     tz: process.env.TZ || 'UTC',
-    stage: (process.env.STAGE || 'local') as 'local' | 'dev' | 'test' | 'prod',
+    stage,
     env: (process.env.NODE_ENV || 'development') as 'development' | 'production',
     port: +(process.env.PORT || 8080),
-    build: BUILD,
+    build,
     deploy: formatISO(process.env.NOW || new Date()),
     version: pkg.version as string,
     colorize: !process.env.NO_COLOR,
-
-    debug: {
-      lambda: !!process.env.DEBUG_LAMBDA,
-      prisma: !!process.env.DEBUG_PRISMA,
-    },
 
     db: {
       url: process.env.DB_URL!,
@@ -70,14 +66,20 @@ export const env = () => {
     },
 
     is: {
-      local: process.env.STAGE === 'local',
-      test: process.env.STAGE === 'test',
-      dev: process.env.STAGE === 'dev',
-      prod: process.env.STAGE === 'prod',
+      local: stage === 'local',
+      test: stage === 'test',
+      dev: stage === 'dev',
+      prod: stage === 'prod',
+    },
+
+    debug: {
+      lambda: !!process.env.DEBUG_LAMBDA,
+      prisma: !!process.env.DEBUG_PRISMA,
+      memory: !!process.env.DEBUG_MEMORY,
     },
   };
 
   return env;
 };
 
-export class TypedConfigService extends TypedConfigServiceBuilder<ReturnType<typeof env>> {}
+export class TypedConfigService extends TypedConfigServiceBuilder(env) {}

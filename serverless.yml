@@ -67,6 +67,7 @@ provider:
   websocketsApiName: ${self:provider.stage}-${self:service}-ws
   environment:
     SERVERLESS: true
+    DEBUG_MEMORY: true
 
     TZ: ${env:TZ}
     STAGE: ${self:provider.stage}

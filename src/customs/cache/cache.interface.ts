@@ -1,11 +1,12 @@
 import type { CacheService } from './services';
 import type { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
+import type { Simplify } from 'type-fest';
 
-interface _CacheModuleOptions {
+interface InternalCacheModuleOptions {
   service: CacheService;
 }
 
-interface _CacheModuleAsyncOptions extends BaseFactoryProvider<_CacheModuleOptions> {}
+interface InternalCacheModuleAsyncOptions extends BaseFactoryProvider<InternalCacheModuleOptions> {}
 
-export type CacheModuleOptions = _CacheModuleOptions & BaseModuleOptions;
-export type CacheModuleAsyncOptions = _CacheModuleAsyncOptions & BaseModuleOptions;
+export type CacheModuleOptions = Simplify<InternalCacheModuleOptions & BaseModuleOptions>;
+export type CacheModuleAsyncOptions = Simplify<InternalCacheModuleAsyncOptions & BaseModuleOptions>;

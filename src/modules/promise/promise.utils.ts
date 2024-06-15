@@ -4,7 +4,7 @@ import { createQueryBuilder } from '@/prisma/utils';
 
 import { PromiseStatus, PromiseUserRole } from './promise.enum';
 
-import type { InputLocationDTO } from '../locations';
+import type { InputLocationDTO } from '../location';
 import type { Prisma } from '@prisma/client';
 
 export type FilterOptions = {
