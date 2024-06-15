@@ -1,5 +1,5 @@
 import { registerDecorator } from 'class-validator';
-import { formatISO, fromUnixTime, isAfter, isValid } from 'date-fns';
+import { formatISO, isAfter, isValid, toDate } from 'date-fns';
 
 import type { ValidationOptions } from 'class-validator';
 
@@ -11,21 +11,9 @@ export function IsAfter(date: () => Date, validationOptions?: ValidationOptions)
       propertyName: propertyName as string,
       options: validationOptions,
       validator: {
-        validate(value: string | Date | number) {
-          if (typeof value === 'string') {
-            value = new Date(value);
-          }
-          if (typeof value === 'number') {
-            if (`${value}`.length === 13) {
-              value = new Date(value);
-            } else {
-              value = fromUnixTime(value);
-            }
-          }
-          if (isValid(value)) {
-            return isAfter(value, date());
-          }
-          return false;
+        validate(value: any) {
+          value = toDate(value);
+          return isValid(value) && isAfter(value, date());
         },
         defaultMessage(args) {
           return `${args?.property} must be a date after ${formatISO(date())}`;

@@ -1,10 +1,10 @@
-import { Module, Scope } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule, Scope } from '@nestjs/common';
 import { ConditionalModule } from '@nestjs/config';
 import { PrismaClient } from '@prisma/client';
 import { mapValues } from 'remeda';
 
 import { AppController } from '@/app/app.controller';
-import { CommonModule } from '@/common/modules';
+import { LoggerMiddleware, TrimMiddleware } from '@/common/middlewares';
 import { TypedConfigService } from '@/config/env';
 import { schema } from '@/config/validation';
 import { CacheModule, InMemoryCacheService, RedisCacheService } from '@/customs/cache';
@@ -149,13 +149,12 @@ import { PrismaModule } from '@/prisma';
     PromiseModule,
     FileUploadModule,
     EventModule,
-    CommonModule,
 
     ConditionalModule.registerWhen(DevModule, ({ STAGE }) => !['prod'].includes(STAGE || '')),
   ],
   controllers: [AppController],
 })
-export class AppModule {
+export class AppModule implements NestModule {
   constructor(
     private readonly logger: LoggerService,
     private readonly config: TypedConfigService
@@ -166,5 +165,10 @@ export class AppModule {
         this.logger.debug(JSON.stringify(memoryUsage), 'MemoryUsage');
       }, 60_000);
     }
+  }
+
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(TrimMiddleware).forRoutes('*');
+    consumer.apply(LoggerMiddleware).forRoutes('*');
   }
 }

@@ -63,10 +63,8 @@ export class HttpException extends NestHttpException {
     Object.assign(this, exception);
   }
 
-  static new(error: any): NestHttpException;
-  static new(error: Error | HttpException): NestHttpException;
-  static new(error: Error | string, status?: ExceptionStatus, cause?: unknown): NestHttpException;
-  static new(args: { message: string; status: ExceptionStatus; cause?: unknown }): NestHttpException;
+  static new(error: NestHttpException | Error | string, status?: ExceptionStatus, cause?: unknown): NestHttpException;
+  static new(error: { message: string; status: ExceptionStatus; cause?: unknown }): NestHttpException;
   static new(error: any, status: ExceptionStatus = 'INTERNAL_SERVER_ERROR', cause?: unknown): NestHttpException {
     if (error instanceof NestHttpException) {
       return error;
@@ -78,10 +76,8 @@ export class HttpException extends NestHttpException {
     return new HttpException(input.message, input.status, input.cause);
   }
 
-  static throw(error: any): never;
-  static throw(error: Error | HttpException): never;
-  static throw(error: Error | string, status?: ExceptionStatus, cause?: unknown): never;
-  static throw(args: { message: string; status: ExceptionStatus; cause?: unknown }): never;
+  static throw(error: NestHttpException | Error | string, status?: ExceptionStatus, cause?: unknown): never;
+  static throw(error: { message: string; status: ExceptionStatus; cause?: unknown }): never;
   static throw(error: any, status: ExceptionStatus = 'INTERNAL_SERVER_ERROR', cause?: unknown): never {
     throw HttpException.new(error, status, cause);
   }
