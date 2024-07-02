@@ -1,6 +1,6 @@
 service: promise-api
 
-frameworkVersion: '3'
+frameworkVersion: '4'
 
 plugins:
   - serverless-prune-plugin
@@ -89,17 +89,7 @@ provider:
     REDIS_PASSWORD: ${env:REDIS_PASSWORD}
 
     AWS_S3_BUCKET_NAME: ${env:AWS_S3_BUCKET_NAME}
-    AWS_GW_WEBSOCKET_ENDPOINT: 
-      Fn::Join:
-        - ''
-        - - 'https://'
-          - Ref: 'WebsocketsApi'
-          - '.execute-api.'
-          - Ref: 'AWS::Region'
-          - '.'
-          - Ref: 'AWS::URLSuffix'
-          - '/'
-          - ${self:provider.stage}
+    AWS_GW_WEBSOCKET_ENDPOINT: https://${aws:accountId}.execute-api.${aws:region}.amazonaws.com/${self:provider.stage}
 
 functions:
   main:
@@ -117,3 +107,11 @@ functions:
       - websocket: $connect
       - websocket: $disconnect
       - websocket: $default
+
+resources:
+  Resources:
+    assetsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        AccessControl: PublicRead
+        BucketName: ${env:AWS_S3_BUCKET_NAME}
