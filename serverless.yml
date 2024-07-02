@@ -1,10 +1,10 @@
 service: promise-api
 
-frameworkVersion: '4'
+frameworkVersion: '3'
 
 plugins:
   - serverless-prune-plugin
-  - serverless-domain-manager
+  # - serverless-domain-manager
 
 custom:
   prune:
@@ -20,15 +20,15 @@ custom:
       dev: ws.dev.promise-app.com
   customDomain:
     rest:
-      endpointType: EDGE
+      endpointType: REGIONAL
       stage: ${self:provider.stage}
       domainName: ${self:custom.domain.api.${self:provider.stage}}
-      certificateArn: arn:aws:acm:us-east-1:${aws:accountId}:certificate/bb2cf4ae-22a7-41c9-bfc4-98a983b88663
+      certificateArn: arn:aws:acm:ap-northeast-2:${aws:accountId}:certificate/dc9fc730-073b-45be-b6d9-6423c984b366
     websocket:
       endpointType: REGIONAL
       stage: ${self:provider.stage}
       domainName: ${self:custom.domain.websocket.${self:provider.stage}}
-      certificateArn: arn:aws:acm:ap-northeast-2:${aws:accountId}:certificate/c611f60a-37d4-456a-922e-ad5f4836d248
+      certificateArn: arn:aws:acm:ap-northeast-2:${aws:accountId}:certificate/dc9fc730-073b-45be-b6d9-6423c984b366
 
 provider:
   name: aws
