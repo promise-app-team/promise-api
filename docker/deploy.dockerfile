@@ -19,7 +19,7 @@ COPY --from=install /deps/dev/node_modules node_modules
 COPY . .
 RUN . ./patch.sh && npm run build
 
-FROM public.ecr.aws/lambda/nodejs:20 as deploy
+FROM public.ecr.aws/lambda/nodejs:20 AS deploy
 COPY package.json ./
 COPY --from=install /deps/prod/node_modules node_modules
 COPY --from=build /app/dist dist
