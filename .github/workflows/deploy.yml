@@ -66,14 +66,12 @@ jobs:
           echo "NOW=$(date +%Y-%m-%dT%H:%M:%S%z)" >> $GITHUB_ENV
 
       - name: Build and Push Docker Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           push: true
           context: .
           file: docker/deploy.dockerfile
           tags: ${{ steps.ecr.outputs.registry }}/promise-api-${{ env.STAGE }}:appimage
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
           provenance: false
           build-args: |
             NOW=${{ env.NOW }}
