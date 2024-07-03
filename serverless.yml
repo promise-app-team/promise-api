@@ -5,6 +5,7 @@ frameworkVersion: '3'
 plugins:
   - serverless-prune-plugin
   - serverless-domain-manager
+  - serverless-deployment-bucket
 
 custom:
   prune:
@@ -23,12 +24,12 @@ custom:
       endpointType: EDGE
       stage: ${self:provider.stage}
       domainName: ${self:custom.domain.api.${self:provider.stage}}
-      certificateArn: arn:aws:acm:us-east-1:${aws:accountId}:certificate/bb2cf4ae-22a7-41c9-bfc4-98a983b88663
+      certificateArn: arn:aws:acm:us-east-1:${aws:accountId}:certificate/7651f958-b574-4d70-b8f5-a6f31ba3331d
     websocket:
       endpointType: REGIONAL
       stage: ${self:provider.stage}
       domainName: ${self:custom.domain.websocket.${self:provider.stage}}
-      certificateArn: arn:aws:acm:ap-northeast-2:${aws:accountId}:certificate/c611f60a-37d4-456a-922e-ad5f4836d248
+      certificateArn: arn:aws:acm:ap-northeast-2:${aws:accountId}:certificate/cafb731c-bb5c-4e73-8c99-85e910994629
 
 provider:
   name: aws
@@ -54,7 +55,9 @@ provider:
             - ec2:DeleteNetworkInterface
           Resource: '*'
         - Effect: Allow
-          Action: s3:PutObject
+          Action:
+            - s3:PutObject
+            - s3:PutBucketPolicy
           Resource: arn:aws:s3:::${env:AWS_S3_BUCKET_NAME}/*
         - Effect: Allow
           Action:
@@ -89,7 +92,7 @@ provider:
     REDIS_PASSWORD: ${env:REDIS_PASSWORD}
 
     AWS_S3_BUCKET_NAME: ${env:AWS_S3_BUCKET_NAME}
-    AWS_GW_WEBSOCKET_ENDPOINT: 
+    AWS_GW_WEBSOCKET_ENDPOINT:
       Fn::Join:
         - ''
         - - 'https://'
@@ -117,3 +120,27 @@ functions:
       - websocket: $connect
       - websocket: $disconnect
       - websocket: $default
+
+resources:
+  Resources:
+    AssetsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${env:AWS_S3_BUCKET_NAME}
+        AccessControl: Private
+        PublicAccessBlockConfiguration:
+          BlockPublicAcls: false
+          IgnorePublicAcls: false
+          BlockPublicPolicy: false
+          RestrictPublicBuckets: false
+
+    AssetsBucketPolicy:
+      Type: AWS::S3::BucketPolicy
+      Properties:
+        Bucket: !Ref AssetsBucket
+        PolicyDocument:
+          Statement:
+            - Effect: Allow
+              Principal: '*'
+              Action: s3:GetObject
+              Resource: arn:aws:s3:::${env:AWS_S3_BUCKET_NAME}/*

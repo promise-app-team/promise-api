@@ -66,7 +66,7 @@ jobs:
           echo "NOW=$(date +%Y-%m-%dT%H:%M:%S%z)" >> $GITHUB_ENV
 
       - name: Build and Push Docker Image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           push: true
           context: .
@@ -85,7 +85,11 @@ jobs:
           cache: 'npm'
 
       - name: Install Serverless Framework and Plugins
-        run: npm install --global serverless@3 serverless-prune-plugin serverless-domain-manager
+        run: |
+          npm install --global serverless@3 \
+            serverless-prune-plugin \
+            serverless-domain-manager \
+            serverless-deployment-bucket
 
       - name: Deploy to AWS Lambda
         run: |
