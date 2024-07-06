@@ -1,7 +1,7 @@
 import path from 'node:path';
 
 import { compile } from 'path-to-regexp';
-import { mapValues } from 'remeda';
+import * as R from 'remeda';
 import request from 'supertest';
 
 import type { JwtAuthTokenService } from '@/modules/auth';
@@ -62,12 +62,12 @@ function createRequestInstance<T>(routes: Routes<T>): HttpRequest<T> {
     },
   } as HttpRequest<T>;
 
-  for (const [name, path] of Object.entries(routes)) {
+  for (const [name, path] of R.entries(routes)) {
     function operator(params: Record<string, Param> = {}) {
       return new Proxy({} as RequestTestMap, {
         get(_target, method: HttpMethod) {
           if (!app) throw new Error('Server is not prepared');
-          const res = request(app.getHttpServer())[method](compilePath(path as string, params));
+          const res = request(app.getHttpServer())[method](compilePath(path, params));
           return auth ? res.auth(auth.token, { type: 'bearer' }) : res;
         },
       });
@@ -102,7 +102,7 @@ function makePath(prefix?: string, ...paths: string[]) {
 }
 
 function normalizeRoutes<T>(prefix: string, routes: Routes<T>): Routes<T> {
-  return mapValues(routes, (path) => makePath(prefix, path)) as Routes<T>;
+  return R.mapValues(routes, (path) => makePath(prefix, path as string)) as Routes<T>;
 }
 
 function compilePath(path: string, params?: Record<string, Param>): string {
