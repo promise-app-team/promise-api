@@ -4,8 +4,6 @@ set -e
 
 cd $(dirname $0)/..
 
-./patch.sh
-
 _inthash_key() {
   local data=$(npx inthash 2>/dev/null)
   local bits=$(echo $data | jq -r '.bits')
@@ -27,7 +25,7 @@ _sqids_key() {
 }
 
 _jwt_key_pair() {
-  local key_pair=$(npm run generate-key-pair -- --json)
+  local key_pair=$(npm --loglevel=silent run generate-key-pair -- --json)
 
   local public_key=$(echo $key_pair | jq -r '.publicKey')
   local private_key=$(echo $key_pair | jq -r '.privateKey')

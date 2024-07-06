@@ -7,4 +7,4 @@ COPY package* prisma ./
 RUN npm ci && npx prisma generate
 
 COPY . .
-RUN . ./patch.sh && npm run build
+RUN npm run build
