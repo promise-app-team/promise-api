@@ -1,5 +1,5 @@
 import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
-import { formatISO, isValid, toDate } from 'date-fns';
+import { formatISO, isValid } from 'date-fns';
 import * as R from 'remeda';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -14,9 +14,9 @@ export class StringifyDateInterceptor implements NestInterceptor {
     const result = R.conditional(
       data,
       [R.isNumber, R.identity()],
-      [(d) => isValid(toDate(d)), formatISO],
+      [isValid, formatISO],
       [R.isArray, R.map(this.transform.bind(this))],
-      [R.isPlainObject, R.mapValues(this.transform.bind(this))],
+      [R.isObjectType, R.mapValues(this.transform.bind(this))],
       R.conditional.defaultCase(R.identity())
     );
     return result;

@@ -44,7 +44,7 @@ describe(UserController, () => {
       const res = await http.request.getMyProfile().get.expect(200);
       expect(res.body).toEqual({
         ...pick(http.request.auth.user, ['id', 'username', 'profileUrl', 'provider']),
-        createdAt: expect.any(String),
+        createdAt: expect.toBeISO8601(),
       });
     });
 
@@ -67,7 +67,7 @@ describe(UserController, () => {
       expect(res.body).toEqual({
         ...pick(http.request.auth.user, ['id', 'provider']),
         ...input,
-        createdAt: expect.any(String),
+        createdAt: expect.toBeISO8601(),
       });
     });
 
@@ -78,8 +78,8 @@ describe(UserController, () => {
       expect(res.body).toEqual({
         ...pick(http.request.auth.user, ['id', 'provider']),
         ...input,
-        profileUrl: expect.any(String),
-        createdAt: expect.any(String),
+        profileUrl: expect.toBeString(),
+        createdAt: expect.toBeISO8601(),
       });
     });
 
