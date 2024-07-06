@@ -2,8 +2,10 @@ import { exec } from 'node:child_process';
 import readline from 'node:readline';
 
 import chalk from 'chalk';
-import { HighlightOptions, highlight as cliHighlight } from 'cli-highlight';
+import { highlight as cliHighlight } from 'cli-highlight';
 import { mergeDeep } from 'remeda';
+
+import type { HighlightOptions } from 'cli-highlight';
 
 export const logger = {
   log: (...msg: string[]) => console.log(...msg),

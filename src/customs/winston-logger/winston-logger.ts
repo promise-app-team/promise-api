@@ -28,6 +28,7 @@ export const createWinstonLogger = memoize((options: WinstonLoggerOptions = {}):
       const defaultColor = '\x1b[0m';
       return highlight(message, {
         colors: {
+          identifier: defaultColor,
           keyword: blue,
           function: magenta,
           number: green,
