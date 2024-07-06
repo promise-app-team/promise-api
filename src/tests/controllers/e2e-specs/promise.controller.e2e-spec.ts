@@ -79,9 +79,9 @@ describe(PromiseController, () => {
       locationShareStartValue: promise.locationShareStartValue,
       locationShareEndType: promise.locationShareEndType,
       locationShareEndValue: promise.locationShareEndValue,
-      promisedAt: expect.toBeDateString(),
+      promisedAt: expect.toBeISO8601(),
       completedAt: promise.completedAt ? new Date(promise.completedAt) : null,
-      createdAt: expect.toBeDateString(),
+      createdAt: expect.toBeISO8601(),
       host: R.pick(host, ['id', 'username', 'profileUrl']),
       themes: expect.toIncludeSameMembers(themes),
       destination: destination
@@ -99,7 +99,7 @@ describe(PromiseController, () => {
             ...R.pick(attendee, ['id', 'username', 'profileUrl']),
             hasStartLocation: i === 1,
             isMidpointCalculated: expect.toBeBoolean(),
-            attendedAt: expect.toBeDateString(),
+            attendedAt: expect.toBeISO8601(),
             leavedAt: null,
           }))
         )
@@ -354,7 +354,7 @@ describe(PromiseController, () => {
           ).map(([attendee, isMidpointCalculated]) => ({
             ...R.pick(attendee, ['id', 'username', 'profileUrl']),
             isMidpointCalculated,
-            attendedAt: expect.toBeDateString(),
+            attendedAt: expect.toBeISO8601(),
             hasStartLocation: expect.toBeBoolean(),
             leavedAt: null,
           }))
@@ -398,7 +398,7 @@ describe(PromiseController, () => {
           [host, ...attendees].map((attendee) => ({
             ...R.pick(attendee, ['id', 'username', 'profileUrl']),
             isMidpointCalculated: false,
-            attendedAt: expect.toBeDateString(),
+            attendedAt: expect.toBeISO8601(),
             hasStartLocation: expect.toBeBoolean(),
             leavedAt: null,
           }))
@@ -498,7 +498,7 @@ describe(PromiseController, () => {
         const res = await http.request.getPromise({ pid }).get.expect(200);
         expect(res.body.attendees[0]).toMatchObject({
           id: http.request.auth.user.id,
-          attendedAt: expect.toBeDateString(),
+          attendedAt: expect.toBeISO8601(),
           leavedAt: null,
         });
       }
@@ -508,7 +508,7 @@ describe(PromiseController, () => {
         const res = await http.request.getPromise({ pid }).get.expect(200);
         expect(res.body.attendees[0]).toMatchObject({
           id: http.request.auth.user.id,
-          leavedAt: expect.toBeDateString(),
+          leavedAt: expect.toBeISO8601(),
         });
       }
     });

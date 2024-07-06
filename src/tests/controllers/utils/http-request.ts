@@ -39,7 +39,7 @@ type HttpRequest<T> = Record<OperatorName<T>, Operator> & {
 
 function createRequestInstance<T>(routes: Routes<T>): HttpRequest<T> {
   let app: INestApplication | null = null;
-  let auth: Auth;
+  let auth: Auth | null = null;
 
   const httpRequest = {
     get auth() {
@@ -50,12 +50,12 @@ function createRequestInstance<T>(routes: Routes<T>): HttpRequest<T> {
       app?.close();
     },
     authorize(user, options) {
-      if (!request) throw new Error('Server is not prepared');
+      if (!app) throw new Error('Server is not prepared');
       const token = options.jwt.generateAccessToken({ sub: user.id });
       auth = { user, token };
     },
     unauthorize() {
-      auth = null as any;
+      auth = null;
     },
     prepare(_app) {
       app = _app;
