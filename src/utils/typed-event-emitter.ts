@@ -2,44 +2,32 @@ export interface TypedEvents {
   [event: string]: any;
 }
 
-export interface TypedEventListener<TEvents extends TypedEvents> {
-  (...args: TEvents[keyof TEvents]): void | Promise<void>;
+export interface TypedEventListener<TEvents extends TypedEvents, TEvent extends keyof TEvents = keyof TEvents> {
+  (...args: TEvents[TEvent]): void | Promise<void>;
 }
 
-export interface TypedEventListenerMap<
-  TEvents extends TypedEvents = TypedEvents,
-  TEventListener extends TypedEventListener<TEvents>[] = TypedEventListener<TEvents>[],
-> {
-  get(event: keyof TEvents): TEventListener | undefined;
-  set(event: keyof TEvents, listener: TEventListener): void;
-  del(event: keyof TEvents): void;
-}
+export type TypedEventListenerMap<TEvents extends TypedEvents> = Map<keyof TEvents, Set<TypedEventListener<TEvents>>>;
 
-const map = {
-  map: new Map(),
-  get(event: string) {
-    return this.map.get(event);
-  },
-  set(event: string, listener: any[]) {
-    this.map.set(event, listener);
-  },
-  del(event: string) {
-    this.map.delete(event);
-  },
-};
+export interface TypedEventEmitterOptions<TEvents extends TypedEvents = TypedEvents> {
+  listenerMap?: TypedEventListenerMap<TEvents>;
+}
 
 export class TypedEventEmitter<TEvents extends TypedEvents> {
-  constructor(private readonly listenerMap: TypedEventListenerMap<TEvents, TypedEventListener<TEvents>[]> = map) {}
+  private listenerMap: TypedEventListenerMap<TEvents>;
 
-  public on<K extends keyof TEvents>(event: K, listener: TypedEventListener<TEvents>): this {
-    const listeners = this.listenerMap.get(event) || [];
-    listeners.push(listener);
+  constructor(options: TypedEventEmitterOptions<TEvents> = {}) {
+    this.listenerMap = options.listenerMap || new Map();
+  }
+
+  public on<TEvent extends keyof TEvents>(event: TEvent, listener: TypedEventListener<TEvents, TEvent>): this {
+    const listeners = this.listenerMap.get(event) || new Set();
+    listeners.add(listener as TypedEventListener<TEvents>);
     this.listenerMap.set(event, listeners);
     return this;
   }
 
-  public once<K extends keyof TEvents>(event: K, listener: TypedEventListener<TEvents>): this {
-    const onceListener: TypedEventListener<TEvents> = async (...args) => {
+  public once<TEvent extends keyof TEvents>(event: TEvent, listener: TypedEventListener<TEvents, TEvent>): this {
+    const onceListener: TypedEventListener<TEvents, TEvent> = async (...args) => {
       this.off(event, onceListener);
       await listener(...args);
     };
@@ -47,31 +35,26 @@ export class TypedEventEmitter<TEvents extends TypedEvents> {
     return this.on(event, onceListener);
   }
 
-  public off<K extends keyof TEvents>(event: K): this;
-  public off<K extends keyof TEvents>(event: K, listener: TypedEventListener<TEvents>): this;
-  public off<K extends keyof TEvents>(event: K, listener?: TypedEventListener<TEvents>): this {
-    if (!listener) return this.listenerMap.del(event), this;
+  public off<TEvent extends keyof TEvents>(event: TEvent, listener?: TypedEventListener<TEvents, TEvent>): this {
+    if (!listener) return this.listenerMap.delete(event), this;
 
     const listeners = this.listenerMap.get(event);
     if (!listeners) return this;
 
-    const index = listeners.indexOf(listener);
-    if (index < 0) return this;
-
-    listeners.splice(index, 1);
-    if (listeners.length) {
+    listeners.delete(listener as TypedEventListener<TEvents>);
+    if (listeners.size > 0) {
       this.listenerMap.set(event, listeners);
     } else {
-      this.listenerMap.del(event);
+      this.listenerMap.delete(event);
     }
 
     return this;
   }
 
-  public async emit<K extends keyof TEvents>(event: K, ...args: TEvents[K]): Promise<boolean> {
+  public async emit<TEvent extends keyof TEvents>(event: TEvent, ...args: TEvents[TEvent]): Promise<boolean> {
     const listeners = this.listenerMap.get(event);
     if (!listeners) return false;
-    await Promise.all(listeners.map((listener) => listener(...args)));
+    await Promise.all([...listeners].map((listener) => listener(...args)));
     return true;
   }
 }

@@ -85,7 +85,7 @@ describe(TypedEventEmitter, () => {
   test('should remove only the specified event', async () => {
     const emitter = new TypedEventEmitter<{
       foo: [string];
-      bar: [string];
+      bar: [number];
     }>();
 
     const fooListener = jest.fn();
@@ -96,7 +96,7 @@ describe(TypedEventEmitter, () => {
     emitter.off('foo');
 
     await emitter.emit('foo', 'hello');
-    await emitter.emit('bar', 'world');
+    await emitter.emit('bar', 42);
 
     expect(fooListener).not.toHaveBeenCalled();
     expect(barListener).toHaveBeenCalled();
