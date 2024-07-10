@@ -1,9 +1,10 @@
 import crypto from 'node:crypto';
+import { promisify } from 'node:util';
 
-const isJson = process.argv.includes('--json');
+const _generateKeyPair = promisify(crypto.generateKeyPair);
 
-function generateKeyPair() {
-  return crypto.generateKeyPairSync('ec', {
+export async function generateKeyPair() {
+  const { privateKey, publicKey } = await _generateKeyPair('ec', {
     namedCurve: 'P-256',
     publicKeyEncoding: {
       type: 'spki',
@@ -14,19 +15,9 @@ function generateKeyPair() {
       format: 'pem',
     },
   });
-}
 
-const { publicKey, privateKey } = generateKeyPair();
-
-const keyPair = {
-  publicKey: publicKey.replace(/\r?\n|\r/g, '\\n'),
-  privateKey: privateKey.replace(/\r?\n|\r/g, '\\n'),
-};
-
-if (isJson) {
-  console.log(JSON.stringify(keyPair, null, 2));
-} else {
-  console.log('Copy the key pair below and paste them in your .env file\n');
-  console.log(`JWT_SIGN_KEY='${keyPair.privateKey}'`);
-  console.log(`JWT_VERIFY_KEY='${keyPair.publicKey}'`);
+  return {
+    publicKey: publicKey.replace(/\r?\n|\r/g, '\\n'),
+    privateKey: privateKey.replace(/\r?\n|\r/g, '\\n'),
+  };
 }
