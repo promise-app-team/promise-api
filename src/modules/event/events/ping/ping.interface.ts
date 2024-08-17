@@ -11,54 +11,54 @@ export module PingEvent {
     Broadcast = 'broadcast',
   }
 
-  interface ParamSelf {
+  type ParamSelf = {
     strategy: Strategy.Self;
-  }
+  };
 
-  interface ParamSpecific {
+  type ParamSpecific = {
     strategy: Strategy.Specific;
     to: string;
-  }
+  };
 
-  interface ParamBroadcast {
+  type ParamBroadcast = {
     strategy: Strategy.Broadcast;
-  }
+  };
 
-  export interface Param {
+  export type Param = {
     [Strategy.Self]: ParamSelf;
     [Strategy.Specific]: ParamSpecific;
     [Strategy.Broadcast]: ParamBroadcast;
-  }
+  };
 
   export type Body = any;
 
-  export interface Data<TParam = Param[Strategy], TBody = Body> {
+  export type Data<TParam = Param[Strategy], TBody = Body> = {
     param?: TParam;
     body: TBody;
-  }
+  };
 
-  export interface Payload<S extends Strategy = Strategy, TBody = Body> {
+  export type Payload<S extends Strategy = Strategy, TBody = Body> = {
     event: 'ping';
     data: Data<Param[S], TBody>;
-  }
+  };
 
-  export interface Response {
+  export type Response = {
     message: string;
-  }
+  };
 
   export type MessageData = any;
   export type MessageError = { error: string };
 
-  export interface Message<TData = MessageData> {
+  export type Message<TData = MessageData> = {
     from: string;
     timestamp: number;
     data: TData;
-  }
+  };
 
-  export interface Type {
+  export type Type = {
     send: [to: ConnectionID, data: Message];
     error: [to: ConnectionID, error: Message<MessageError>];
-  }
+  };
 
   export module DTO {
     export class PingEventParamDTO {

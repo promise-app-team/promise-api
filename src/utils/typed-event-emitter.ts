@@ -1,16 +1,28 @@
-export interface TypedEvents {
-  [event: string]: any;
-}
+type SingleArgument = any;
+type ArrayArguments = any[];
+type ObjectArguments = Record<string, any>;
+type ArgumentType<T, K extends keyof T> = T[K] extends ArrayArguments ? T[K] : [T[K]];
 
-export interface TypedEventListener<TEvents extends TypedEvents, TEvent extends keyof TEvents = keyof TEvents> {
-  (...args: TEvents[TEvent]): void | Promise<void>;
-}
+type MaybePromise<T> = T | Promise<T>;
+
+export type TypedEvents = {
+  [event: string]: ObjectArguments | ArrayArguments | SingleArgument;
+};
+
+export type TypedEventListener<
+  TEvents extends TypedEvents,
+  TEvent extends keyof TEvents = keyof TEvents,
+> = TEvents[TEvent] extends ArrayArguments
+  ? (...args: TEvents[TEvent]) => MaybePromise<any>
+  : TEvents[TEvent] extends ObjectArguments
+    ? (args: TEvents[TEvent]) => MaybePromise<any>
+    : (arg: TEvents[TEvent]) => MaybePromise<any>;
 
 export type TypedEventListenerMap<TEvents extends TypedEvents> = Map<keyof TEvents, Set<TypedEventListener<TEvents>>>;
 
-export interface TypedEventEmitterOptions<TEvents extends TypedEvents = TypedEvents> {
+export type TypedEventEmitterOptions<TEvents extends TypedEvents = TypedEvents> = {
   listenerMap?: TypedEventListenerMap<TEvents>;
-}
+};
 
 export class TypedEventEmitter<TEvents extends TypedEvents> {
   private listenerMap: TypedEventListenerMap<TEvents>;
@@ -27,9 +39,9 @@ export class TypedEventEmitter<TEvents extends TypedEvents> {
   }
 
   public once<TEvent extends keyof TEvents>(event: TEvent, listener: TypedEventListener<TEvents, TEvent>): this {
-    const onceListener: TypedEventListener<TEvents, TEvent> = async (...args) => {
+    const onceListener = async (...args: any) => {
       this.off(event, onceListener);
-      await listener(...args);
+      return listener.apply(this, args);
     };
 
     return this.on(event, onceListener);
@@ -51,10 +63,13 @@ export class TypedEventEmitter<TEvents extends TypedEvents> {
     return this;
   }
 
-  public async emit<TEvent extends keyof TEvents>(event: TEvent, ...args: TEvents[TEvent]): Promise<boolean> {
+  public async emit<TEvent extends keyof TEvents>(
+    event: TEvent,
+    ...args: ArgumentType<TEvents, TEvent>
+  ): Promise<boolean> {
     const listeners = this.listenerMap.get(event);
     if (!listeners) return false;
-    await Promise.all([...listeners].map((listener) => listener(...args)));
+    await Promise.all([...listeners].map((listener) => listener.apply(this, args as any)));
     return true;
   }
 }

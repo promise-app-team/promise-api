@@ -149,4 +149,50 @@ describe(TypedEventEmitter, () => {
 
     expect(fooListener).toHaveBeenCalledOnce();
   });
+
+  test('should pass single argument types to listeners', async () => {
+    const emitter = new TypedEventEmitter<{ single: string }>();
+
+    emitter.on('single', (arg) => expect(arg).toBeString());
+
+    await emitter.emit('single', 'hello');
+  });
+
+  test('should pass array argument types to listeners', async () => {
+    const emitter = new TypedEventEmitter<{ array: [str: string, num: number] }>();
+
+    emitter.on('array', (str, num) => {
+      expect(str).toBeString();
+      expect(num).toBeNumber();
+    });
+
+    await emitter.emit('array', 'world', 42);
+  });
+
+  test('should pass object argument types to listeners', async () => {
+    const emitter = new TypedEventEmitter<{ object: { str: string; num: number } }>();
+
+    emitter.on('object', ({ str, num }) => {
+      expect(str).toBeString();
+      expect(num).toBeNumber();
+    });
+
+    await emitter.emit('object', { str: 'foo', num: 24 });
+  });
+
+  test('should pass complex argument types to listeners', async () => {
+    const emitter = new TypedEventEmitter<{
+      complex: [obj: { str: string; num: number }, arr: [bool: boolean], str: string, num: number];
+    }>();
+
+    emitter.on('complex', (obj, [bool], str, num) => {
+      expect(obj.str).toBeString();
+      expect(obj.num).toBeNumber();
+      expect(bool).toBeBoolean();
+      expect(str).toBeString();
+      expect(num).toBeNumber();
+    });
+
+    await emitter.emit('complex', { str: 'foo', num: 24 }, [true], 'hello', 42);
+  });
 });

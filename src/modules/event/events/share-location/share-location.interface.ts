@@ -6,53 +6,53 @@ import { ConnectionID } from '../../connections';
 import { AbstractEvent } from '../event.interface';
 
 export module ShareLocationEvent {
-  export interface Body {
+  export type Body = {
     lat: number;
     lng: number;
-  }
+  };
 
-  export interface Param {
+  export type Param = {
     promiseIds: string[];
     _promiseIds: string[]; // decoded
-  }
+  };
 
-  export interface Data {
+  export type Data = {
     param: Param;
     body: Body;
-  }
+  };
 
-  export interface Payload {
+  export type Payload = {
     event: 'share-location';
     data: Data;
-  }
+  };
 
-  export interface MessageData {
+  export type MessageData = {
     lat: number;
     lng: number;
-  }
+  };
 
-  export interface MessageError {
+  export type MessageError = {
     error: string;
-  }
+  };
 
-  export interface Message<TData = MessageData> {
+  export type Message<TData = MessageData> = {
     from: number;
     timestamp: number;
     data: TData;
-  }
+  };
 
-  export interface Response {
+  export type Response = {
     message: string;
-  }
+  };
 
-  export interface Type {
+  export type Type = {
     share: [to: ConnectionID, data: Message];
     error: [to: ConnectionID, data: Message<MessageError>];
-  }
+  };
 
-  export interface Context {
+  export type Context = {
     prisma: PrismaService;
-  }
+  };
 
   export module DTO {
     export class ShareLocationEventParamDTO {

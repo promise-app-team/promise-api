@@ -5,15 +5,15 @@ export module AbstractEvent {
   export type Param = Record<string, any>;
   export type Body = Record<string, any>;
 
-  export interface Data<TParam extends Param = Param, TBody extends Body = Body> {
+  export type Data<TParam extends Param = Param, TBody extends Body = Body> = {
     param?: TParam;
     body: TBody;
-  }
+  };
 
-  export interface Payload<TData extends Data = Data> {
+  export type Payload<TData extends Data = Data> = {
     event: string;
     data: TData;
-  }
+  };
 
   export type Message = Record<string, any>;
   export type Response = Record<string, any>;
