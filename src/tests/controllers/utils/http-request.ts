@@ -106,5 +106,12 @@ function normalizeRoutes<T>(prefix: string, routes: Routes<T>): Routes<T> {
 }
 
 function compilePath(path: string, params?: Record<string, Param>): string {
-  return compile(path, { encode: encodeURIComponent })(params);
+  const _params = R.pipe(
+    params ?? {},
+    R.entries(),
+    R.filter(([_, value]) => !!value),
+    R.map(([key, value]) => [key, `${value}`] as const),
+    R.fromEntries()
+  );
+  return compile(path, { encode: encodeURIComponent })(_params);
 }
