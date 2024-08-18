@@ -18,6 +18,7 @@ export class ConnectionManager {
   private static readonly pool: ConnectionPool = new Map();
   private static readonly instances = new Map<ConnectionEvent, ConnectionManager>();
 
+  private static delConnectionPromise: Promise<void> | null = null;
   private static readonly reservedDelConnections = new Set<ConnectionID>();
 
   static forEvent(event: ConnectionEvent, stage: ConnectionStage, opts: { cache: ConnectionCache }): ConnectionManager {
@@ -186,8 +187,22 @@ export class ConnectionManager {
   }
 
   static async delConnection(cid: ConnectionID): Promise<void> {
+    this.debug(this.delConnection, `Trying to delete connection: ${cid}`);
+
     this.reservedDelConnections.add(cid);
-    await new Promise((resolve) => setTimeout(() => this.delConnections().then(resolve), 300));
+
+    if (!this.delConnectionPromise) {
+      this.delConnectionPromise = new Promise((resolve) => {
+        setTimeout(() => this.delConnections().then(resolve), 300);
+      });
+    }
+
+    await this.delConnectionPromise;
+    this.delConnectionPromise = null;
+
+    if (this.reservedDelConnections.has(cid)) {
+      await this.delConnection(cid);
+    }
   }
 
   static async delConnections() {
@@ -198,9 +213,10 @@ export class ConnectionManager {
       `Trying to delete reserved connections: ${Array.from(this.reservedDelConnections)}`
     );
 
+    const reservedDelConnections = Array.from(this.reservedDelConnections);
     for (const [eventName, channelMap] of this.pool.entries()) {
       for (const [channelName, connectionMap] of channelMap.entries()) {
-        for (const id of this.reservedDelConnections) {
+        for (const id of reservedDelConnections) {
           const connection = connectionMap.get(id);
           if (!connection) continue;
 
@@ -208,6 +224,7 @@ export class ConnectionManager {
           if (!instance) continue;
 
           connectionMap.delete(id);
+          this.reservedDelConnections.delete(id);
           const key = instance.makeCacheKey(channelName);
           if (connectionMap.size > 0) {
             await instance.cache.set(key, Array.from(connectionMap.values() ?? []));
@@ -220,8 +237,6 @@ export class ConnectionManager {
         }
       }
     }
-
-    this.reservedDelConnections.clear();
 
     this.debug(this.delConnections, `Reserved connections deleted`);
   }
