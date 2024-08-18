@@ -1,12 +1,24 @@
 {
-  "extends": ["../../tsconfig.json"],
+  "extends": [
+    "../../tsconfig.json"
+  ],
   "compilerOptions": {
     "sourceMap": true,
-    "types": ["jest", "@types/multer", "../types/utils.d.ts"],
+    "types": [
+      "jest",
+      "@types/multer",
+    ],
     "baseUrl": "../",
     "paths": {
-      "@/*": ["*"]
+      "@/*": [
+        "*"
+      ]
     }
   },
-  "include": ["./**/*.ts"]
+  "include": [
+    "**/*.ts"
+  ],
+  "exclude": [
+    "**/-*",
+  ]
 }

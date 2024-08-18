@@ -23,6 +23,8 @@
     "format": "prettier --write **/* --ext .ts",
     "lint": "DEBUG=eslint:cli-engine eslint \"src/**/*.ts\"",
     "lint:fix": "DEBUG=eslint:cli-engine eslint --fix \"src/**/*.ts\"",
+    "typecheck": "tsc -p tsconfig.build.json && echo \"✓ typecheck passed\"",
+    "typecheck:test": "tsc -p tsconfig.test.json && echo \"✓ typecheck passed\"",
     "test": "dotenv -oe .env.test -- jest",
     "coverage": "dotenv -oe .env.test -- jest --coverage",
     "update": "npx -y npm-check-updates -ui",
