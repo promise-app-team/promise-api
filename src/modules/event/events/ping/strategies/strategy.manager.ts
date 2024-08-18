@@ -6,7 +6,7 @@ import { SelfStrategy } from './self.strategy';
 import { SpecificStrategy } from './specific.strategy';
 
 import type { ConnectionManager } from '@/modules/event/connections';
-import type { TypedEventEmitter } from '@/utils';
+import type { AsyncEventEmitter } from '@/utils';
 
 interface StrategyMap {
   [PingEvent.Strategy.Self]: SelfStrategy;
@@ -20,7 +20,7 @@ export class StrategyManager {
 
   constructor(
     private readonly connection: ConnectionManager,
-    private readonly emitter: TypedEventEmitter<PingEvent.Type>
+    private readonly emitter: AsyncEventEmitter<PingEvent.Type>
   ) {
     this.strategies = {
       [PingEvent.Strategy.Self]: new SelfStrategy(this.connection, this.emitter),

@@ -1,15 +1,15 @@
-import { TypedEventEmitter } from '@/utils';
+import { AsyncEventEmitter } from '@/utils';
 
 import { ConnectionManager } from '../connections';
 
 import type { AbstractEvent } from './event.interface';
 import type { Connection, ConnectionID, ConnectionScope } from '../connections';
 import type { CacheService } from '@/customs/cache';
-import type { TypedEventListener } from '@/utils';
+import type { AsyncEventListener } from '@/utils';
 
 export abstract class EventHandler<TEvent extends AbstractEvent> {
   protected readonly connectionManager: ConnectionManager;
-  protected readonly eventEmitter = new TypedEventEmitter<TEvent['Type']>();
+  protected readonly eventEmitter = new AsyncEventEmitter<TEvent['Type']>();
   protected readonly context?: TEvent['Context'];
 
   constructor(scope: ConnectionScope, cache: CacheService, context?: TEvent['Context']) {
@@ -36,14 +36,14 @@ export abstract class EventHandler<TEvent extends AbstractEvent> {
 
   private registered = new Set();
 
-  async on<K extends keyof TEvent['Type']>(event: K, listener: TypedEventListener<TEvent['Type']>) {
+  async on<K extends keyof TEvent['Type']>(event: K, listener: AsyncEventListener<K, TEvent['Type']>) {
     if (this.registered.has(event)) return;
     this.registered.add(event);
-    this.eventEmitter.on(event as string, listener);
+    this.eventEmitter.on(event as any, listener);
   }
 
-  async off<K extends keyof TEvent['Type']>(event: K, listener: TypedEventListener<TEvent['Type']>) {
+  async off<K extends keyof TEvent['Type']>(event: K, listener: AsyncEventListener<K, TEvent['Type']>) {
     this.registered.delete(event);
-    this.eventEmitter.off(event as string, listener);
+    this.eventEmitter.off(event as any, listener);
   }
 }
