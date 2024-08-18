@@ -1,5 +1,5 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
-import { Observable, map } from 'rxjs';
+import { map } from 'rxjs';
 
 import { InthashService } from '@/customs/inthash';
 
@@ -20,7 +20,7 @@ export class EncodePromiseID implements NestInterceptor {
     return data;
   }
 
-  intercept(context: ExecutionContext, next: CallHandler<any>): MaybePromise<Observable<any>> {
+  intercept(context: ExecutionContext, next: CallHandler<any>) {
     return next.handle().pipe(map(this.#transform.bind(this)));
   }
 }
