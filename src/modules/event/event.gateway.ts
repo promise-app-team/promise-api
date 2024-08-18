@@ -6,11 +6,11 @@ import {
   OnGatewayDisconnect,
   SubscribeMessage,
   ConnectedSocket,
+  WsException,
 } from '@nestjs/websockets';
 import { v4 as uuid } from 'uuid';
 import { WebSocket } from 'ws';
 
-import { HttpException } from '@/common/exceptions';
 import { TypedConfigService } from '@/config/env';
 import { InthashService } from '@/customs/inthash';
 import { LoggerService } from '@/customs/logger';
@@ -54,11 +54,13 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.logger.debug(`Client connected: ${client.cid} (total: ${this.clients.size})`);
       return response;
     } catch (error: any) {
-      throw HttpException.new(error, 'FORBIDDEN');
+      client.close();
+      this.logger.warn(`Client connection failed: ${error.message} (${error.name})`);
     }
   }
 
   async handleDisconnect(@ConnectedSocket() client: Client) {
+    if (!client.cid) return { message: 'Invalid client' };
     this.clients.delete(client.cid);
     this.logger.debug(`Client disconnected: ${client.cid} (total: ${this.clients.size})`);
     await EventHandler.disconnect(client.cid);
@@ -67,7 +69,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @SubscribeMessage('ping')
   async handlePingEvent(client: Client, data: PingEvent.Data) {
-    if (this.config.get('is.prod')) throw HttpException.new('Forbidden', 'FORBIDDEN');
+    if (this.config.get('is.prod')) throw new WsException('Forbidden');
 
     const handler = this.event.get('ping');
 
