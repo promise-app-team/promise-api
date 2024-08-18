@@ -18,7 +18,7 @@ import { random } from '@/utils';
 
 import { JwtAuthTokenService } from '../auth';
 
-import { Connection } from './connections';
+import { Connection, ConnectionID } from './connections';
 import { EventHandler, EventManager, Events } from './events';
 import { PingEvent } from './events/ping';
 import { ShareLocationEvent } from './events/share-location';
@@ -27,7 +27,7 @@ type Client = WebSocket & Pick<Connection, 'cid' | 'uid'>;
 
 @WebSocketGateway()
 export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  private readonly clients: Map<string, Client> = new Map();
+  private readonly clients: Map<ConnectionID, Client> = new Map();
 
   constructor(
     private readonly event: EventManager,
@@ -48,6 +48,8 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
       Object.assign(client, { cid: uuid(), uid: payload.sub });
       this.clients.set(client.cid, client);
 
+      this.logger.debug(`Client trying to connect: ${client.cid}`);
+
       const params = new URLSearchParams(incoming.url?.replace('/?', ''));
       const name = params.get('event') as keyof Events;
       const response = await this.event.get(name).connect(client);
@@ -61,6 +63,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleDisconnect(@ConnectedSocket() client: Client) {
     if (!client.cid) return { message: 'Invalid client' };
+    this.logger.debug(`Client trying to disconnect: ${client.cid}`);
     this.clients.delete(client.cid);
     this.logger.debug(`Client disconnected: ${client.cid} (total: ${this.clients.size})`);
     await EventHandler.disconnect(client.cid);
@@ -70,6 +73,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('ping')
   async handlePingEvent(client: Client, data: PingEvent.Data) {
     if (this.config.get('is.prod')) throw new WsException('Forbidden');
+    this.logger.debug(`[PING] Client trying to send message: ${client.cid} with ${JSON.stringify(data)}`);
 
     const handler = this.event.get('ping');
 
@@ -84,12 +88,15 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
     });
 
     const response = await handler.handle(client.cid, data);
-    this.logger.debug(`Client sent message: ${client.cid} with ${JSON.stringify(data)}`);
+    this.logger.debug(`[PING] Client sent message: ${client.cid} with ${JSON.stringify(data)}`);
     return response;
   }
 
   @SubscribeMessage('share-location')
   async handleShareLocationEvent(client: Client, data: ShareLocationEvent.Data) {
+    if (this.config.get('is.prod')) throw new WsException('Forbidden');
+    this.logger.debug(`[SHARE-LOCATION] Client trying to send message: ${client.cid} with ${JSON.stringify(data)}`);
+
     const handler = this.event.get('share-location');
 
     handler.on('share', async (cid, data) => {
@@ -104,7 +111,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     data.param._promiseIds = data.param.promiseIds.map((id) => this.hasher.decode(id));
     const response = await handler.handle(client.cid, data);
-    this.logger.debug(`Client sent message: ${client.cid} with ${JSON.stringify(data)}`);
+    this.logger.debug(`[SHARE-LOCATION] Client sent message: ${client.cid} with ${JSON.stringify(data)}`);
     return response;
   }
 

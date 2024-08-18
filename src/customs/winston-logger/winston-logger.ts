@@ -68,7 +68,7 @@ export const createWinstonLogger = memoize((options: WinstonLoggerOptions = {}):
               return {
                 ...info,
                 level: info.level.toUpperCase().padStart(7),
-                context: info.level ? `[${info.context}]` : '',
+                context: info.context ? `[${info.context}]` : '',
               };
             },
           },

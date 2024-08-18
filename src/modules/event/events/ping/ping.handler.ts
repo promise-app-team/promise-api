@@ -14,14 +14,14 @@ export class PingEventHandler extends EventHandler<PingEvent> {
 
   constructor(scope: ConnectionScope, cache: CacheService) {
     super(scope, cache);
-    this.strategy = new StrategyManager(this.connection, this.emitter);
+    this.strategy = new StrategyManager(this.connectionManager, this.eventEmitter);
   }
 
   async handle(cid: ConnectionID, data: PingEvent.Data): Promise<PingEvent.Response> {
-    const exists = await this.connection.exists(cid, 'default');
+    const exists = await this.connectionManager.exists(cid, 'default');
     if (!exists) {
       const error = `Connection not found: ${cid}`;
-      await this.emitter.emit('error', cid, {
+      await this.eventEmitter.emit('error', cid, {
         from: cid,
         timestamp: getUnixTime(new Date()),
         data: { error },

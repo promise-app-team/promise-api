@@ -17,6 +17,7 @@ import type {
 export class ConnectionManager {
   private static readonly pool: ConnectionPool = new Map();
   private static readonly instances = new Map<ConnectionEvent, ConnectionManager>();
+
   private static readonly reservedDelConnections = new Set<ConnectionID>();
 
   static forEvent(event: ConnectionEvent, stage: ConnectionStage, opts: { cache: ConnectionCache }): ConnectionManager {
@@ -28,6 +29,9 @@ export class ConnectionManager {
     return instance;
   }
 
+  private readonly channelMap: ConnectionChannelMap;
+  private readonly loadConnectionPromiseMap: Map<ConnectionChannel, Promise<ConnectionMap>> = new Map();
+
   private constructor(
     private readonly event: ConnectionEvent,
     private readonly stage: ConnectionStage,
@@ -36,9 +40,6 @@ export class ConnectionManager {
     this.channelMap = new Map();
     ConnectionManager.pool.set(event, this.channelMap);
   }
-
-  private readonly channelMap: ConnectionChannelMap;
-  private readonly loadConnectionPromiseMap: Map<ConnectionChannel, Promise<ConnectionMap>> = new Map();
 
   private makeCacheKey(channel: ConnectionChannel) {
     return `connection:[${JSON.stringify({ event: this.event, channel, stage: this.stage })}]`;
@@ -143,8 +144,6 @@ export class ConnectionManager {
     await this.cache.set(key, Array.from(connectionMap.values() ?? []));
     this.debug(this.setConnection, `Connection set (channel: ${channel}): ${JSON.stringify(newConnection)}`);
 
-    this.debug(this.setConnection, `ConnectionPool: ${JSON.stringify(Array.from(ConnectionManager.pool.entries()))}`);
-
     return true;
   }
 
@@ -163,7 +162,6 @@ export class ConnectionManager {
     }
 
     this.debug(this.delConnection, `Connection deleted (${key}): ${cid}`);
-    this.debug(this.delConnection, `ConnectionPool: ${JSON.stringify(Array.from(ConnectionManager.pool.entries()))}`);
 
     return true;
   }
@@ -224,12 +222,14 @@ export class ConnectionManager {
     }
 
     this.reservedDelConnections.clear();
+
+    this.debug(this.delConnections, `Reserved connections deleted`);
   }
 
   async exists(cid: ConnectionID, channel: ConnectionChannel): Promise<boolean> {
     const connectionMap = await this.loadConnectionMap(channel);
     const exists = !!connectionMap.get(cid);
-    this.debug(this.exists, `Connection ${exists ? '' : 'not'} exists: ${cid} (channel: ${channel})`);
+    this.debug(this.exists, `Connection ${exists ? 'exists' : 'not exists'}: ${cid} (channel: ${channel})`);
     return exists;
   }
 
@@ -240,7 +240,14 @@ export class ConnectionManager {
   }
 
   private readonly debug = ConnectionManager.debug;
-  private static debug(fn: Function, message: string, metadata: any = {}) {
-    Logger.debug(`[${ConnectionManager.name}.${fn.name}] ${message}`, ConnectionManager.name, metadata);
+  private static debug(message: any): void;
+  private static debug(fn: Function, message: any): void;
+  private static debug(...args: any[]): void {
+    if (args.length === 2) {
+      const [fn, message] = args;
+      Logger.debug(`[${ConnectionManager.name}.${fn.name}] ${message}`, ConnectionManager.name);
+    } else {
+      Logger.debug(args[0], ConnectionManager.name);
+    }
   }
 }

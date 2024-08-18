@@ -23,7 +23,7 @@ export class ShareLocationHandler extends EventHandler<ShareLocationEvent> {
     });
 
     if (promises.length > 0) {
-      await Promise.all(promises.map((p) => this.connection.setConnection(connection, this.channel(p.id))));
+      await Promise.all(promises.map((p) => this.connectionManager.setConnection(connection, this.channel(p.id))));
     } else {
       throw new Error('참여 중인 약속이 없습니다.');
     }
@@ -32,14 +32,25 @@ export class ShareLocationHandler extends EventHandler<ShareLocationEvent> {
   }
 
   async handle(cid: ConnectionID, data: ShareLocationEvent.Data): Promise<ShareLocationEvent.Response> {
+    const exists = await this.connectionManager.exists(cid, 'default');
+    if (!exists) {
+      const error = `Connection not found: ${cid}`;
+      await this.eventEmitter.emit('error', cid, {
+        from: 0,
+        timestamp: getUnixTime(new Date()),
+        data: { error },
+      });
+      return { message: error };
+    }
+
     const timestamp = getUnixTime(new Date());
     await Promise.all(
       data.param._promiseIds.map(async (pid, i) => {
         const channel = this.channel(pid);
-        const connection = await this.connection.getConnection(cid, channel);
+        const connection = await this.connectionManager.getConnection(cid, channel);
         if (!connection) {
           const error = `연결된 약속을 찾을 수 없습니다 (pid: ${data.param.promiseIds[i]})`;
-          await this.emitter.emit('error', cid, {
+          await this.eventEmitter.emit('error', cid, {
             from: 0,
             timestamp,
             data: { error },
@@ -47,12 +58,12 @@ export class ShareLocationHandler extends EventHandler<ShareLocationEvent> {
           return { message: error };
         }
 
-        const connections = await this.connection.getConnections(channel);
+        const connections = await this.connectionManager.getConnections(channel);
         return Promise.all(
           connections
             .filter((to) => to.cid !== cid)
             .map((to) =>
-              this.emitter.emit('share', to.cid, {
+              this.eventEmitter.emit('share', to.cid, {
                 from: connection.uid,
                 timestamp,
                 data: {
