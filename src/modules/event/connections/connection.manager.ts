@@ -135,7 +135,7 @@ export class ConnectionManager {
     this.debug(this.setConnection, `[${this.event}.${channel}] Trying to set connection: ${cid}`);
 
     const key = this.makeCacheKey(channel);
-    const exists = await this.exists(cid, channel);
+    const exists = await this.getConnection(cid, channel);
     if (exists) return false;
 
     const iat = getUnixTime(new Date());
@@ -151,49 +151,49 @@ export class ConnectionManager {
     return true;
   }
 
-  async delConnection(cid: ConnectionID, channel: ConnectionChannel): Promise<boolean> {
-    this.debug(this.delConnection, `Trying to delete connection (channel: ${channel}): ${cid}`);
+  // async delConnection(cid: ConnectionID, channel: ConnectionChannel): Promise<boolean> {
+  //   this.debug(this.delConnection, `Trying to delete connection (channel: ${channel}): ${cid}`);
 
-    const connectionMap = await this.loadConnectionMap(channel);
-    connectionMap.delete(cid);
-    ConnectionManager.connectionIds.delete(cid);
-    ConnectionManager.reservedDelConnections.delete(cid);
+  //   const connectionMap = await this.loadConnectionMap(channel);
+  //   connectionMap.delete(cid);
+  //   ConnectionManager.connectionIds.delete(cid);
+  //   ConnectionManager.reservedDelConnections.delete(cid);
 
-    const key = this.makeCacheKey(channel);
-    if (connectionMap.size > 0) {
-      await this.cache.set(key, Array.from(connectionMap.values() ?? []));
-    } else {
-      this.channelMap.delete(channel);
-      await this.cache.del(key);
-    }
+  //   const key = this.makeCacheKey(channel);
+  //   if (connectionMap.size > 0) {
+  //     await this.cache.set(key, Array.from(connectionMap.values() ?? []));
+  //   } else {
+  //     this.channelMap.delete(channel);
+  //     await this.cache.del(key);
+  //   }
 
-    this.debug(this.delConnection, `Connection deleted (${key}): ${cid}`);
+  //   this.debug(this.delConnection, `Connection deleted (${key}): ${cid}`);
 
-    return true;
-  }
+  //   return true;
+  // }
 
-  async delConnections(ids: ConnectionID[], channel: ConnectionChannel): Promise<boolean> {
-    this.debug(this.delConnections, `Trying to delete connections (channel: ${channel}): ${ids}`);
+  // async delConnections(ids: ConnectionID[], channel: ConnectionChannel): Promise<boolean> {
+  //   this.debug(this.delConnections, `Trying to delete connections (channel: ${channel}): ${ids}`);
 
-    const connectionMap = await this.loadConnectionMap(channel);
-    for (const id of ids) {
-      connectionMap.delete(id);
-      ConnectionManager.connectionIds.delete(id);
-      ConnectionManager.reservedDelConnections.delete(id);
-    }
+  //   const connectionMap = await this.loadConnectionMap(channel);
+  //   for (const id of ids) {
+  //     connectionMap.delete(id);
+  //     ConnectionManager.connectionIds.delete(id);
+  //     ConnectionManager.reservedDelConnections.delete(id);
+  //   }
 
-    const key = this.makeCacheKey(channel);
-    if (connectionMap.size > 0) {
-      await this.cache.set(key, Array.from(connectionMap.values() ?? []));
-    } else {
-      this.channelMap.delete(channel);
-      await this.cache.del(key);
-    }
+  //   const key = this.makeCacheKey(channel);
+  //   if (connectionMap.size > 0) {
+  //     await this.cache.set(key, Array.from(connectionMap.values() ?? []));
+  //   } else {
+  //     this.channelMap.delete(channel);
+  //     await this.cache.del(key);
+  //   }
 
-    this.debug(this.delConnections, `Connections deleted (${key}): ${ids}`);
+  //   this.debug(this.delConnections, `Connections deleted (${key}): ${ids}`);
 
-    return true;
-  }
+  //   return true;
+  // }
 
   static async delConnection(cid: ConnectionID): Promise<void> {
     if (this.reservedDelConnections.has(cid)) return;
@@ -217,7 +217,7 @@ export class ConnectionManager {
     }
   }
 
-  static async delConnections() {
+  private static async delConnections() {
     if (this.reservedDelConnections.size === 0) return;
 
     this.debug(
@@ -253,12 +253,12 @@ export class ConnectionManager {
     this.debug(this.delConnections, `Reserved connections deleted`);
   }
 
-  async exists(cid: ConnectionID, channel: ConnectionChannel): Promise<boolean> {
-    const connectionMap = await this.loadConnectionMap(channel);
-    const exists = !!connectionMap.get(cid);
-    this.debug(this.exists, `Connection ${exists ? 'exists' : 'not exists'}: ${cid} (channel: ${channel})`);
-    return exists;
-  }
+  // async exists(cid: ConnectionID, channel: ConnectionChannel): Promise<boolean> {
+  //   const connectionMap = await this.loadConnectionMap(channel);
+  //   const exists = !!connectionMap.get(cid);
+  //   this.debug(this.exists, `Connection ${exists ? 'exists' : 'not exists'}: ${cid} (channel: ${channel})`);
+  //   return exists;
+  // }
 
   expired(connection: Connection): boolean {
     const expired = isPast(fromUnixTime(connection.exp));

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 
 import { InthashService } from '@/customs/inthash';
 import { LoggerService } from '@/customs/logger';
+import { guard } from '@/utils';
 
 import { ConnectionID, ConnectionUID } from './connections';
 import { EventHandler, EventManager, Events, PingEvent, ShareLocationEvent } from './events';
@@ -99,7 +100,8 @@ export class EventService {
       }
     });
 
-    data.param._promiseIds = data.param.promiseIds.map((id) => this.hasher.decode(id));
+    data.param.__promiseIds = guard(() => data.param.promiseIds.map((id) => this.hasher.decode(id)), []);
+
     return handler.handle(connectionId, data);
   }
 }

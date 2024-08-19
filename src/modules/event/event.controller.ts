@@ -29,6 +29,7 @@ export class EventController {
     private readonly logger: LoggerService
   ) {
     const endpoint = this.config.get('aws.websocket.endpoint');
+    /* istanbul ignore next */
     if (!endpoint) return;
     this.client = new ApiGatewayManagementApi({ endpoint });
     this.logger.setContext(EventController.name);

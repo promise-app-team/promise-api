@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 
 import { AppModule } from '@/app';
 import { CacheService } from '@/customs/cache';
+import { InthashService } from '@/customs/inthash';
 import { configure } from '@/main';
 import { JwtAuthTokenService } from '@/modules/auth';
 import { PingEvent } from '@/modules/event';
@@ -11,6 +12,7 @@ import { createPrismaClient } from '@/tests/setups/prisma';
 
 import { createHttpRequest } from '../utils/http-request';
 
+import type { Events, ShareLocationEvent } from '@/modules/event';
 import type { NestExpressApplication } from '@nestjs/platform-express';
 
 describe(EventController, () => {
@@ -23,24 +25,31 @@ describe(EventController, () => {
     requestShareLocationEvent: 'share-location',
   });
 
+  let hasher: InthashService;
   let cacheService: CacheService;
   let jwtAuthTokenService: JwtAuthTokenService;
 
   let eventController: EventController;
 
-  const cacheKey = (event: string, channel = 'public') =>
+  const cacheKey = (event: keyof Events, channel = 'public') =>
     `connection:[{"event":"${event}","channel":"${channel}","stage":"test"}]`;
-  const params = (event: string, opts?: { client?: typeof http.request; channel?: string }) => ({
+  const params = (event: keyof Events, opts?: { client?: typeof http.request; channel?: string }) => ({
     event,
     channel: opts?.channel,
     connectionId: (opts?.client ?? http.request).auth.user.id,
   });
   const { tomorrow, yesterday } = fixture.date;
 
-  async function cloneHttpRequest(channel?: string) {
-    const authUser = await fixture.write.user.output();
+  async function cloneHttpRequest(
+    event: keyof Events,
+    opts?: {
+      channel?: string;
+      user?: Awaited<ReturnType<typeof fixture.write.user.output>>;
+    }
+  ) {
+    const authUser = opts?.user ?? (await fixture.write.user.output());
     const client = http.clone().authorize(authUser, { jwt: jwtAuthTokenService });
-    await client.requestConnectEvent().get.query(params('ping', { client, channel })).expect(200);
+    await client.requestConnectEvent().get.query(params(event, { client, channel: opts?.channel }));
     return client;
   }
 
@@ -56,6 +65,7 @@ describe(EventController, () => {
     const app = module.createNestApplication<NestExpressApplication>();
     http.prepare(await configure(app).then((app) => app.init()));
 
+    hasher = module.get(InthashService);
     cacheService = module.get(CacheService);
     jwtAuthTokenService = module.get(JwtAuthTokenService);
 
@@ -66,6 +76,12 @@ describe(EventController, () => {
     const authUser = await fixture.write.user.output();
     http.request.authorize(authUser, { jwt: jwtAuthTokenService });
     fixture.configure({ authUser });
+  });
+
+  describe('initialize', () => {
+    test('should initialize event controller', async () => {
+      expect(eventController).toBeInstanceOf(EventController);
+    });
   });
 
   describe(http.request.requestConnectEvent, () => {
@@ -152,13 +168,21 @@ describe(EventController, () => {
       test('should do nothing if client is not connected', async () => {
         await http.request.requestDisconnectEvent().get.query(params('ping')).expect(200);
       });
+
+      test('should throw 403 error if failed to disconnect client', async () => {
+        jest.spyOn(eventController['service'], 'handleDisconnection').mockRejectedValue(new Error('Unexpected Error'));
+
+        await http.request.requestConnectEvent().get.query(params('ping')).expect(200);
+        await http.request.requestDisconnectEvent().get.query(params('ping')).expect(403);
+
+        jest.restoreAllMocks();
+      });
     });
 
     describe('share-location', () => {
       test('should disconnect client from websocket', async () => {
         const { promise } = await fixture.write.promise.output({
           host: http.request.auth.user,
-          partial: { promisedAt: new Date(tomorrow) },
         });
 
         await http.request.requestConnectEvent().get.query(params('share-location')).expect(200);
@@ -191,7 +215,7 @@ describe(EventController, () => {
 
     describe('success', () => {
       test('should send message to self', async () => {
-        const client = await cloneHttpRequest();
+        const client = await cloneHttpRequest('ping');
 
         const input = {
           event: 'ping',
@@ -207,18 +231,17 @@ describe(EventController, () => {
 
         const res = await client.requestPingEvent().post.query(params('ping', { client })).send(input).expect(201);
         expect(res.body).toEqual({ message: 'pong' });
-        expect(postToConnectionSpy).toHaveBeenCalledOnce();
-        expect(postToConnectionSpy).toHaveBeenCalledWith({
+        expect(postToConnectionSpy).toHaveBeenCalledExactlyOnceWith({
           ConnectionId: `${client.auth.user.id}`,
-          Data: expect.stringMatching(/Hello, World!/),
+          Data: expect.stringMatching(new RegExp(JSON.stringify(input.data.body))),
         });
 
-        clearHttpRequest(client);
+        await clearHttpRequest(client);
       });
 
       test('should send message to specific client', async () => {
-        const sender = await cloneHttpRequest();
-        const receiver = await cloneHttpRequest();
+        const sender = await cloneHttpRequest('ping');
+        const receiver = await cloneHttpRequest('ping');
 
         const body = {
           event: 'ping',
@@ -239,10 +262,9 @@ describe(EventController, () => {
           .send(body)
           .expect(201);
         expect(res.body).toEqual({ message: 'pong' });
-        expect(postToConnectionSpy).toHaveBeenCalledOnce();
-        expect(postToConnectionSpy).toHaveBeenCalledWith({
+        expect(postToConnectionSpy).toHaveBeenCalledExactlyOnceWith({
           ConnectionId: `${receiver.auth.user.id}`,
-          Data: expect.stringMatching(/Hello, World!/),
+          Data: expect.stringMatching(new RegExp(JSON.stringify(body.data.body))),
         });
 
         clearHttpRequest(sender, receiver);
@@ -250,9 +272,9 @@ describe(EventController, () => {
 
       test('should send message to all clients', async () => {
         const channel = 'private_channel_1';
-        const sender = await cloneHttpRequest(channel);
-        const receiver1 = await cloneHttpRequest(channel);
-        const receiver2 = await cloneHttpRequest(channel);
+        const sender = await cloneHttpRequest('ping', { channel });
+        const receiver1 = await cloneHttpRequest('ping', { channel });
+        const receiver2 = await cloneHttpRequest('ping', { channel });
 
         const body = {
           event: 'ping',
@@ -282,20 +304,20 @@ describe(EventController, () => {
         expect(postToConnectionSpy).toHaveBeenCalledTimes(2);
         expect(postToConnectionSpy).toHaveBeenCalledWith({
           ConnectionId: `${receiver1.auth.user.id}`,
-          Data: expect.stringMatching(/Hello, World!/),
+          Data: expect.stringMatching(new RegExp(JSON.stringify(body.data.body))),
         });
         expect(postToConnectionSpy).toHaveBeenCalledWith({
           ConnectionId: `${receiver2.auth.user.id}`,
-          Data: expect.stringMatching(/Hello, World!/),
+          Data: expect.stringMatching(new RegExp(JSON.stringify(body.data.body))),
         });
 
-        clearHttpRequest(sender, receiver1, receiver2);
+        await clearHttpRequest(sender, receiver1, receiver2);
       });
     });
 
     describe('exception', () => {
       test('should receive error message if strategy is not provided', async () => {
-        const sender = await cloneHttpRequest();
+        const sender = await cloneHttpRequest('ping');
 
         const body = {
           event: 'ping',
@@ -320,11 +342,11 @@ describe(EventController, () => {
           Data: expect.stringMatching(/Strategy not found/),
         });
 
-        clearHttpRequest(sender);
+        await clearHttpRequest(sender);
       });
 
       test('should receive error message if strategy is not found', async () => {
-        const sender = await cloneHttpRequest();
+        const sender = await cloneHttpRequest('ping');
         const strategy = 'NOT_EXISTS';
 
         const body = {
@@ -350,12 +372,12 @@ describe(EventController, () => {
           Data: expect.stringMatching(new RegExp(`Strategy '${strategy}' not found`)),
         });
 
-        clearHttpRequest(sender);
+        await clearHttpRequest(sender);
       });
 
       test('should receive error message if to parameter is invalid in specific strategy', async () => {
-        const sender = await cloneHttpRequest();
-        const receiver = await cloneHttpRequest();
+        const sender = await cloneHttpRequest('ping');
+        const receiver = await cloneHttpRequest('ping');
         const to = 'NOT_EXISTS';
 
         const body = {
@@ -382,11 +404,11 @@ describe(EventController, () => {
           Data: expect.stringMatching(new RegExp(`Connection '${to}' not found`)),
         });
 
-        clearHttpRequest(sender, receiver);
+        await clearHttpRequest(sender, receiver);
       });
 
       test('should receive error message if to parameter is not provided in specific strategy', async () => {
-        const sender = await cloneHttpRequest();
+        const sender = await cloneHttpRequest('ping');
 
         const body = {
           event: 'ping',
@@ -412,7 +434,159 @@ describe(EventController, () => {
           Data: expect.stringMatching(/Strategy 'specific' requires a 'to' parameter/),
         });
 
-        clearHttpRequest(sender);
+        await clearHttpRequest(sender);
+      });
+    });
+  });
+
+  describe(http.request.requestShareLocationEvent, () => {
+    let postToConnectionSpy: jest.SpyInstance;
+
+    beforeEach(async () => {
+      postToConnectionSpy = jest.spyOn(eventController['client'], 'postToConnection');
+    });
+
+    afterEach(async () => {
+      jest.restoreAllMocks();
+    });
+
+    describe('success', () => {
+      test('should share location to all clients in attended promises', async () => {
+        const users = await fixture.write.users.output(3);
+        const { promise: p1 } = await fixture.write.promise.output({ host: users[0], attendees: [users[1], users[2]] });
+        const { promise: p2 } = await fixture.write.promise.output({ host: users[1], attendees: [users[0], users[2]] });
+
+        const sender = await cloneHttpRequest('share-location', { user: users[0] });
+        const receivers = await Promise.all(users.slice(1).map((user) => cloneHttpRequest('share-location', { user })));
+
+        const body = {
+          event: 'share-location',
+          data: {
+            param: {
+              promiseIds: [hasher.encode(p1.id), hasher.encode(p2.id)],
+            },
+            body: {
+              lat: 37.123456,
+              lng: 127.123456,
+            },
+          },
+        } satisfies ShareLocationEvent.Payload;
+
+        const res = await sender
+          .requestShareLocationEvent()
+          .post.query(params('share-location', { client: sender }))
+          .send(body)
+          .expect(201);
+
+        expect(res.body).toEqual({ message: 'location shared' });
+        expect(postToConnectionSpy).toHaveBeenCalledTimes(4);
+
+        for (const receiver of receivers) {
+          expect(postToConnectionSpy).toHaveBeenCalledWith({
+            ConnectionId: `${receiver.auth.user.id}`,
+            Data: expect.stringMatching(new RegExp(JSON.stringify(body.data.body))),
+          });
+        }
+
+        await clearHttpRequest(sender, ...receivers);
+      });
+    });
+
+    describe('exception', () => {
+      test('should receive error message if promiseIds is not provided', async () => {
+        const user = await fixture.write.user.output();
+        await fixture.write.promise({ host: user });
+        const sender = await cloneHttpRequest('share-location', { user });
+
+        const body = {
+          event: 'share-location',
+          data: {
+            param: {
+              // promiseIds: [],
+            } as any,
+            body: {
+              lat: 37.123456,
+              lng: 127.123456,
+            },
+          },
+        } satisfies ShareLocationEvent.Payload;
+
+        await sender
+          .requestShareLocationEvent()
+          .post.query(params('share-location', { client: sender }))
+          .send(body)
+          .expect(201);
+
+        expect(postToConnectionSpy).toHaveBeenCalledExactlyOnceWith({
+          ConnectionId: `${sender.auth.user.id}`,
+          Data: expect.stringMatching(/약속을 찾을 수 없습니다/),
+        });
+
+        await clearHttpRequest(sender);
+      });
+
+      test('should receive error message if promiseIds is invalid', async () => {
+        const user = await fixture.write.user.output();
+        await fixture.write.promise({ host: user });
+        const sender = await cloneHttpRequest('share-location', { user });
+
+        const body = {
+          event: 'share-location',
+          data: {
+            param: {
+              promiseIds: ['INVALID_PROMISE_ID'],
+            },
+            body: {
+              lat: 37.123456,
+              lng: 127.123456,
+            },
+          },
+        } satisfies ShareLocationEvent.Payload;
+
+        await sender
+          .requestShareLocationEvent()
+          .post.query(params('share-location', { client: sender }))
+          .send(body)
+          .expect(201);
+
+        expect(postToConnectionSpy).toHaveBeenCalledExactlyOnceWith({
+          ConnectionId: `${sender.auth.user.id}`,
+          Data: expect.stringMatching(/약속을 찾을 수 없습니다/),
+        });
+
+        await clearHttpRequest(sender);
+      });
+
+      test('should receive error message if connection not found in attended promises', async () => {
+        const user = await fixture.write.user.output();
+        await fixture.write.promise({ host: user });
+        const sender = await cloneHttpRequest('share-location', { user });
+
+        const body = {
+          event: 'share-location',
+          data: {
+            param: {
+              promiseIds: [hasher.encode(0)],
+            },
+            body: {
+              lat: 37.123456,
+              lng: 127.123456,
+            },
+          },
+        } satisfies ShareLocationEvent.Payload;
+
+        await sender
+          .requestShareLocationEvent()
+          .post.query(params('share-location', { client: sender }))
+          .send(body)
+          .expect(201);
+
+        expect(postToConnectionSpy).toHaveBeenCalledExactlyOnceWith({
+          ConnectionId: `${sender.auth.user.id}`,
+          Data: expect.stringMatching(/연결된 약속을 찾을 수 없습니다/),
+        });
+
+        await clearHttpRequest(sender);
       });
     });
   });

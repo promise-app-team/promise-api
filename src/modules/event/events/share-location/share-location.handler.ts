@@ -6,7 +6,7 @@ import { makePromiseFilter } from '@/modules/promise/promise.utils';
 import { EventHandler } from '../event.handler';
 
 import type { ShareLocationEvent } from './share-location.interface';
-import type { Connection, ConnectionID } from '../../connections';
+import type { Connection, ConnectionID, ConnectionUID } from '../../connections';
 
 export class ShareLocationHandler extends EventHandler<ShareLocationEvent> {
   private channel = (pid: number | string) => `promise_${pid}`;
@@ -32,46 +32,30 @@ export class ShareLocationHandler extends EventHandler<ShareLocationEvent> {
   }
 
   async handle(cid: ConnectionID, data: ShareLocationEvent.Data): Promise<ShareLocationEvent.Response> {
-    const exists = await this.connectionManager.exists(cid, 'default');
-    if (!exists) {
-      const error = `Connection not found: ${cid}`;
-      await this.eventEmitter.emit('error', cid, {
-        from: 0,
-        timestamp: getUnixTime(new Date()),
-        data: { error },
-      });
+    const message = (uid: ConnectionUID, data: any) => ({ from: uid, timestamp: getUnixTime(new Date()), data });
+
+    if (!data.param.__promiseIds?.length) {
+      const error = '약속을 찾을 수 없습니다';
+      await this.eventEmitter.emit('error', cid, message(0, { error }));
       return { message: error };
     }
 
-    const timestamp = getUnixTime(new Date());
     await Promise.all(
-      data.param._promiseIds.map(async (pid, i) => {
+      data.param.__promiseIds!.map(async (pid, i) => {
         const channel = this.channel(pid);
         const connection = await this.connectionManager.getConnection(cid, channel);
         if (!connection) {
           const error = `연결된 약속을 찾을 수 없습니다 (pid: ${data.param.promiseIds[i]})`;
-          await this.eventEmitter.emit('error', cid, {
-            from: 0,
-            timestamp,
-            data: { error },
-          });
+          await this.eventEmitter.emit('error', cid, message(0, { error }));
           return { message: error };
         }
 
         const connections = await this.connectionManager.getConnections(channel);
+        const loc = { lat: data.body.lat, lng: data.body.lng };
         return Promise.all(
           connections
             .filter((to) => to.cid !== cid)
-            .map((to) =>
-              this.eventEmitter.emit('share', to.cid, {
-                from: connection.uid,
-                timestamp,
-                data: {
-                  lat: data.body.lat,
-                  lng: data.body.lng,
-                },
-              })
-            )
+            .map((to) => this.eventEmitter.emit('share', to.cid, message(connection.uid, loc)))
         );
       })
     );

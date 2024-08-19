@@ -1,4 +1,4 @@
-import { ApiExtraModels, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiExtraModels, ApiProperty, ApiPropertyOptional, getSchemaPath } from '@nestjs/swagger';
 import { getUnixTime } from 'date-fns';
 
 import { ConnectionID } from '../../connections';
@@ -25,7 +25,9 @@ export module PingEvent {
     channel?: string;
   };
 
-  export type Param = {
+  export type Param = ParamSelf | ParamSpecific | ParamBroadcast;
+
+  export type ParamMap = {
     [Strategy.Self]: ParamSelf;
     [Strategy.Specific]: ParamSpecific;
     [Strategy.Broadcast]: ParamBroadcast;
@@ -33,14 +35,14 @@ export module PingEvent {
 
   export type Body = any;
 
-  export type Data<TParam = Param[Strategy], TBody = Body> = {
+  export type Data<TParam = ParamMap[Strategy], TBody = Body> = {
     param?: TParam;
     body: TBody;
   };
 
   export type Payload<S extends Strategy = Strategy, TBody = Body> = {
     event: 'ping';
-    data: Data<Param[S], TBody>;
+    data: Data<ParamMap[S], TBody>;
   };
 
   export type Response = {
@@ -62,38 +64,47 @@ export module PingEvent {
   };
 
   export module DTO {
-    export class PingEventParamDTO {
-      @ApiProperty({
-        example: Object.values(Strategy).join('|'),
-        description: 'Strategy to send message',
-      })
-      strategy: Strategy;
+    export class PingEventParamSelfDTO implements ParamSelf {
+      @ApiProperty({ example: Strategy.Self })
+      strategy: Strategy.Self;
+    }
+
+    export class PingEventParamSpecificDTO implements ParamSpecific {
+      @ApiProperty({ example: Strategy.Specific })
+      strategy: Strategy.Specific;
+
+      @ApiProperty({ example: '1234567890', description: 'ConnectionID to send message' })
+      to: string;
+    }
+
+    export class PingEventParamBroadcastDTO implements ParamBroadcast {
+      @ApiProperty({ example: Strategy.Broadcast })
+      strategy: Strategy.Broadcast;
 
       @ApiPropertyOptional({
-        nullable: true,
-        example: '1234567890',
-        description: 'ConnectionId to send message to (required if strategy is specific)',
-      })
-      to?: string;
-
-      @ApiPropertyOptional({
-        nullable: true,
         example: 'channel',
-        description: 'Channel to send message to (required if strategy is broadcast)',
+        description: 'Channel to send message',
         default: 'public',
       })
       channel?: string;
     }
 
-    export class PingEventDataDTO {
-      @ApiProperty()
-      param: PingEventParamDTO;
+    @ApiExtraModels(PingEventParamSelfDTO, PingEventParamSpecificDTO, PingEventParamBroadcastDTO)
+    export class PingEventDataDTO implements Data {
+      @ApiProperty({
+        oneOf: [
+          { $ref: getSchemaPath(PingEventParamSelfDTO) },
+          { $ref: getSchemaPath(PingEventParamSpecificDTO) },
+          { $ref: getSchemaPath(PingEventParamBroadcastDTO) },
+        ],
+      })
+      param: PingEventParamSelfDTO | PingEventParamSpecificDTO | PingEventParamBroadcastDTO;
 
       @ApiProperty()
       body: any;
     }
 
-    export class PingEventMessageDTO {
+    export class PingEventMessageDTO implements Message {
       @ApiProperty({ example: 'connectionId' })
       from: string;
 
@@ -105,7 +116,7 @@ export module PingEvent {
     }
 
     @ApiExtraModels(PingEventMessageDTO)
-    export class PingEventPayloadDTO {
+    export class PingEventPayloadDTO implements Payload {
       @ApiProperty({ example: 'ping' })
       event: 'ping';
 
@@ -117,7 +128,7 @@ export module PingEvent {
 
 export interface PingEvent extends AbstractEvent {
   Type: PingEvent.Type;
-  Param: PingEvent.Param;
+  Param: PingEvent.ParamMap;
   Body: PingEvent.Body;
   Data: PingEvent.Data;
   Payload: PingEvent.Payload;

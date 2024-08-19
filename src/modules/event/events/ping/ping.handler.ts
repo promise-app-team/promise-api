@@ -19,7 +19,7 @@ export class PingEventHandler extends EventHandler<PingEvent> {
 
   async handle(cid: ConnectionID, data: PingEvent.Data): Promise<PingEvent.Response> {
     const channel = data.param?.strategy === PingEvent.Strategy.Broadcast && data.param.channel;
-    const exists = await this.connectionManager.exists(cid, channel || 'public');
+    const exists = await this.connectionManager.getConnection(cid, channel || 'public');
     if (!exists) {
       const error = `Connection not found: ${cid}`;
       await this.eventEmitter.emit('error', cid, {
