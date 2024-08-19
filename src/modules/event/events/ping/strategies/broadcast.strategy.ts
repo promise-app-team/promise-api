@@ -1,5 +1,4 @@
 import { getUnixTime } from 'date-fns';
-import * as R from 'remeda';
 
 import { Strategy } from './strategy';
 
@@ -11,17 +10,15 @@ export class BroadcastStrategy extends Strategy<PingEvent.Strategy.Broadcast> {
     const channel = data.param?.channel || 'public';
     const toConnections = await this.connection.getConnections(channel);
     await Promise.all(
-      R.pipe(
-        toConnections,
-        R.filter((to) => to.cid !== cid),
-        R.map((to) =>
+      toConnections
+        .filter((to) => to.cid !== cid)
+        .map((to) =>
           this.emitter.emit('send', to.cid, {
             from: cid,
             timestamp: getUnixTime(Date.now()),
             data: data.body,
           })
         )
-      )
     );
   }
 }

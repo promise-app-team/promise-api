@@ -73,7 +73,11 @@ export class EventController {
       connectionId,
       data,
       async (cid, data) => this.client.postToConnection({ ConnectionId: cid, Data: JSON.stringify(data) }),
-      async (error) => error.name === 'GoneException' && EventHandler.disconnect(connectionId)
+      async (error) => {
+        if (error.name === 'GoneException') {
+          await EventHandler.disconnect(connectionId);
+        }
+      }
     );
   }
 
@@ -87,7 +91,11 @@ export class EventController {
       connectionId,
       data,
       async (cid, data) => this.client.postToConnection({ ConnectionId: cid, Data: JSON.stringify(data) }),
-      async (error) => error.name === 'GoneException' && EventHandler.disconnect(connectionId)
+      async (error) => {
+        if (error.name === 'GoneException') {
+          await EventHandler.disconnect(connectionId);
+        }
+      }
     );
   }
 }

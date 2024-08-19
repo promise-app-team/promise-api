@@ -11,16 +11,20 @@ export module PingEvent {
     Broadcast = 'broadcast',
   }
 
-  type ParamSelf = {
+  type DefaultParam = {
+    channel?: string;
+  };
+
+  type ParamSelf = DefaultParam & {
     strategy: Strategy.Self;
   };
 
-  type ParamSpecific = {
+  type ParamSpecific = DefaultParam & {
     strategy: Strategy.Specific;
     to: string;
   };
 
-  type ParamBroadcast = {
+  type ParamBroadcast = DefaultParam & {
     strategy: Strategy.Broadcast;
     channel?: string;
   };
@@ -36,7 +40,7 @@ export module PingEvent {
   export type Body = any;
 
   export type Data<TParam = ParamMap[Strategy], TBody = Body> = {
-    param?: TParam;
+    param: TParam;
     body: TBody;
   };
 
@@ -64,12 +68,21 @@ export module PingEvent {
   };
 
   export module DTO {
-    export class PingEventParamSelfDTO implements ParamSelf {
+    class DefaultParamDTO implements DefaultParam {
+      @ApiPropertyOptional({
+        example: 'channel',
+        description: 'Channel to send message',
+        default: 'public',
+      })
+      channel?: string;
+    }
+
+    export class PingEventParamSelfDTO extends DefaultParamDTO implements ParamSelf {
       @ApiProperty({ example: Strategy.Self })
       strategy: Strategy.Self;
     }
 
-    export class PingEventParamSpecificDTO implements ParamSpecific {
+    export class PingEventParamSpecificDTO extends DefaultParamDTO implements ParamSpecific {
       @ApiProperty({ example: Strategy.Specific })
       strategy: Strategy.Specific;
 
@@ -77,16 +90,9 @@ export module PingEvent {
       to: string;
     }
 
-    export class PingEventParamBroadcastDTO implements ParamBroadcast {
+    export class PingEventParamBroadcastDTO extends DefaultParamDTO implements ParamBroadcast {
       @ApiProperty({ example: Strategy.Broadcast })
       strategy: Strategy.Broadcast;
-
-      @ApiPropertyOptional({
-        example: 'channel',
-        description: 'Channel to send message',
-        default: 'public',
-      })
-      channel?: string;
     }
 
     @ApiExtraModels(PingEventParamSelfDTO, PingEventParamSpecificDTO, PingEventParamBroadcastDTO)
@@ -128,7 +134,7 @@ export module PingEvent {
 
 export interface PingEvent extends AbstractEvent {
   Type: PingEvent.Type;
-  Param: PingEvent.ParamMap;
+  Param: PingEvent.Param;
   Body: PingEvent.Body;
   Data: PingEvent.Data;
   Payload: PingEvent.Payload;

@@ -41,9 +41,4 @@ export abstract class EventHandler<TEvent extends AbstractEvent> {
     this.registered.add(event);
     this.eventEmitter.on(event as any, listener);
   }
-
-  async off<K extends keyof TEvent['Type']>(event: K, listener: AsyncEventListener<K, TEvent['Type']>) {
-    this.registered.delete(event);
-    this.eventEmitter.off(event as any, listener);
-  }
 }

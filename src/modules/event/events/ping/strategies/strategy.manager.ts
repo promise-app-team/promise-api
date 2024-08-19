@@ -1,7 +1,6 @@
 import { PingEvent } from '../ping.interface';
 
 import { BroadcastStrategy } from './broadcast.strategy';
-import { CommonStrategy } from './common.strategy';
 import { SelfStrategy } from './self.strategy';
 import { SpecificStrategy } from './specific.strategy';
 
@@ -12,7 +11,6 @@ interface StrategyMap {
   [PingEvent.Strategy.Self]: SelfStrategy;
   [PingEvent.Strategy.Specific]: SpecificStrategy;
   [PingEvent.Strategy.Broadcast]: BroadcastStrategy;
-  common: CommonStrategy;
 }
 
 export class StrategyManager {
@@ -26,7 +24,6 @@ export class StrategyManager {
       [PingEvent.Strategy.Self]: new SelfStrategy(this.connection, this.emitter),
       [PingEvent.Strategy.Specific]: new SpecificStrategy(this.connection, this.emitter),
       [PingEvent.Strategy.Broadcast]: new BroadcastStrategy(this.connection, this.emitter),
-      common: new CommonStrategy(this.connection, this.emitter),
     };
   }
 

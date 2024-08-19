@@ -2,9 +2,9 @@ import { getUnixTime } from 'date-fns';
 
 import { EventHandler } from '../event.handler';
 
-import { PingEvent } from './ping.interface';
 import { StrategyManager } from './strategies';
 
+import type { PingEvent } from './ping.interface';
 import type { Strategy } from './strategies';
 import type { ConnectionID, ConnectionScope } from '../../connections';
 import type { CacheService } from '@/customs/cache';
@@ -18,29 +18,19 @@ export class PingEventHandler extends EventHandler<PingEvent> {
   }
 
   async handle(cid: ConnectionID, data: PingEvent.Data): Promise<PingEvent.Response> {
-    const channel = data.param?.strategy === PingEvent.Strategy.Broadcast && data.param.channel;
-    const exists = await this.connectionManager.getConnection(cid, channel || 'public');
-    if (!exists) {
-      const error = `Connection not found: ${cid}`;
-      await this.eventEmitter.emit('error', cid, {
-        from: cid,
-        timestamp: getUnixTime(new Date()),
-        data: { error },
-      });
-      return { message: error };
-    }
+    const message = (cid: ConnectionID, data: any) => ({ from: cid, timestamp: getUnixTime(new Date()), data });
 
     const strategy = data.param?.strategy;
     if (!strategy) {
       const error = `Strategy not found`;
-      await this.strategy.get('common').post(cid, { body: { error } });
+      await this.eventEmitter.emit('error', cid, message(cid, { error }));
       return { message: error };
     }
 
     const handler: Strategy = this.strategy.get(strategy);
     if (!handler) {
       const error = `Strategy '${strategy}' not found`;
-      await this.strategy.get('common').post(cid, { body: { error } });
+      await this.eventEmitter.emit('error', cid, message(cid, { error }));
       return { message: error };
     }
 

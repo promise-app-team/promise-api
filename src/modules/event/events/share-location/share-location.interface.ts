@@ -11,13 +11,13 @@ export module ShareLocationEvent {
     lng: number;
   };
 
-  export type ParamMap = {
+  export type Param = {
     promiseIds: string[];
     __promiseIds?: string[]; // decoded
   };
 
   export type Data = {
-    param: ParamMap;
+    param: Param;
     body: Body;
   };
 
@@ -55,7 +55,7 @@ export module ShareLocationEvent {
   };
 
   export module DTO {
-    export class ShareLocationEventParamDTO implements ParamMap {
+    export class ShareLocationEventParamDTO implements Param {
       @ApiProperty({ example: ['1234567890'] })
       promiseIds: string[];
     }
@@ -118,7 +118,7 @@ export module ShareLocationEvent {
 
 export interface ShareLocationEvent extends AbstractEvent {
   Type: ShareLocationEvent.Type;
-  Param: ShareLocationEvent.ParamMap;
+  Param: ShareLocationEvent.Param;
   Body: ShareLocationEvent.Body;
   Data: ShareLocationEvent.Data;
   Payload: ShareLocationEvent.Payload;

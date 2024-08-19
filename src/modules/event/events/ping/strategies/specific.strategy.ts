@@ -7,21 +7,21 @@ import type { ConnectionID } from '@/modules/event/connections';
 
 export class SpecificStrategy extends Strategy<PingEvent.Strategy.Specific> {
   async post<T>(cid: ConnectionID, data: PingEvent.Payload<PingEvent.Strategy.Specific, T>['data']) {
-    const response = (data: PingEvent.Payload<PingEvent.Strategy.Specific>['data']) =>
-      ({ from: cid, timestamp: getUnixTime(Date.now()), data: data.body }) satisfies PingEvent.Message;
+    const response = (data: PingEvent.Payload<PingEvent.Strategy.Specific>['data']['body']) =>
+      ({ from: cid, timestamp: getUnixTime(Date.now()), data }) satisfies PingEvent.Message;
 
     if (!data.param?.to) {
       const error = `Strategy 'specific' requires a 'to' parameter`;
-      await this.emitter.emit('send', cid, response({ body: { error } }));
-      return;
+      return this.emitter.emit('send', cid, response({ error }));
     }
 
-    const to = await this.connection.getConnection(data.param.to, 'public');
-    if (to) {
-      await this.emitter.emit('send', to.cid, response(data));
+    const channel = data.param?.channel || 'public';
+    const connection = await this.connection.getConnection(data.param.to, channel);
+    if (connection) {
+      await this.emitter.emit('send', connection.cid, response(data.body));
     } else {
-      const error = `Connection '${data.param.to}' not found`;
-      await this.emitter.emit('send', cid, response({ body: { error } }));
+      const error = `Connection '${data.param.to}' not found in '${channel}'`;
+      await this.emitter.emit('send', cid, response({ error }));
     }
   }
 }

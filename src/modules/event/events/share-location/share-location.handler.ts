@@ -12,7 +12,8 @@ export class ShareLocationHandler extends EventHandler<ShareLocationEvent> {
   private channel = (pid: number | string) => `promise_${pid}`;
 
   async connect(connection: Pick<Connection, 'cid' | 'uid'>): Promise<ShareLocationEvent.Response> {
-    if (!this.context?.prisma) throw new Error('PrismaService not found');
+    /* istanbul ignore next */
+    if (!this.context?.prisma) throw new Error('PrismaService is not provided');
 
     const promises = await this.context.prisma.promise.findMany({
       where: makePromiseFilter({

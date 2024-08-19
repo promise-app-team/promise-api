@@ -19,7 +19,12 @@ module.exports = {
     ],
   },
   verbose: false,
-  collectCoverageFrom: ['(app|utils|modules)/**/[^-]*.ts'],
+  collectCoverageFrom: [
+    '(app|utils|modules)/**/[^-]*.ts',
+    '!**/event/index.ts',
+    '!**/event/event.gateway.ts',
+    '!**/events/event.interface.ts',
+  ],
   coverageDirectory: '../coverage',
   testEnvironment: 'node',
   preset: 'ts-jest',
