@@ -352,6 +352,14 @@ export function createTestFixture(
       tomorrow: new Date(tomorrow),
     },
 
+    random: {
+      string: (length: number = 10) => R.randomString(length),
+      integer: (min: number = 0, max: number = 100) => R.randomInteger(min, max),
+      boolean: () => Math.random() > 0.5,
+      latitude: (precision = 6) => R.round(Math.random() * 180 - 90, precision),
+      longitude: (precision = 6) => R.round(Math.random() * 360 - 180, precision),
+    },
+
     configure,
     resetData,
   };

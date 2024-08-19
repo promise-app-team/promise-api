@@ -243,11 +243,11 @@ describe(PromiseController, () => {
       locationShareEndType: LocationShareType.TIME,
       locationShareEndValue: 60,
       destination: {
-        name: R.randomString(5),
-        city: R.randomString(5),
-        district: R.randomString(5),
-        address1: R.randomString(5),
-        address2: R.randomString(5),
+        name: fixture.random.string(5),
+        city: fixture.random.string(5),
+        district: fixture.random.string(5),
+        address1: fixture.random.string(5),
+        address2: fixture.random.string(5),
         latitude: 37.5665,
         longitude: 127.0365,
       },
@@ -958,16 +958,13 @@ describe(PromiseController, () => {
     });
 
     test('should return calculated middle location of start locations with provided attendee ids', async () => {
-      const randomLat = () => Math.random() * 180 - 90;
-      const randomLng = () => Math.random() * 360 - 180;
-
       const allDifferent = (arr: any[]) => arr.every((v, i, a) => a.indexOf(v) === i);
 
       const locations = await Promise.all(
         R.times(10, () =>
           fixture.write.location.output({
-            latitude: new Prisma.Decimal(randomLat()),
-            longitude: new Prisma.Decimal(randomLng()),
+            latitude: new Prisma.Decimal(fixture.random.latitude()),
+            longitude: new Prisma.Decimal(fixture.random.longitude()),
           })
         )
       );
