@@ -14,7 +14,7 @@ services:
       mysql:
         condition: service_healthy
     command: >
-      sh -c "npx prisma db push; npm run test:all"
+      sh -c "npx prisma db push --skip-generate; npm run test:all"
     environment:
       TZ: ${TZ}
       PORT: ${PORT}
