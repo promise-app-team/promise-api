@@ -1,24 +1,24 @@
-import { TypedEventEmitter } from '@/utils';
+import { AsyncEventEmitter } from '@/utils';
 
 import { ConnectionManager } from '../connections';
 
 import type { AbstractEvent } from './event.interface';
 import type { Connection, ConnectionID, ConnectionScope } from '../connections';
 import type { CacheService } from '@/customs/cache';
-import type { TypedEventListener } from '@/utils';
+import type { AsyncEventListener } from '@/utils';
 
 export abstract class EventHandler<TEvent extends AbstractEvent> {
-  protected readonly connection: ConnectionManager;
-  protected readonly emitter = new TypedEventEmitter<TEvent['Type']>();
+  protected readonly connectionManager: ConnectionManager;
+  protected readonly eventEmitter = new AsyncEventEmitter<TEvent['Type']>();
   protected readonly context?: TEvent['Context'];
 
   constructor(scope: ConnectionScope, cache: CacheService, context?: TEvent['Context']) {
-    this.connection = ConnectionManager.forEvent(scope.event, scope.stage, { cache });
+    this.connectionManager = ConnectionManager.forEvent(scope.event, scope.stage, { cache });
     this.context = context;
   }
 
-  async connect(connection: Pick<Connection, 'cid' | 'uid'>): Promise<TEvent['Response']> {
-    const success = await this.connection.setConnection(connection, 'default');
+  async connect(connection: Pick<Connection, 'cid' | 'uid'>, channel = 'public'): Promise<TEvent['Response']> {
+    const success = await this.connectionManager.setConnection(connection, channel);
     if (!success) throw new Error(`Failed to connect to ${connection.cid} (${connection.uid})`);
     return { message: `Connected to ${connection.cid}` };
   }
@@ -36,14 +36,9 @@ export abstract class EventHandler<TEvent extends AbstractEvent> {
 
   private registered = new Set();
 
-  async on<K extends keyof TEvent['Type']>(event: K, listener: TypedEventListener<TEvent['Type']>) {
+  async on<K extends keyof TEvent['Type']>(event: K, listener: AsyncEventListener<K, TEvent['Type']>) {
     if (this.registered.has(event)) return;
     this.registered.add(event);
-    this.emitter.on(event as string, listener);
-  }
-
-  async off<K extends keyof TEvent['Type']>(event: K, listener: TypedEventListener<TEvent['Type']>) {
-    this.registered.delete(event);
-    this.emitter.off(event as string, listener);
+    this.eventEmitter.on(event as any, listener);
   }
 }

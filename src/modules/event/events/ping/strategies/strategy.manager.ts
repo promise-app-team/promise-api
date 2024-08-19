@@ -1,18 +1,16 @@
 import { PingEvent } from '../ping.interface';
 
 import { BroadcastStrategy } from './broadcast.strategy';
-import { CommonStrategy } from './common.strategy';
 import { SelfStrategy } from './self.strategy';
 import { SpecificStrategy } from './specific.strategy';
 
 import type { ConnectionManager } from '@/modules/event/connections';
-import type { TypedEventEmitter } from '@/utils';
+import type { AsyncEventEmitter } from '@/utils';
 
 interface StrategyMap {
   [PingEvent.Strategy.Self]: SelfStrategy;
   [PingEvent.Strategy.Specific]: SpecificStrategy;
   [PingEvent.Strategy.Broadcast]: BroadcastStrategy;
-  common: CommonStrategy;
 }
 
 export class StrategyManager {
@@ -20,13 +18,12 @@ export class StrategyManager {
 
   constructor(
     private readonly connection: ConnectionManager,
-    private readonly emitter: TypedEventEmitter<PingEvent.Type>
+    private readonly emitter: AsyncEventEmitter<PingEvent.Type>
   ) {
     this.strategies = {
       [PingEvent.Strategy.Self]: new SelfStrategy(this.connection, this.emitter),
       [PingEvent.Strategy.Specific]: new SpecificStrategy(this.connection, this.emitter),
       [PingEvent.Strategy.Broadcast]: new BroadcastStrategy(this.connection, this.emitter),
-      common: new CommonStrategy(this.connection, this.emitter),
     };
   }
 

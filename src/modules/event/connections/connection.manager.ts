@@ -1,11 +1,11 @@
-import { getUnixTime } from 'date-fns';
+import { Logger } from '@nestjs/common';
+import { fromUnixTime, getUnixTime, isPast } from 'date-fns';
 import * as R from 'remeda';
 
 import type {
   Connection,
   ConnectionID,
   ConnectionCache,
-  ConnectionScope,
   ConnectionEvent,
   ConnectionStage,
   ConnectionChannel,
@@ -15,19 +15,12 @@ import type {
 } from './connection.interface';
 
 export class ConnectionManager {
-  private readonly channelMap: ConnectionChannelMap;
+  private static readonly pool: ConnectionPool = new Map();
+  private static readonly instances = new Map<ConnectionEvent, ConnectionManager>();
 
-  private static pool: ConnectionPool = new Map();
-  private static instances = new Map<ConnectionEvent, ConnectionManager>();
-
-  private constructor(
-    private readonly event: ConnectionEvent,
-    private readonly stage: ConnectionStage,
-    private readonly cache: ConnectionCache
-  ) {
-    this.channelMap = new Map();
-    ConnectionManager.pool.set(event, this.channelMap);
-  }
+  private static delConnectionPromise: Promise<void> | null = null;
+  private static readonly reservedDelConnections = new Set<ConnectionID>();
+  private static readonly connectionIds = new Set<ConnectionID>();
 
   static forEvent(event: ConnectionEvent, stage: ConnectionStage, opts: { cache: ConnectionCache }): ConnectionManager {
     let instance = ConnectionManager.instances.get(event);
@@ -38,25 +31,37 @@ export class ConnectionManager {
     return instance;
   }
 
-  private makeCacheKey(channel: ConnectionChannel) {
-    const { event, stage } = this;
-    const scope: ConnectionScope = { event, channel, stage };
-    return `connection:[${JSON.stringify(scope)}]`;
+  private readonly channelMap: ConnectionChannelMap;
+  private readonly loadConnectionPromiseMap: Map<ConnectionChannel, Promise<ConnectionMap>> = new Map();
+
+  private constructor(
+    private readonly event: ConnectionEvent,
+    private readonly stage: ConnectionStage,
+    private readonly cache: ConnectionCache
+  ) {
+    this.channelMap = new Map();
+    ConnectionManager.pool.set(event, this.channelMap);
   }
 
-  private loadConnectionPromiseMap: Map<ConnectionChannel, Promise<ConnectionMap>> = new Map();
+  private makeCacheKey(channel: ConnectionChannel) {
+    return `connection:[${JSON.stringify({ event: this.event, channel, stage: this.stage })}]`;
+  }
+
   private async loadConnectionMap(channel: ConnectionChannel): Promise<ConnectionMap> {
+    if (this.channelMap.has(channel)) {
+      // this.debug(this.loadConnectionMap, `ConnectionMap already loaded (channel: ${channel})`);
+      return this.channelMap.get(channel)!;
+    }
+
     if (this.loadConnectionPromiseMap.has(channel)) {
-      this.debug(this.loadConnectionMap, `Loading connection map (${channel}) is already in progress`);
+      this.debug(this.loadConnectionMap, `Loading ConnectionMap in progress (channel: ${channel})`);
       return this.loadConnectionPromiseMap.get(channel)!;
     }
 
+    this.debug(this.loadConnectionMap, `ConnectionMap not found (channel: ${channel})`);
     const promise = this._loadConnectionMap(channel);
     this.loadConnectionPromiseMap.set(channel, promise);
-
-    promise.finally(() => {
-      this.loadConnectionPromiseMap.delete(channel);
-    });
+    promise.finally(() => this.loadConnectionPromiseMap.delete(channel));
 
     return promise;
   }
@@ -65,7 +70,7 @@ export class ConnectionManager {
     const connectionMap = this.channelMap.get(channel);
     if (connectionMap) return connectionMap;
 
-    this.debug(this.loadConnectionMap, `Loading connection map (${channel})`);
+    this.debug(this._loadConnectionMap, `Trying to load ConnectionMap (channel: ${channel})`);
 
     const key = this.makeCacheKey(channel);
     const loadedConnections = await this.cache.get<Connection[]>(key);
@@ -78,37 +83,47 @@ export class ConnectionManager {
       (input) => new Map(input)
     );
     this.channelMap.set(channel, filteredConnectionMap);
-    this.debug(this.loadConnectionMap, `Loaded connection map (${key}): %o`, filteredConnectionMap);
+    filteredConnectionMap.forEach((_, cid) => ConnectionManager.connectionIds.add(cid));
+
+    if (filteredConnectionMap.size === 0) {
+      this.debug(this._loadConnectionMap, `Empty ConnectionMap loaded (channel: ${channel})`);
+    } else {
+      const size = filteredConnectionMap.size;
+      this.debug(this._loadConnectionMap, `ConnectionMap loaded (${size} connections) (channel: ${channel})`);
+    }
 
     return filteredConnectionMap;
   }
 
   async getConnection(cid: ConnectionID, channel: ConnectionChannel): Promise<Connection | null> {
+    this.debug(this.getConnection, `Trying to get connection (channel: ${channel}): ${cid}`);
+
+    if (ConnectionManager.reservedDelConnections.has(cid)) {
+      this.debug(this.getConnection, `Connection is reserved for deletion: ${cid}`);
+      return null;
+    }
+
     const connectionMap = await this.loadConnectionMap(channel);
-
-    this.debug(this.getConnection, `Getting connection (${channel}): %o`, cid);
-
     const connection = connectionMap.get(cid) ?? null;
 
     connection
-      ? this.debug(this.getConnection, `Connection found (${channel}): %o`, connection)
-      : this.debug(this.getConnection, `Connection not found (${channel}): %s`, cid);
+      ? this.debug(this.getConnection, `Connection found (${channel}): ${JSON.stringify(connection)}`)
+      : this.debug(this.getConnection, `Connection not found (${channel}): ${cid}`);
 
     return connection;
   }
 
   async getConnections(channel: ConnectionChannel): Promise<Connection[]> {
+    this.debug(this.getConnections, `Trying to get connections (channel: ${channel})`);
+
     const connectionMap = await this.loadConnectionMap(channel);
-
-    this.debug(this.getConnections, `Getting connections (${channel})`);
-
     const connections = Array.from(connectionMap.values() ?? []);
 
     connections.length > 0
-      ? this.debug(this.getConnections, `Connections found (${channel}): %o`, connections)
+      ? this.debug(this.getConnections, `Connections found (${channel}): ${connections}`)
       : this.debug(this.getConnections, `Connections not found (${channel})`);
 
-    return connections;
+    return connections.filter((c) => !ConnectionManager.reservedDelConnections.has(c.cid));
   }
 
   async setConnection(
@@ -116,78 +131,101 @@ export class ConnectionManager {
     channel: ConnectionChannel,
     opts?: { ttl?: number }
   ): Promise<boolean> {
-    const key = this.makeCacheKey(channel);
     const { cid, uid } = connection;
-    const exists = await this.exists(connection.cid, channel);
-    if (exists) return false;
+    this.debug(this.setConnection, `[${this.event}.${channel}] Trying to set connection: ${cid}`);
 
-    this.debug(this.setConnection, `Setting connection (${channel}): %o`, JSON.stringify({ cid, uid }));
+    const key = this.makeCacheKey(channel);
+    const exists = await this.getConnection(cid, channel);
+    if (exists) return false;
 
     const iat = getUnixTime(new Date());
     const ttl = opts?.ttl ?? 60 * 60 * 24;
     const newConnection: Connection = { cid, uid, iat, exp: iat + ttl };
     const connectionMap = await this.loadConnectionMap(channel);
     connectionMap.set(cid, newConnection);
+    ConnectionManager.connectionIds.add(cid);
 
     await this.cache.set(key, Array.from(connectionMap.values() ?? []));
-    this.debug(this.setConnection, `Connection set (${channel}): %o`, newConnection);
-
-    this.debug(this.setConnection, `Current connection pool: %o`, ConnectionManager.pool);
+    this.debug(this.setConnection, `Connection set (channel: ${channel}): ${JSON.stringify(newConnection)}`);
 
     return true;
   }
 
-  async delConnection(cid: ConnectionID, channel: ConnectionChannel): Promise<boolean> {
-    const connectionMap = await this.loadConnectionMap(channel);
+  // async delConnection(cid: ConnectionID, channel: ConnectionChannel): Promise<boolean> {
+  //   this.debug(this.delConnection, `Trying to delete connection (channel: ${channel}): ${cid}`);
 
-    this.debug(this.delConnection, `Deleting connection (${channel}): %s`, cid);
+  //   const connectionMap = await this.loadConnectionMap(channel);
+  //   connectionMap.delete(cid);
+  //   ConnectionManager.connectionIds.delete(cid);
+  //   ConnectionManager.reservedDelConnections.delete(cid);
 
-    connectionMap.delete(cid);
-    const key = this.makeCacheKey(channel);
-    if (connectionMap.size > 0) {
-      await this.cache.set(key, Array.from(connectionMap.values() ?? []));
-    } else {
-      this.channelMap.delete(channel);
-      await this.cache.del(key);
-    }
+  //   const key = this.makeCacheKey(channel);
+  //   if (connectionMap.size > 0) {
+  //     await this.cache.set(key, Array.from(connectionMap.values() ?? []));
+  //   } else {
+  //     this.channelMap.delete(channel);
+  //     await this.cache.del(key);
+  //   }
 
-    this.debug(this.delConnection, `Connection deleted (${key}): %s`, cid);
+  //   this.debug(this.delConnection, `Connection deleted (${key}): ${cid}`);
 
-    this.debug(this.delConnection, `Current connection pool: %o`, ConnectionManager.pool);
+  //   return true;
+  // }
 
-    return true;
-  }
+  // async delConnections(ids: ConnectionID[], channel: ConnectionChannel): Promise<boolean> {
+  //   this.debug(this.delConnections, `Trying to delete connections (channel: ${channel}): ${ids}`);
 
-  async delConnections(ids: ConnectionID[], channel: ConnectionChannel = 'default'): Promise<boolean> {
-    const connectionMap = await this.loadConnectionMap(channel);
+  //   const connectionMap = await this.loadConnectionMap(channel);
+  //   for (const id of ids) {
+  //     connectionMap.delete(id);
+  //     ConnectionManager.connectionIds.delete(id);
+  //     ConnectionManager.reservedDelConnections.delete(id);
+  //   }
 
-    this.debug(this.delConnections, `Deleting connections (${channel}): %o`, ids);
+  //   const key = this.makeCacheKey(channel);
+  //   if (connectionMap.size > 0) {
+  //     await this.cache.set(key, Array.from(connectionMap.values() ?? []));
+  //   } else {
+  //     this.channelMap.delete(channel);
+  //     await this.cache.del(key);
+  //   }
 
-    ids.forEach((id) => connectionMap.delete(id));
-    const key = this.makeCacheKey(channel);
-    if (connectionMap.size > 0) {
-      await this.cache.set(key, Array.from(connectionMap.values() ?? []));
-    } else {
-      this.channelMap.delete(channel);
-      await this.cache.del(key);
-    }
+  //   this.debug(this.delConnections, `Connections deleted (${key}): ${ids}`);
 
-    this.debug(this.delConnections, `Connections deleted (${key}): %o`, ids);
-
-    return true;
-  }
-
-  private static reservedDelConnections = new Set<ConnectionID>();
+  //   return true;
+  // }
 
   static async delConnection(cid: ConnectionID): Promise<void> {
+    if (this.reservedDelConnections.has(cid)) return;
+    if (!this.connectionIds.has(cid)) return;
+
+    this.debug(this.delConnection, `Trying to delete connection: ${cid}`);
+
     this.reservedDelConnections.add(cid);
-    await new Promise((resolve) => setTimeout(() => this.delConnections().then(resolve), 300));
+
+    if (!this.delConnectionPromise) {
+      this.delConnectionPromise = new Promise((resolve) => {
+        setTimeout(() => this.delConnections().then(resolve), 300);
+      });
+    }
+
+    await this.delConnectionPromise;
+    this.delConnectionPromise = null;
+
+    if (this.reservedDelConnections.has(cid)) {
+      await this.delConnection(cid);
+    }
   }
 
-  static async delConnections() {
+  private static async delConnections() {
     if (this.reservedDelConnections.size === 0) return;
-    const reservedDelConnections = Array.from(this.reservedDelConnections.values());
 
+    this.debug(
+      this.delConnections,
+      `Trying to delete reserved connections: ${Array.from(this.reservedDelConnections)}`
+    );
+
+    const reservedDelConnections = Array.from(this.reservedDelConnections);
     for (const [eventName, channelMap] of this.pool.entries()) {
       for (const [channelName, connectionMap] of channelMap.entries()) {
         for (const id of reservedDelConnections) {
@@ -198,6 +236,7 @@ export class ConnectionManager {
           if (!instance) continue;
 
           connectionMap.delete(id);
+          this.reservedDelConnections.delete(id);
           const key = instance.makeCacheKey(channelName);
           if (connectionMap.size > 0) {
             await instance.cache.set(key, Array.from(connectionMap.values() ?? []));
@@ -206,30 +245,36 @@ export class ConnectionManager {
             await instance.cache.del(key);
           }
 
-          instance.debug(this.delConnections, `Connection deleted (${key}): %s`, id);
+          instance.debug(this.delConnections, `Connection deleted (${key}): ${id}`);
         }
       }
     }
 
-    this.reservedDelConnections.clear();
+    this.debug(this.delConnections, `Reserved connections deleted`);
   }
 
-  async exists(cid: ConnectionID, channel: ConnectionChannel): Promise<boolean> {
-    this.debug(this.exists, `Checking connection exists: %s`, cid);
-    const connectionMap = await this.loadConnectionMap(channel);
-    const connection = connectionMap.get(cid);
-    this.debug(this.exists, `Connection ${connection ? 'exists' : 'not exists'}: %s`, cid);
-    return !!connection;
-  }
+  // async exists(cid: ConnectionID, channel: ConnectionChannel): Promise<boolean> {
+  //   const connectionMap = await this.loadConnectionMap(channel);
+  //   const exists = !!connectionMap.get(cid);
+  //   this.debug(this.exists, `Connection ${exists ? 'exists' : 'not exists'}: ${cid} (channel: ${channel})`);
+  //   return exists;
+  // }
 
   expired(connection: Connection): boolean {
-    const now = getUnixTime(new Date());
-    const expired = connection.exp < now;
-    if (expired) this.debug(this.expired, `Connection expired: %o`, connection);
-    return !expired;
+    const expired = isPast(fromUnixTime(connection.exp));
+    if (expired) this.debug(this.expired, `Connection expired: ${connection.cid}`);
+    return expired;
   }
 
-  private debug(fn: Function, message: string, ...args: any[]) {
-    console.log(`[${ConnectionManager.name}.${fn.name}] ${message}`, ...args);
+  private readonly debug = ConnectionManager.debug;
+  private static debug(message: any): void;
+  private static debug(fn: Function, message: any): void;
+  private static debug(...args: any[]): void {
+    if (args.length === 2) {
+      const [fn, message] = args;
+      Logger.debug(`[${ConnectionManager.name}.${fn.name}] ${message}`, ConnectionManager.name);
+    } else {
+      Logger.debug(args[0], ConnectionManager.name);
+    }
   }
 }

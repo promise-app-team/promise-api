@@ -1,6 +1,6 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { Request, Response } from 'express';
-import { Observable, map } from 'rxjs';
+import { map } from 'rxjs';
 
 import { LoggerService } from '@/customs/logger';
 import { JwtAuthTokenService } from '@/modules/auth';
@@ -29,7 +29,7 @@ export class MutationLogInterceptor implements NestInterceptor {
     logger.setContext(MutationLogInterceptor.name);
   }
 
-  intercept(context: ExecutionContext, next: CallHandler): MaybePromise<Observable<any>> {
+  intercept(context: ExecutionContext, next: CallHandler) {
     const request = context.switchToHttp().getRequest<Request>();
     const response = context.switchToHttp().getResponse<Response>();
     const requestBody = request.body;

@@ -9,17 +9,22 @@ module.exports = {
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
-  testRegex: ['^(?!.*/_).*\\.test\\.ts$', '^(?!.*/_)..*\\.spec\\.ts$', '^(?!.*/_)..*\\.e2e-spec\\.ts$'],
+  testRegex: '^(?!.*/-).*\\.(test|spec|e2e-spec)\\.ts$',
   transform: {
-    '^.+\\.(t|j)s$': [
+    '^.+\\.ts$': [
       'ts-jest',
       {
-        tsconfig: '<rootDir>/tests/tsconfig.json',
+        tsconfig: 'tsconfig.test.json',
       },
     ],
   },
   verbose: false,
-  collectCoverageFrom: ['app/**/[^_]*.(t|j)s', 'modules/**/[^_]*.{!(gateway),}.(t|j)s', 'utils/**/[^_]*.(t|j)s'],
+  collectCoverageFrom: [
+    '(app|utils|modules)/**/[^-]*.ts',
+    '!**/event/index.ts',
+    '!**/event/event.gateway.ts',
+    '!**/events/event.interface.ts',
+  ],
   coverageDirectory: '../coverage',
   testEnvironment: 'node',
   preset: 'ts-jest',

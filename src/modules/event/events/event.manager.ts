@@ -29,7 +29,7 @@ export class EventManager {
   }
 
   get<T extends keyof Events>(event: T): Events[T] {
-    if (!event) throw new Error('Must provide an event name by query parameter');
+    if (!event) throw new Error('Must provide an event name');
     if (!this.events[event]) throw new Error(`Event '${event}' not found`);
     return this.events[event];
   }

@@ -4,7 +4,7 @@ import { addMinutes } from 'date-fns';
 import * as R from 'remeda';
 
 import { AppModule } from '@/app';
-import { InthashService } from '@/customs/inthash';
+import { IntHashService } from '@/customs/inthash';
 import { configure } from '@/main';
 import { JwtAuthTokenService } from '@/modules/auth';
 import { PromiseController } from '@/modules/promise';
@@ -41,7 +41,7 @@ describe(PromiseController, () => {
 
   const { tomorrow, yesterday } = fixture.date;
 
-  let hasher: InthashService;
+  let hasher: IntHashService;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -54,7 +54,7 @@ describe(PromiseController, () => {
     const authUser = await fixture.write.user.output();
     http.request.authorize(authUser, { jwt: module.get(JwtAuthTokenService) });
     fixture.configure({ authUser });
-    hasher = module.get(InthashService);
+    hasher = module.get(IntHashService);
   });
 
   function toPromiseDTO({
@@ -167,7 +167,7 @@ describe(PromiseController, () => {
           'locationShareEndValue',
         ]),
         destination,
-        promisedAt: tomorrow,
+        promisedAt: tomorrow.toISOString(),
         themeIds: themes.map((theme) => theme.id),
       } satisfies InputCreatePromiseDTO;
 
@@ -200,7 +200,7 @@ describe(PromiseController, () => {
           'locationShareEndValue',
         ]),
         destination,
-        promisedAt: yesterday,
+        promisedAt: yesterday.toISOString(),
         themeIds: themes.map((theme) => theme.id),
       } satisfies InputCreatePromiseDTO;
 
@@ -243,16 +243,16 @@ describe(PromiseController, () => {
       locationShareEndType: LocationShareType.TIME,
       locationShareEndValue: 60,
       destination: {
-        name: R.randomString(5),
-        city: R.randomString(5),
-        district: R.randomString(5),
-        address1: R.randomString(5),
-        address2: R.randomString(5),
+        name: fixture.random.string(5),
+        city: fixture.random.string(5),
+        district: fixture.random.string(5),
+        address1: fixture.random.string(5),
+        address2: fixture.random.string(5),
         latitude: 37.5665,
         longitude: 127.0365,
       },
       themeIds: [],
-      promisedAt: tomorrow,
+      promisedAt: tomorrow.toISOString(),
     } satisfies InputUpdatePromiseDTO;
 
     test('should update a promise', async () => {
@@ -467,9 +467,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if promisedAt is in the past', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          promisedAt: new Date(yesterday),
-        },
+        partial: { promisedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -478,9 +476,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if already completed', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          completedAt: new Date(yesterday),
-        },
+        partial: { completedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -522,9 +518,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if promisedAt is in the past', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          promisedAt: new Date(yesterday),
-        },
+        partial: { promisedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -533,9 +527,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if already completed', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          completedAt: new Date(yesterday),
-        },
+        partial: { completedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -648,9 +640,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if promisedAt is in the past', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          promisedAt: new Date(yesterday),
-        },
+        partial: { promisedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -659,9 +649,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if already completed', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          completedAt: new Date(yesterday),
-        },
+        partial: { completedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -710,9 +698,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if promisedAt is in the past', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          promisedAt: new Date(yesterday),
-        },
+        partial: { promisedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -721,9 +707,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if already completed', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          completedAt: new Date(yesterday),
-        },
+        partial: { completedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -885,9 +869,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if promise is unavailable', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          promisedAt: new Date(yesterday),
-        },
+        partial: { promisedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -896,9 +878,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if already completed', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          completedAt: new Date(yesterday),
-        },
+        partial: { completedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -942,9 +922,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if promisedAt is in the past', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          promisedAt: new Date(yesterday),
-        },
+        partial: { promisedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -953,9 +931,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if already completed', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          completedAt: new Date(yesterday),
-        },
+        partial: { completedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -982,16 +958,13 @@ describe(PromiseController, () => {
     });
 
     test('should return calculated middle location of start locations with provided attendee ids', async () => {
-      const randomLat = () => Math.random() * 180 - 90;
-      const randomLng = () => Math.random() * 360 - 180;
-
       const allDifferent = (arr: any[]) => arr.every((v, i, a) => a.indexOf(v) === i);
 
       const locations = await Promise.all(
         R.times(10, () =>
           fixture.write.location.output({
-            latitude: new Prisma.Decimal(randomLat()),
-            longitude: new Prisma.Decimal(randomLng()),
+            latitude: new Prisma.Decimal(fixture.random.latitude()),
+            longitude: new Prisma.Decimal(fixture.random.longitude()),
           })
         )
       );
@@ -1059,9 +1032,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if promisedAt is in the past', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          promisedAt: new Date(yesterday),
-        },
+        partial: { promisedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -1070,9 +1041,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if already completed', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          completedAt: new Date(yesterday),
-        },
+        partial: { completedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);

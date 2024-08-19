@@ -1,36 +1,15 @@
 {
-  "cSpell.words": [
-    "apigatewaymanagementapi",
-    "appimage",
-    "autoincrement",
-    "buildx",
-    "bunx",
-    "cmdrc",
-    "codegenie",
-    "customfav",
-    "datamodel",
-    "datasource",
-    "deinit",
-    "dockerdata",
-    "dtos",
-    "fastify",
-    "filelink",
-    "hasher",
-    "hoverkraft",
-    "inno",
-    "inthash",
-    "kakao",
-    "latlng",
-    "loglevel",
-    "mikro",
-    "nestjs",
-    "predeploy",
-    "probee",
-    "remeda",
-    "sqids",
-    "uncolorize",
-    "websockets"
-  ],
+  "cSpell.customDictionaries": {
+    "project-dictionary": {
+      "name": "Promise API",
+      "path": "${workspaceRoot}/.vscode/dictionary.txt",
+      "description": "Words used in this project",
+      "addWords": true,
+      "scope": "workspace"
+    },
+    "custom": true,
+    "internal-terms": false
+  },
   "editor.codeActionsOnSave": {
     "source.fixAll": "explicit"
   },
