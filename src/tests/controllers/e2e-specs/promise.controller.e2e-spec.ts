@@ -4,7 +4,7 @@ import { addMinutes } from 'date-fns';
 import * as R from 'remeda';
 
 import { AppModule } from '@/app';
-import { InthashService } from '@/customs/inthash';
+import { IntHashService } from '@/customs/inthash';
 import { configure } from '@/main';
 import { JwtAuthTokenService } from '@/modules/auth';
 import { PromiseController } from '@/modules/promise';
@@ -41,7 +41,7 @@ describe(PromiseController, () => {
 
   const { tomorrow, yesterday } = fixture.date;
 
-  let hasher: InthashService;
+  let hasher: IntHashService;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
@@ -54,7 +54,7 @@ describe(PromiseController, () => {
     const authUser = await fixture.write.user.output();
     http.request.authorize(authUser, { jwt: module.get(JwtAuthTokenService) });
     fixture.configure({ authUser });
-    hasher = module.get(InthashService);
+    hasher = module.get(IntHashService);
   });
 
   function toPromiseDTO({

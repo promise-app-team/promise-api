@@ -2,7 +2,7 @@ import { Test } from '@nestjs/testing';
 
 import { AppModule } from '@/app';
 import { CacheService } from '@/customs/cache';
-import { InthashService } from '@/customs/inthash';
+import { IntHashService } from '@/customs/inthash';
 import { configure } from '@/main';
 import { JwtAuthTokenService } from '@/modules/auth';
 import { PingEvent } from '@/modules/event';
@@ -25,7 +25,7 @@ describe(EventController, () => {
     requestShareLocationEvent: 'share-location',
   });
 
-  let hasher: InthashService;
+  let hasher: IntHashService;
   let cacheService: CacheService;
   let jwtAuthTokenService: JwtAuthTokenService;
 
@@ -65,7 +65,7 @@ describe(EventController, () => {
     const app = module.createNestApplication<NestExpressApplication>();
     http.prepare(await configure(app).then((app) => app.init()));
 
-    hasher = module.get(InthashService);
+    hasher = module.get(IntHashService);
     cacheService = module.get(CacheService);
     jwtAuthTokenService = module.get(JwtAuthTokenService);
 

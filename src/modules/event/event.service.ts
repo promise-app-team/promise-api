@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
-import { InthashService } from '@/customs/inthash';
+import { IntHashService } from '@/customs/inthash';
 import { LoggerService } from '@/customs/logger';
 import { guard } from '@/utils';
 
@@ -11,7 +11,7 @@ import { EventHandler, EventManager, Events, PingEvent, ShareLocationEvent } fro
 export class EventService {
   constructor(
     private readonly event: EventManager,
-    private readonly hasher: InthashService,
+    private readonly hasher: IntHashService,
     private readonly logger: LoggerService
   ) {}
 

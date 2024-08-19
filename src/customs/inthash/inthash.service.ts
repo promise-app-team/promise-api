@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { Hasher, HasherOptions } from 'inthash';
 
 @Injectable()
-export class InthashService {
+export class IntHashService {
   private readonly hasher: Hasher;
 
   constructor(options: HasherOptions) {

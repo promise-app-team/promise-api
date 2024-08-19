@@ -1,11 +1,11 @@
 import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
 import { map } from 'rxjs';
 
-import { InthashService } from '@/customs/inthash';
+import { IntHashService } from '@/customs/inthash';
 
 @Injectable()
 export class EncodePromiseID implements NestInterceptor {
-  constructor(private readonly hasher: InthashService) {}
+  constructor(private readonly hasher: IntHashService) {}
 
   #transform(data: any): any {
     if (Array.isArray(data)) {
