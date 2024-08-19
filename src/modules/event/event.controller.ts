@@ -5,7 +5,6 @@ import { ApiBody, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ParsedBody } from '@/common/decorators';
 import { HttpException } from '@/common/exceptions';
 import { TypedConfigService } from '@/config/env';
-import { InthashService } from '@/customs/inthash';
 import { LoggerService } from '@/customs/logger';
 import { Get, Post } from '@/customs/nest';
 import { UserModel } from '@/prisma';
@@ -13,7 +12,8 @@ import { UserModel } from '@/prisma';
 import { AuthUser } from '../auth';
 
 import { ConnectionID } from './connections';
-import { EventHandler, EventManager, Events } from './events';
+import { EventService } from './event.service';
+import { EventHandler, Events } from './events';
 import { AbstractEvent } from './events/event.interface';
 import { PingEvent } from './events/ping';
 import { ShareLocationEvent } from './events/share-location';
@@ -24,8 +24,7 @@ export class EventController {
   private readonly client: ApiGatewayManagementApi;
 
   constructor(
-    private readonly event: EventManager,
-    private readonly hasher: InthashService,
+    private readonly service: EventService,
     private readonly config: TypedConfigService,
     private readonly logger: LoggerService
   ) {
@@ -43,8 +42,7 @@ export class EventController {
     @Query('connectionId') connectionId: ConnectionID
   ): Promise<AbstractEvent.DTO.EventResponse> {
     try {
-      this.logger.debug(`Client connected: ${connectionId}. Joining event: ${event} (User ID: ${user.id})`);
-      return await this.event.get(event).connect({ cid: connectionId, uid: user.id });
+      return await this.service.handleConnection(event, { cid: connectionId, uid: user.id });
     } catch (error: any) {
       this.logger.error(`Failed to connect client: ${connectionId}`, error);
       throw HttpException.new(error, 'FORBIDDEN');
@@ -55,48 +53,26 @@ export class EventController {
   async requestDisconnectEvent(
     @Query('connectionId') connectionId: ConnectionID
   ): Promise<AbstractEvent.DTO.EventResponse> {
-    this.logger.debug(`Client disconnected: ${connectionId}`);
-    await EventHandler.disconnect(connectionId);
-    return { message: `Disconnected from ${connectionId}` };
+    try {
+      return await this.service.handleDisconnection(connectionId);
+    } catch (error: any) {
+      this.logger.error(`Failed to disconnect client: ${connectionId}`, error);
+      throw HttpException.new(error, 'FORBIDDEN');
+    }
   }
 
-  @Post('ping', { description: 'Post message to Ping Event' })
+  @Post('ping', { description: 'Post message to Ping Event', exceptions: ['BAD_REQUEST'] })
   @ApiBody({ type: PingEvent.DTO.PingEventPayloadDTO })
   async requestPingEvent(
     @Query('connectionId') connectionId: ConnectionID,
     @ParsedBody('data') data: PingEvent.Data
   ): Promise<AbstractEvent.DTO.EventResponse> {
-    if (this.config.get('is.prod')) throw HttpException.new('Forbidden', 'FORBIDDEN');
-
-    this.logger.debug(`Client sent message: ${connectionId} with ${JSON.stringify(data)}`);
-
-    const handler = this.event.get('ping');
-
-    handler.on('send', async (cid, data) => {
-      this.logger.debug(`Sending message to ${cid}: ${JSON.stringify(data)}`);
-      try {
-        await this.client.postToConnection({ ConnectionId: cid, Data: JSON.stringify(data) });
-        this.logger.debug(`Sent message to ${cid}`);
-      } catch (error: any) {
-        this.logger.error(`Failed to send message to ${cid}`, error);
-        if (error.name === 'GoneException') {
-          await EventHandler.disconnect(cid);
-        }
-      }
-    });
-
-    handler.on('error', async (cid, error) => {
-      try {
-        await this.client.postToConnection({ ConnectionId: cid, Data: JSON.stringify(error) });
-      } catch (error: any) {
-        this.logger.error(`Failed to send error to ${cid}`, error);
-        if (error.name === 'GoneException') {
-          await EventHandler.disconnect(cid);
-        }
-      }
-    });
-
-    return handler.handle(connectionId, data);
+    return this.service.handlePingEvent(
+      connectionId,
+      data,
+      async (cid, data) => this.client.postToConnection({ ConnectionId: cid, Data: JSON.stringify(data) }),
+      async (error) => error.name === 'GoneException' && EventHandler.disconnect(connectionId)
+    );
   }
 
   @Post('share-location', { description: 'Share location with other attendees' })
@@ -105,35 +81,11 @@ export class EventController {
     @Query('connectionId') connectionId: ConnectionID,
     @ParsedBody('data') data: ShareLocationEvent.Data
   ): Promise<AbstractEvent.DTO.EventResponse> {
-    this.logger.debug(`Client sent location: ${connectionId} with ${JSON.stringify(data)}`);
-
-    const handler = this.event.get('share-location');
-
-    handler.on('share', async (cid, data) => {
-      try {
-        this.logger.debug(`Sharing location to ${cid}: ${JSON.stringify(data)}`);
-        await this.client.postToConnection({ ConnectionId: cid, Data: JSON.stringify(data) });
-        this.logger.debug(`Shared location to ${cid}`);
-      } catch (error: any) {
-        this.logger.error(`Failed to share location to ${cid}`, error);
-        if (error.name === 'GoneException') {
-          await EventHandler.disconnect(cid);
-        }
-      }
-    });
-
-    handler.on('error', async (cid, error) => {
-      try {
-        await this.client.postToConnection({ ConnectionId: cid, Data: JSON.stringify(error) });
-      } catch (error: any) {
-        this.logger.error(`Failed to send error to ${cid}`, error);
-        if (error.name === 'GoneException') {
-          await EventHandler.disconnect(cid);
-        }
-      }
-    });
-
-    data.param._promiseIds = data.param.promiseIds.map((id) => this.hasher.decode(id));
-    return handler.handle(connectionId, data);
+    return this.service.handleShareLocationEvent(
+      connectionId,
+      data,
+      async (cid, data) => this.client.postToConnection({ ConnectionId: cid, Data: JSON.stringify(data) }),
+      async (error) => error.name === 'GoneException' && EventHandler.disconnect(connectionId)
+    );
   }
 }
