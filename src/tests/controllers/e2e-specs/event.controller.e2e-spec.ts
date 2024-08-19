@@ -86,6 +86,7 @@ describe(EventController, () => {
   });
 
   beforeEach(async () => {
+    Reflect.set(eventController, 'client', { postToConnection: jest.fn() });
     postToConnection = jest.spyOn(eventController['client'], 'postToConnection');
   });
 
