@@ -29,12 +29,13 @@ interface Operator {
   toString(): string;
 }
 
-type HttpRequest<T> = Record<OperatorName<T>, Operator> & {
+export type HttpRequest<T> = Record<OperatorName<T>, Operator> & {
+  app: INestApplication;
   auth: Auth;
   close: INestApplication['close'];
-  authorize(user: User, options: { jwt: JwtAuthTokenService }): void;
-  unauthorize(): void;
-  prepare(app: INestApplication): void;
+  authorize(user: User, options: { jwt: JwtAuthTokenService }): HttpRequest<T>;
+  unauthorize(): HttpRequest<T>;
+  prepare(app: INestApplication): HttpRequest<T>;
 };
 
 function createRequestInstance<T>(routes: Routes<T>): HttpRequest<T> {
@@ -42,23 +43,30 @@ function createRequestInstance<T>(routes: Routes<T>): HttpRequest<T> {
   let auth: Auth | null = null;
 
   const httpRequest = {
+    get app() {
+      return app;
+    },
     get auth() {
       if (!auth) throw new Error('User is not authorized');
       return auth;
     },
     close() {
       app?.close();
+      app = null;
     },
     authorize(user, options) {
       if (!app) throw new Error('Server is not prepared');
       const token = options.jwt.generateAccessToken({ sub: user.id });
       auth = { user, token };
+      return httpRequest;
     },
     unauthorize() {
       auth = null;
+      return httpRequest;
     },
     prepare(_app) {
       app = _app;
+      return httpRequest;
     },
   } as HttpRequest<T>;
 
@@ -80,12 +88,13 @@ function createRequestInstance<T>(routes: Routes<T>): HttpRequest<T> {
   return httpRequest;
 }
 
-export type HttpServer<T> = {
+export type HttpClient<T> = {
   request: HttpRequest<T>;
   prepare(app: INestApplication): void;
+  clone(): HttpRequest<T>;
 };
 
-export function createHttpRequest<T>(prefix: string, routes: Routes<T>): HttpServer<T> {
+export function createHttpRequest<T>(prefix: string, routes: Routes<T>): HttpClient<T> {
   const normalizedRoutes = normalizeRoutes(prefix, routes);
   const request = createRequestInstance<T>(normalizedRoutes);
 
@@ -93,6 +102,12 @@ export function createHttpRequest<T>(prefix: string, routes: Routes<T>): HttpSer
     request,
     prepare(app) {
       request.prepare(app);
+    },
+    clone() {
+      const inst = createRequestInstance<T>(normalizedRoutes);
+      if (!request.app) throw new Error('Server is not prepared');
+      inst.prepare(request.app);
+      return inst;
     },
   };
 }

@@ -14,10 +14,10 @@ export class EventService {
     private readonly logger: LoggerService
   ) {}
 
-  async handleConnection(event: keyof Events, connection: { cid: ConnectionID; uid: ConnectionUID }) {
-    const { cid, uid } = connection;
+  async handleConnection(event: keyof Events, connection: { cid: ConnectionID; uid: ConnectionUID; channel?: string }) {
+    const { cid, uid, channel } = connection;
     this.logger.debug(`[EVENT] Trying to connect to ${cid} with ${uid}`);
-    const response = this.event.get(event).connect({ cid, uid });
+    const response = this.event.get(event).connect({ cid, uid }, channel);
     this.logger.debug(`[EVENT] Connected to ${cid} with ${JSON.stringify(response)}`);
     return response;
   }

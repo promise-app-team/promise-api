@@ -16,7 +16,7 @@ export class SpecificStrategy extends Strategy<PingEvent.Strategy.Specific> {
       return;
     }
 
-    const to = await this.connection.getConnection(data.param.to, 'default');
+    const to = await this.connection.getConnection(data.param.to, 'public');
     if (to) {
       await this.emitter.emit('send', to.cid, response(data));
     } else {

@@ -22,6 +22,7 @@ export module PingEvent {
 
   type ParamBroadcast = {
     strategy: Strategy.Broadcast;
+    channel?: string;
   };
 
   export type Param = {
@@ -62,7 +63,10 @@ export module PingEvent {
 
   export module DTO {
     export class PingEventParamDTO {
-      @ApiProperty({ example: Object.values(Strategy).join('|') })
+      @ApiProperty({
+        example: Object.values(Strategy).join('|'),
+        description: 'Strategy to send message',
+      })
       strategy: Strategy;
 
       @ApiPropertyOptional({
@@ -71,6 +75,14 @@ export module PingEvent {
         description: 'ConnectionId to send message to (required if strategy is specific)',
       })
       to?: string;
+
+      @ApiPropertyOptional({
+        nullable: true,
+        example: 'channel',
+        description: 'Channel to send message to (required if strategy is broadcast)',
+        default: 'public',
+      })
+      channel?: string;
     }
 
     export class PingEventDataDTO {

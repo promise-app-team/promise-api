@@ -4,6 +4,7 @@ import { AppModule } from '@/app';
 import { CacheService } from '@/customs/cache';
 import { configure } from '@/main';
 import { JwtAuthTokenService } from '@/modules/auth';
+import { PingEvent } from '@/modules/event';
 import { EventController } from '@/modules/event/event.controller';
 import { createTestFixture } from '@/tests/fixtures';
 import { createPrismaClient } from '@/tests/setups/prisma';
@@ -25,6 +26,8 @@ describe(EventController, () => {
   let cacheService: CacheService;
   let jwtAuthTokenService: JwtAuthTokenService;
 
+  let eventController: EventController;
+
   const cacheKey = (event: string, channel = 'public') =>
     `connection:[{"event":"${event}","channel":"${channel}","stage":"test"}]`;
   const params = (event: string, opts?: { client?: typeof http.request; channel?: string }) => ({
@@ -34,6 +37,20 @@ describe(EventController, () => {
   });
   const { tomorrow, yesterday } = fixture.date;
 
+  async function cloneHttpRequest(channel?: string) {
+    const authUser = await fixture.write.user.output();
+    const client = http.clone().authorize(authUser, { jwt: jwtAuthTokenService });
+    await client.requestConnectEvent().get.query(params('ping', { client, channel })).expect(200);
+    return client;
+  }
+
+  async function clearHttpRequest(...clients: (typeof http.request)[]) {
+    for (const client of clients) {
+      await client.requestDisconnectEvent().get.query(params('ping', { client })).expect(200);
+      client.unauthorize();
+    }
+  }
+
   beforeAll(async () => {
     const module = await Test.createTestingModule({ imports: [AppModule] }).compile();
     const app = module.createNestApplication<NestExpressApplication>();
@@ -41,6 +58,8 @@ describe(EventController, () => {
 
     cacheService = module.get(CacheService);
     jwtAuthTokenService = module.get(JwtAuthTokenService);
+
+    eventController = module.get(EventController);
   });
 
   beforeEach(async () => {
@@ -155,6 +174,245 @@ describe(EventController, () => {
 
       test('should do nothing if client is not connected', async () => {
         await http.request.requestDisconnectEvent().get.query(params('share-location')).expect(200);
+      });
+    });
+  });
+
+  describe(http.request.requestPingEvent, () => {
+    let postToConnectionSpy: jest.SpyInstance;
+
+    beforeEach(async () => {
+      postToConnectionSpy = jest.spyOn(eventController['client'], 'postToConnection');
+    });
+
+    afterEach(async () => {
+      jest.restoreAllMocks();
+    });
+
+    describe('success', () => {
+      test('should send message to self', async () => {
+        const client = await cloneHttpRequest();
+
+        const input = {
+          event: 'ping',
+          data: {
+            param: {
+              strategy: PingEvent.Strategy.Self,
+            },
+            body: {
+              message: 'Hello, World!',
+            },
+          },
+        } satisfies PingEvent.Payload;
+
+        const res = await client.requestPingEvent().post.query(params('ping', { client })).send(input).expect(201);
+        expect(res.body).toEqual({ message: 'pong' });
+        expect(postToConnectionSpy).toHaveBeenCalledOnce();
+        expect(postToConnectionSpy).toHaveBeenCalledWith({
+          ConnectionId: `${client.auth.user.id}`,
+          Data: expect.stringMatching(/Hello, World!/),
+        });
+
+        clearHttpRequest(client);
+      });
+
+      test('should send message to specific client', async () => {
+        const sender = await cloneHttpRequest();
+        const receiver = await cloneHttpRequest();
+
+        const body = {
+          event: 'ping',
+          data: {
+            param: {
+              strategy: PingEvent.Strategy.Specific,
+              to: `${receiver.auth.user.id}`,
+            },
+            body: {
+              message: 'Hello, World!',
+            },
+          },
+        } satisfies PingEvent.Payload;
+
+        const res = await sender
+          .requestPingEvent()
+          .post.query(params('ping', { client: sender }))
+          .send(body)
+          .expect(201);
+        expect(res.body).toEqual({ message: 'pong' });
+        expect(postToConnectionSpy).toHaveBeenCalledOnce();
+        expect(postToConnectionSpy).toHaveBeenCalledWith({
+          ConnectionId: `${receiver.auth.user.id}`,
+          Data: expect.stringMatching(/Hello, World!/),
+        });
+
+        clearHttpRequest(sender, receiver);
+      });
+
+      test('should send message to all clients', async () => {
+        const channel = 'private_channel_1';
+        const sender = await cloneHttpRequest(channel);
+        const receiver1 = await cloneHttpRequest(channel);
+        const receiver2 = await cloneHttpRequest(channel);
+
+        const body = {
+          event: 'ping',
+          data: {
+            param: {
+              strategy: PingEvent.Strategy.Broadcast,
+              channel,
+            },
+            body: {
+              message: 'Hello, World!',
+            },
+          },
+        } satisfies PingEvent.Payload;
+
+        const res = await sender
+          .requestPingEvent()
+          .post.query(
+            params('ping', {
+              client: sender,
+              channel,
+            })
+          )
+          .send(body)
+          .expect(201);
+
+        expect(res.body).toEqual({ message: 'pong' });
+        expect(postToConnectionSpy).toHaveBeenCalledTimes(2);
+        expect(postToConnectionSpy).toHaveBeenCalledWith({
+          ConnectionId: `${receiver1.auth.user.id}`,
+          Data: expect.stringMatching(/Hello, World!/),
+        });
+        expect(postToConnectionSpy).toHaveBeenCalledWith({
+          ConnectionId: `${receiver2.auth.user.id}`,
+          Data: expect.stringMatching(/Hello, World!/),
+        });
+
+        clearHttpRequest(sender, receiver1, receiver2);
+      });
+    });
+
+    describe('exception', () => {
+      test('should receive error message if strategy is not provided', async () => {
+        const sender = await cloneHttpRequest();
+
+        const body = {
+          event: 'ping',
+          data: {
+            param: {
+              // strategy: '',
+            } as any,
+            body: {
+              message: 'Hello, World!',
+            },
+          },
+        } satisfies PingEvent.Payload;
+
+        await sender
+          .requestPingEvent()
+          .post.query(params('ping', { client: sender }))
+          .send(body)
+          .expect(201);
+
+        expect(postToConnectionSpy).toHaveBeenCalledExactlyOnceWith({
+          ConnectionId: `${sender.auth.user.id}`,
+          Data: expect.stringMatching(/Strategy not found/),
+        });
+
+        clearHttpRequest(sender);
+      });
+
+      test('should receive error message if strategy is not found', async () => {
+        const sender = await cloneHttpRequest();
+        const strategy = 'NOT_EXISTS';
+
+        const body = {
+          event: 'ping',
+          data: {
+            param: {
+              strategy,
+            } as any,
+            body: {
+              message: 'Hello, World!',
+            },
+          },
+        } satisfies PingEvent.Payload;
+
+        await sender
+          .requestPingEvent()
+          .post.query(params('ping', { client: sender }))
+          .send(body)
+          .expect(201);
+
+        expect(postToConnectionSpy).toHaveBeenCalledExactlyOnceWith({
+          ConnectionId: `${sender.auth.user.id}`,
+          Data: expect.stringMatching(new RegExp(`Strategy '${strategy}' not found`)),
+        });
+
+        clearHttpRequest(sender);
+      });
+
+      test('should receive error message if to parameter is invalid in specific strategy', async () => {
+        const sender = await cloneHttpRequest();
+        const receiver = await cloneHttpRequest();
+        const to = 'NOT_EXISTS';
+
+        const body = {
+          event: 'ping',
+          data: {
+            param: {
+              strategy: PingEvent.Strategy.Specific,
+              to,
+            },
+            body: {
+              message: 'Hello, World!',
+            },
+          },
+        } satisfies PingEvent.Payload;
+
+        await sender
+          .requestPingEvent()
+          .post.query(params('ping', { client: sender }))
+          .send(body)
+          .expect(201);
+
+        expect(postToConnectionSpy).toHaveBeenCalledExactlyOnceWith({
+          ConnectionId: `${sender.auth.user.id}`,
+          Data: expect.stringMatching(new RegExp(`Connection '${to}' not found`)),
+        });
+
+        clearHttpRequest(sender, receiver);
+      });
+
+      test('should receive error message if to parameter is not provided in specific strategy', async () => {
+        const sender = await cloneHttpRequest();
+
+        const body = {
+          event: 'ping',
+          data: {
+            param: {
+              strategy: PingEvent.Strategy.Specific,
+              // to: '',
+            } as any,
+            body: {
+              message: 'Hello, World!',
+            },
+          },
+        } satisfies PingEvent.Payload;
+
+        await sender
+          .requestPingEvent()
+          .post.query(params('ping', { client: sender }))
+          .send(body)
+          .expect(201);
+
+        expect(postToConnectionSpy).toHaveBeenCalledExactlyOnceWith({
+          ConnectionId: `${sender.auth.user.id}`,
+          Data: expect.stringMatching(/Strategy 'specific' requires a 'to' parameter/),
+        });
+
+        clearHttpRequest(sender);
       });
     });
   });

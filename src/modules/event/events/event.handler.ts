@@ -17,8 +17,8 @@ export abstract class EventHandler<TEvent extends AbstractEvent> {
     this.context = context;
   }
 
-  async connect(connection: Pick<Connection, 'cid' | 'uid'>): Promise<TEvent['Response']> {
-    const success = await this.connectionManager.setConnection(connection, 'default');
+  async connect(connection: Pick<Connection, 'cid' | 'uid'>, channel = 'public'): Promise<TEvent['Response']> {
+    const success = await this.connectionManager.setConnection(connection, channel);
     if (!success) throw new Error(`Failed to connect to ${connection.cid} (${connection.uid})`);
     return { message: `Connected to ${connection.cid}` };
   }

@@ -39,10 +39,11 @@ export class EventController {
   async requestConnectEvent<User extends Pick<UserModel, 'id'>>(
     @AuthUser() user: User,
     @Query('event') event: keyof Events,
+    @Query('channel') channel: string,
     @Query('connectionId') connectionId: ConnectionID
   ): Promise<AbstractEvent.DTO.EventResponse> {
     try {
-      return await this.service.handleConnection(event, { cid: connectionId, uid: user.id });
+      return await this.service.handleConnection(event, { cid: connectionId, uid: user.id, channel });
     } catch (error: any) {
       this.logger.error(`Failed to connect client: ${connectionId}`, error);
       throw HttpException.new(error, 'FORBIDDEN');

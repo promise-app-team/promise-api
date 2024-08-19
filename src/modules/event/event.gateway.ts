@@ -49,7 +49,8 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
       const params = new URLSearchParams(incoming.url?.replace('/?', ''));
       const event = params.get('event') as keyof Events;
-      return await this.service.handleConnection(event, { ...client });
+      const channel = params.get('channel') || undefined;
+      return await this.service.handleConnection(event, { ...client, channel });
     } catch (error: any) {
       client.close();
       this.logger.warn(`Client connection failed: ${error.message} (${error.name})`);

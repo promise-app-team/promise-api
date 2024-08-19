@@ -2,9 +2,9 @@ import { getUnixTime } from 'date-fns';
 
 import { EventHandler } from '../event.handler';
 
+import { PingEvent } from './ping.interface';
 import { StrategyManager } from './strategies';
 
-import type { PingEvent } from './ping.interface';
 import type { Strategy } from './strategies';
 import type { ConnectionID, ConnectionScope } from '../../connections';
 import type { CacheService } from '@/customs/cache';
@@ -18,7 +18,8 @@ export class PingEventHandler extends EventHandler<PingEvent> {
   }
 
   async handle(cid: ConnectionID, data: PingEvent.Data): Promise<PingEvent.Response> {
-    const exists = await this.connectionManager.exists(cid, 'default');
+    const channel = data.param?.strategy === PingEvent.Strategy.Broadcast && data.param.channel;
+    const exists = await this.connectionManager.exists(cid, channel || 'public');
     if (!exists) {
       const error = `Connection not found: ${cid}`;
       await this.eventEmitter.emit('error', cid, {

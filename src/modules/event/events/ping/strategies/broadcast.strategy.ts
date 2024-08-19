@@ -8,7 +8,8 @@ import type { ConnectionID } from '@/modules/event/connections';
 
 export class BroadcastStrategy extends Strategy<PingEvent.Strategy.Broadcast> {
   async post<T>(cid: ConnectionID, data: PingEvent.Payload<PingEvent.Strategy.Broadcast, T>['data']) {
-    const toConnections = await this.connection.getConnections('default');
+    const channel = data.param?.channel || 'public';
+    const toConnections = await this.connection.getConnections(channel);
     await Promise.all(
       R.pipe(
         toConnections,
