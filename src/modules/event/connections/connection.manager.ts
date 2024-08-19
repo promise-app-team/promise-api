@@ -20,6 +20,7 @@ export class ConnectionManager {
 
   private static delConnectionPromise: Promise<void> | null = null;
   private static readonly reservedDelConnections = new Set<ConnectionID>();
+  private static readonly connectionIds = new Set<ConnectionID>();
 
   static forEvent(event: ConnectionEvent, stage: ConnectionStage, opts: { cache: ConnectionCache }): ConnectionManager {
     let instance = ConnectionManager.instances.get(event);
@@ -82,6 +83,7 @@ export class ConnectionManager {
       (input) => new Map(input)
     );
     this.channelMap.set(channel, filteredConnectionMap);
+    filteredConnectionMap.forEach((_, cid) => ConnectionManager.connectionIds.add(cid));
 
     if (filteredConnectionMap.size === 0) {
       this.debug(this._loadConnectionMap, `Empty ConnectionMap loaded (channel: ${channel})`);
@@ -141,6 +143,7 @@ export class ConnectionManager {
     const newConnection: Connection = { cid, uid, iat, exp: iat + ttl };
     const connectionMap = await this.loadConnectionMap(channel);
     connectionMap.set(cid, newConnection);
+    ConnectionManager.connectionIds.add(cid);
 
     await this.cache.set(key, Array.from(connectionMap.values() ?? []));
     this.debug(this.setConnection, `Connection set (channel: ${channel}): ${JSON.stringify(newConnection)}`);
@@ -153,6 +156,8 @@ export class ConnectionManager {
 
     const connectionMap = await this.loadConnectionMap(channel);
     connectionMap.delete(cid);
+    ConnectionManager.connectionIds.delete(cid);
+    ConnectionManager.reservedDelConnections.delete(cid);
 
     const key = this.makeCacheKey(channel);
     if (connectionMap.size > 0) {
@@ -167,11 +172,15 @@ export class ConnectionManager {
     return true;
   }
 
-  async delConnections(ids: ConnectionID[], channel: ConnectionChannel = 'default'): Promise<boolean> {
+  async delConnections(ids: ConnectionID[], channel: ConnectionChannel): Promise<boolean> {
     this.debug(this.delConnections, `Trying to delete connections (channel: ${channel}): ${ids}`);
 
     const connectionMap = await this.loadConnectionMap(channel);
-    ids.forEach((id) => connectionMap.delete(id));
+    for (const id of ids) {
+      connectionMap.delete(id);
+      ConnectionManager.connectionIds.delete(id);
+      ConnectionManager.reservedDelConnections.delete(id);
+    }
 
     const key = this.makeCacheKey(channel);
     if (connectionMap.size > 0) {
@@ -187,6 +196,9 @@ export class ConnectionManager {
   }
 
   static async delConnection(cid: ConnectionID): Promise<void> {
+    if (this.reservedDelConnections.has(cid)) return;
+    if (!this.connectionIds.has(cid)) return;
+
     this.debug(this.delConnection, `Trying to delete connection: ${cid}`);
 
     this.reservedDelConnections.add(cid);
