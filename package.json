@@ -26,6 +26,7 @@
     "typecheck": "tsc -p tsconfig.build.json && echo \"✓ typecheck passed\"",
     "typecheck:test": "tsc -p tsconfig.test.json && echo \"✓ typecheck passed\"",
     "test": "dotenv -oe .env.test -- jest",
+    "test:all": "npm run typecheck && npm run lint && npm run test",
     "coverage": "dotenv -oe .env.test -- jest --coverage",
     "update": "npx -y npm-check-updates -ui",
     "inthash": "dotenv -oe .env.local -- tsx ./scripts/inthash.ts",

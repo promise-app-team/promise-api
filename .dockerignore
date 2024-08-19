@@ -1,4 +1,6 @@
 .*
+!.prettierrc
+!.eslintrc.cjs
 -*
 Makefile
 serverless.yml
@@ -6,4 +8,5 @@ node_modules
 coverage
 scripts
 docker
+seeds
 dist
