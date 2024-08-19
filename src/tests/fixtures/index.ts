@@ -348,8 +348,8 @@ export function createTestFixture(
     },
 
     date: {
-      yesterday,
-      tomorrow,
+      yesterday: new Date(yesterday),
+      tomorrow: new Date(tomorrow),
     },
 
     configure,

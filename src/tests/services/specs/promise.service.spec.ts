@@ -590,7 +590,7 @@ describe(PromiseService, () => {
         ...fixture.input.promise({ hostId: host.id }),
         themeIds: themes.map((theme) => theme.id),
         destination: null,
-        promisedAt: tomorrow,
+        promisedAt: tomorrow.toISOString(),
       } satisfies InputCreatePromiseDTO;
       const result = await promiseService.create(host.id, promiseInput);
 
@@ -616,7 +616,7 @@ describe(PromiseService, () => {
         ...fixture.input.promise({ hostId: host.id }),
         themeIds: [],
         destination,
-        promisedAt: tomorrow,
+        promisedAt: tomorrow.toISOString(),
       } satisfies InputCreatePromiseDTO;
       const result = await promiseService.create(host.id, promiseInput);
 
@@ -645,7 +645,7 @@ describe(PromiseService, () => {
         destinationType: DestinationType.STATIC,
         themeIds: [],
         destination: null,
-        promisedAt: tomorrow,
+        promisedAt: tomorrow.toISOString(),
       } satisfies InputUpdatePromiseDTO;
 
       const result = await promiseService.update(promise.input.id, host.input.id, updatedPromiseInput);
@@ -669,7 +669,7 @@ describe(PromiseService, () => {
         destinationType: DestinationType.STATIC,
         themeIds: updatedThemes.map((theme) => theme.id),
         destination: null,
-        promisedAt: tomorrow,
+        promisedAt: tomorrow.toISOString(),
       } satisfies InputUpdatePromiseDTO;
 
       const result = await promiseService.update(promise.input.id, host.input.id, updatedPromiseInput);
@@ -697,7 +697,7 @@ describe(PromiseService, () => {
         destinationType: DestinationType.STATIC,
         themeIds: [],
         destination: updatedDestination,
-        promisedAt: tomorrow,
+        promisedAt: tomorrow.toISOString(),
       } satisfies InputUpdatePromiseDTO;
 
       const result = await promiseService.update(promise.input.id, host.input.id, updatedPromiseInput);
@@ -891,7 +891,7 @@ describe(PromiseService, () => {
     });
 
     test('should throw an error if the promise is unavailable', async () => {
-      const { promise } = await fixture.write.promise.output({ partial: { promisedAt: new Date(yesterday) } });
+      const { promise } = await fixture.write.promise.output({ partial: { promisedAt: yesterday } });
       const attendee = await fixture.write.user.output();
       await expect(promiseService.attend(promise.id, attendee.id)).rejects.toEqual(PromiseServiceError.NotFoundPromise);
     });
@@ -939,7 +939,7 @@ describe(PromiseService, () => {
     test('should throw an error if the promise is unavailable', async () => {
       const { promise, attendee } = await fixture.write.promise.output({
         attendee: true,
-        partial: { promisedAt: new Date(yesterday) },
+        partial: { promisedAt: yesterday },
       });
       await expect(promiseService.leave(promise.id, attendee.id)).rejects.toEqual(PromiseServiceError.NotFoundPromise);
     });
@@ -996,7 +996,7 @@ describe(PromiseService, () => {
     test('should throw an error if the promise is unavailable', async () => {
       const { promise, attendee } = await fixture.write.promise.output({
         attendee: true,
-        partial: { promisedAt: new Date(yesterday) },
+        partial: { promisedAt: yesterday },
       });
       await expect(promiseService.delegate(promise.id, attendee.id, attendee.id)).rejects.toEqual(
         PromiseServiceError.NotFoundPromise
@@ -1041,7 +1041,7 @@ describe(PromiseService, () => {
     });
 
     test('should throw an error if the promise is unavailable', async () => {
-      const { promise, host } = await fixture.write.promise.output({ partial: { promisedAt: new Date(yesterday) } });
+      const { promise, host } = await fixture.write.promise.output({ partial: { promisedAt: yesterday } });
       await expect(promiseService.complete(promise.id, host.id)).rejects.toEqual(PromiseServiceError.NotFoundPromise);
     });
 

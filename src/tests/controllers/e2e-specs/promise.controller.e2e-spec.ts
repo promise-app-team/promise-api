@@ -167,7 +167,7 @@ describe(PromiseController, () => {
           'locationShareEndValue',
         ]),
         destination,
-        promisedAt: tomorrow,
+        promisedAt: tomorrow.toISOString(),
         themeIds: themes.map((theme) => theme.id),
       } satisfies InputCreatePromiseDTO;
 
@@ -200,7 +200,7 @@ describe(PromiseController, () => {
           'locationShareEndValue',
         ]),
         destination,
-        promisedAt: yesterday,
+        promisedAt: yesterday.toISOString(),
         themeIds: themes.map((theme) => theme.id),
       } satisfies InputCreatePromiseDTO;
 
@@ -252,7 +252,7 @@ describe(PromiseController, () => {
         longitude: 127.0365,
       },
       themeIds: [],
-      promisedAt: tomorrow,
+      promisedAt: tomorrow.toISOString(),
     } satisfies InputUpdatePromiseDTO;
 
     test('should update a promise', async () => {
@@ -467,9 +467,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if promisedAt is in the past', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          promisedAt: new Date(yesterday),
-        },
+        partial: { promisedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -478,9 +476,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if already completed', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          completedAt: new Date(yesterday),
-        },
+        partial: { completedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -522,9 +518,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if promisedAt is in the past', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          promisedAt: new Date(yesterday),
-        },
+        partial: { promisedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -533,9 +527,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if already completed', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          completedAt: new Date(yesterday),
-        },
+        partial: { completedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -648,9 +640,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if promisedAt is in the past', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          promisedAt: new Date(yesterday),
-        },
+        partial: { promisedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -659,9 +649,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if already completed', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          completedAt: new Date(yesterday),
-        },
+        partial: { completedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -710,9 +698,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if promisedAt is in the past', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          promisedAt: new Date(yesterday),
-        },
+        partial: { promisedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -721,9 +707,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if already completed', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          completedAt: new Date(yesterday),
-        },
+        partial: { completedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -885,9 +869,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if promise is unavailable', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          promisedAt: new Date(yesterday),
-        },
+        partial: { promisedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -896,9 +878,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if already completed', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          completedAt: new Date(yesterday),
-        },
+        partial: { completedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -942,9 +922,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if promisedAt is in the past', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          promisedAt: new Date(yesterday),
-        },
+        partial: { promisedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -953,9 +931,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if already completed', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          completedAt: new Date(yesterday),
-        },
+        partial: { completedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -1059,9 +1035,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if promisedAt is in the past', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          promisedAt: new Date(yesterday),
-        },
+        partial: { promisedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
@@ -1070,9 +1044,7 @@ describe(PromiseController, () => {
 
     test('should throw an error if already completed', async () => {
       const { promise } = await fixture.write.promise.output({
-        partial: {
-          completedAt: new Date(yesterday),
-        },
+        partial: { completedAt: yesterday },
       });
 
       const pid = hasher.encode(promise.id);
