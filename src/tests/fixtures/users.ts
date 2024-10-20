@@ -1,11 +1,11 @@
-import { Provider } from '@/prisma';
+import { Provider } from '@/prisma'
 
-import { createModelBuilder } from './builder';
+import { createModelBuilder } from './builder'
 
-import type { UserModel } from '@/prisma';
+import type { UserModel } from '@/prisma'
 
 export function createUserBuilder(initialId: number) {
-  return createModelBuilder<UserModel>(initialId, (id) => ({
+  return createModelBuilder<UserModel>(initialId, id => ({
     id,
     username: `username ${id}`,
     profileUrl: 'http://profile.url',
@@ -14,5 +14,5 @@ export function createUserBuilder(initialId: number) {
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedAt: new Date(),
-  }));
+  }))
 }

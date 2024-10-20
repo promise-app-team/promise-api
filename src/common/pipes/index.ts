@@ -1,1 +1,1 @@
-export * from './to-array-of.pipe';
+export * from './to-array-of.pipe'

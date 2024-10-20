@@ -1,9 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module } from '@nestjs/common'
 
-import { UserService } from '../user';
+import { UserService } from '../user'
 
-import { PromiseController } from './promise.controller';
-import { PromiseService } from './promise.service';
+import { PromiseController } from './promise.controller'
+import { PromiseService } from './promise.service'
 
 @Module({
   controllers: [PromiseController],

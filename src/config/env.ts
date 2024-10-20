@@ -1,16 +1,16 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
-import { formatISO } from 'date-fns';
+import { formatISO } from 'date-fns'
 
-import { TypedConfigServiceBuilder } from '@/customs/typed-config';
+import { TypedConfigServiceBuilder } from '@/customs/typed-config'
 
-const build = formatISO(new Date());
+const build = formatISO(new Date())
 
 export const env = () => {
-  const [bits, prime, inverse, xor] = (process.env.INTHASH_KEY ?? '').split('.');
-  const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf-8'));
-  const stage = process.env.STAGE || ('local' as 'local' | 'dev' | 'test' | 'prod');
+  const [bits, prime, inverse, xor] = (process.env.INTHASH_KEY ?? '').split('.')
+  const pkg = JSON.parse(readFileSync(join(__dirname, '../../package.json'), 'utf-8'))
+  const stage = process.env.STAGE || ('local' as 'local' | 'dev' | 'test' | 'prod')
 
   const env = {
     tz: process.env.TZ || 'UTC',
@@ -23,12 +23,12 @@ export const env = () => {
     colorize: !process.env.NO_COLOR,
 
     db: {
-      url: process.env.DB_URL!,
-      host: process.env.DB_HOST!,
+      url: process.env.DB_URL || '',
+      host: process.env.DB_HOST || 'localhost',
       port: +(process.env.DB_PORT || 3306),
-      name: process.env.DB_NAME!,
-      user: process.env.DB_USER!,
-      password: process.env.DB_PASSWORD!,
+      name: process.env.DB_NAME || 'promise',
+      user: process.env.DB_USER || 'promise',
+      password: process.env.DB_PASSWORD || '',
     },
 
     redis: {
@@ -38,8 +38,8 @@ export const env = () => {
     },
 
     jwt: {
-      signKey: process.env.JWT_SIGN_KEY!.replace(/\\n/g, '\n'),
-      verifyKey: process.env.JWT_VERIFY_KEY!.replace(/\\n/g, '\n'),
+      signKey: process.env.JWT_SIGN_KEY?.replace(/\\n/g, '\n') ?? '',
+      verifyKey: process.env.JWT_VERIFY_KEY?.replace(/\\n/g, '\n') ?? '',
       expires: {
         access: process.env.JWT_ACCESS_EXPIRES_IN || '15m',
         refresh: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
@@ -77,9 +77,9 @@ export const env = () => {
       prisma: !!process.env.DEBUG_PRISMA,
       memory: !!process.env.DEBUG_MEMORY,
     },
-  };
+  }
 
-  return env;
-};
+  return env
+}
 
 export class TypedConfigService extends TypedConfigServiceBuilder(env) {}

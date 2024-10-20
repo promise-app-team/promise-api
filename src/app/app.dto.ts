@@ -1,25 +1,25 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { formatISO } from 'date-fns';
+import { ApiProperty } from '@nestjs/swagger'
+import { formatISO } from 'date-fns'
 
 export class EntryDTO {
   @ApiProperty({ example: 'pong' })
-  message!: string;
+  message!: string
 
   @ApiProperty({ example: '1.0.0' })
-  version!: string;
+  version!: string
 
   @ApiProperty({ example: formatISO(new Date()) })
-  build!: string;
+  build!: string
 
   @ApiProperty({ example: formatISO(new Date()) })
-  deploy!: string;
+  deploy!: string
 
   @ApiProperty({ example: 'prod' })
-  stage!: string;
+  stage!: string
 
   @ApiProperty({ example: process.env.NODE_ENV })
-  env!: string;
+  env!: string
 
   @ApiProperty({ example: Intl.DateTimeFormat().resolvedOptions().timeZone })
-  tz!: string;
+  tz!: string
 }

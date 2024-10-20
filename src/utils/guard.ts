@@ -5,18 +5,19 @@ export function ifs<
 >(conditionMaps: [...ConditionMap]): PossibleValueType | undefined {
   for (const [condition, value] of conditionMaps) {
     if (condition) {
-      return value;
+      return value
     }
   }
 }
 
-export function guard<T>(handler: () => T, defaultValue?: T): T;
-export function guard<T>(handler: () => Promise<T>, defaultValue?: T): Promise<T>;
+export function guard<T>(handler: () => T, defaultValue?: T): T
+export function guard<T>(handler: () => Promise<T>, defaultValue?: T): Promise<T>
 export function guard(handler: () => any, defaultValue = undefined): any {
   try {
-    const result = handler();
-    return result instanceof Promise ? result.catch(() => defaultValue) : result;
-  } catch {
-    return defaultValue;
+    const result = handler()
+    return result instanceof Promise ? result.catch(() => defaultValue) : result
+  }
+  catch {
+    return defaultValue
   }
 }

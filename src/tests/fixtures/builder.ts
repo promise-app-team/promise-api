@@ -1,15 +1,15 @@
-import { isDate, isValid } from 'date-fns';
-import { mapValues } from 'remeda';
+import { isDate, isValid } from 'date-fns'
+import { mapValues } from 'remeda'
 
-import type { IfNever } from 'type-fest';
+import type { IfNever } from 'type-fest'
 
 export class Result<Input = any, Output = Input> {
-  input!: Input;
-  output!: Output;
+  input!: Input
+  output!: Output
 
   constructor(input: Input, output?: Output) {
-    this.input = input;
-    this.output = output ?? (input as any);
+    this.input = input
+    this.output = output ?? (input as any)
   }
 }
 
@@ -17,33 +17,33 @@ type Param<T extends Record<string, any>, R extends keyof T = never> = IfNever<
   R,
   Partial<T>,
   Partial<T> & Required<Pick<T, R>>
->;
+>
 
 interface RequiredModuleBuilder<T extends Record<string, any>, R extends keyof T, P = Param<T, R>> {
-  (partial: P): T;
-  <U>(partial: P, transform?: (result: T) => Promise<U>): Promise<Result<T, U>>;
-  <U>(partial: P, transform?: (result: T) => U): Result<T, U>;
+  (partial: P): T
+  <U>(partial: P, transform?: (result: T) => Promise<U>): Promise<Result<T, U>>
+  <U>(partial: P, transform?: (result: T) => U): Result<T, U>
 }
 
 interface OptionalModuleBuilder<T extends Record<string, any>, P = Param<T>> {
-  (partial?: P): T;
-  <U>(transform?: (result: T) => Promise<U>): Promise<Result<T, U>>;
-  <U>(transform?: (result: T) => U): Result<T, U>;
-  <U>(partial?: P, transform?: (result: T) => Promise<U>): Promise<Result<T, U>>;
-  <U>(partial?: P, transform?: (result: T) => U): Result<T, U>;
+  (partial?: P): T
+  <U>(transform?: (result: T) => Promise<U>): Promise<Result<T, U>>
+  <U>(transform?: (result: T) => U): Result<T, U>
+  <U>(partial?: P, transform?: (result: T) => Promise<U>): Promise<Result<T, U>>
+  <U>(partial?: P, transform?: (result: T) => U): Result<T, U>
 }
 
 export type ModelBuilder<T extends Record<string, any>, R extends keyof T = never> = [R] extends [never]
   ? OptionalModuleBuilder<T>
-  : RequiredModuleBuilder<T, R>;
+  : RequiredModuleBuilder<T, R>
 
 export function createModelBuilder<T extends Record<string, any>, R extends keyof T = never>(
   initialId: number,
-  defaultValue: (id: number) => T
+  defaultValue: (id: number) => T,
 ): ModelBuilder<T, R> {
   const builder: any = (partial: any, transform: any) => {
     if (typeof partial === 'function') {
-      return builder(undefined, partial);
+      return builder(undefined, partial)
     }
 
     const result = mapValues(
@@ -53,35 +53,35 @@ export function createModelBuilder<T extends Record<string, any>, R extends keyo
       },
       (value: any) => {
         if (isDate(value) && isValid(value)) {
-          value.setMilliseconds(0);
-          return value;
+          value.setMilliseconds(0)
+          return value
         }
 
-        return value;
-      }
-    ) as T;
+        return value
+      },
+    ) as T
 
     if (typeof transform === 'undefined') {
-      return result;
+      return result
     }
 
-    const input = { ...result };
-    const output = transform(result);
+    const input = { ...result }
+    const output = transform(result)
 
     if (isPromiseLike(output)) {
-      return output.then((output) => ({ input, output }));
+      return output.then(output => ({ input, output }))
     }
 
-    return { input, output };
-  };
+    return { input, output }
+  }
 
-  return builder as ModelBuilder<T, R>;
+  return builder as ModelBuilder<T, R>
 }
 
 export function isResult<T extends Record<string, any>>(value: any): value is Result<T> {
-  return value && typeof value === 'object' && 'input' in value && 'output' in value;
+  return value && typeof value === 'object' && 'input' in value && 'output' in value
 }
 
 function isPromiseLike(value: any): value is Promise<any> {
-  return value && typeof value.then === 'function';
+  return value && typeof value.then === 'function'
 }

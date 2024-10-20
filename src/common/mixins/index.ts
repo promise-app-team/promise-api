@@ -1,1 +1,1 @@
-export * from './dto.mixin';
+export * from './dto.mixin'

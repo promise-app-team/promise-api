@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client'
 
 /**
  * @see https://www.prisma.io/docs/orm/reference/error-reference#error-codes
@@ -69,23 +69,23 @@ export enum PrismaErrorCode {
   P2037 = 'P2037',
 }
 
-type PrismaErrorCodeType = keyof typeof PrismaErrorCode;
+type PrismaErrorCodeType = keyof typeof PrismaErrorCode
 
 export class PrismaClientError extends Error {
   constructor(
     public code: PrismaErrorCodeType,
-    public message: string
+    public message: string,
   ) {
-    super(message);
+    super(message)
   }
 
   static from(error: any): PrismaClientError | null {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code in PrismaErrorCode) {
-        return new PrismaClientError(error.code as PrismaErrorCodeType, error.message);
+        return new PrismaClientError(error.code as PrismaErrorCodeType, error.message)
       }
-      throw new Error(`Unknown Prisma error code: ${error.code}`);
+      throw new Error(`Unknown Prisma error code: ${error.code}`)
     }
-    return null;
+    return null
   }
 }

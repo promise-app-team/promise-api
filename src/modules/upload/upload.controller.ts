@@ -1,12 +1,12 @@
-import { Controller, ParseFilePipeBuilder, UploadedFile, UseInterceptors } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
+import { Controller, ParseFilePipeBuilder, UploadedFile, UseInterceptors } from '@nestjs/common'
+import { FileInterceptor } from '@nestjs/platform-express'
+import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger'
 
-import { HttpException } from '@/common/exceptions';
-import { Post } from '@/customs/nest';
+import { HttpException } from '@/common/exceptions'
+import { Post } from '@/customs/nest'
 
-import { OutputUploadFileDTO } from './upload.dto';
-import { FileUploadService } from './upload.service';
+import { OutputUploadFileDTO } from './upload.dto'
+import { FileUploadService } from './upload.service'
 
 @ApiTags('FileUpload')
 @ApiBearerAuth()
@@ -26,14 +26,14 @@ export class FileUploadController {
           maxSize: 1024 * 1024 * 5,
           message: '이미지 파일은 최대 5MB까지 업로드 가능합니다.',
         })
-        .build()
+        .build(),
     )
-    file: Express.Multer.File
+    file: Express.Multer.File,
   ): Promise<OutputUploadFileDTO> {
     return {
       url: await this.uploader
         .upload(file)
-        .catch((error) => HttpException.throw('파일 업로드에 실패했습니다.', 'INTERNAL_SERVER_ERROR', error)),
-    };
+        .catch(error => HttpException.throw('파일 업로드에 실패했습니다.', 'INTERNAL_SERVER_ERROR', error)),
+    }
   }
 }

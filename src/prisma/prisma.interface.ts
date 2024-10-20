@@ -1,11 +1,11 @@
-import type { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest';
-import type { PrismaClient } from '@prisma/client';
+import type { BaseFactoryProvider, BaseModuleOptions } from '@/types/nest'
+import type { PrismaClient } from '@prisma/client'
 
 interface _PrismaModuleOptions {
-  prisma?: PrismaClient;
+  prisma?: PrismaClient
 }
 
 interface _PrismaModuleAsyncOptions extends BaseFactoryProvider<_PrismaModuleOptions> {}
 
-export type PrismaModuleOptions = _PrismaModuleOptions & BaseModuleOptions;
-export type PrismaModuleAsyncOptions = _PrismaModuleAsyncOptions & BaseModuleOptions;
+export type PrismaModuleOptions = _PrismaModuleOptions & BaseModuleOptions
+export type PrismaModuleAsyncOptions = _PrismaModuleAsyncOptions & BaseModuleOptions

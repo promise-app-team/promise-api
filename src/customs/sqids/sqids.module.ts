@@ -1,7 +1,7 @@
-import { DynamicModule, Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common'
 
-import { SqidsModuleAsyncOptions, SqidsModuleOptions } from './sqids.interface';
-import { SqidsService } from './sqids.service';
+import { SqidsModuleAsyncOptions, SqidsModuleOptions } from './sqids.interface'
+import { SqidsService } from './sqids.service'
 
 @Module({
   providers: [SqidsService],
@@ -20,7 +20,7 @@ export class SqidsModule {
         },
       ],
       exports: [SqidsService],
-    };
+    }
   }
 
   static registerAsync({ global, scope, inject, useFactory }: SqidsModuleAsyncOptions): DynamicModule {
@@ -33,12 +33,12 @@ export class SqidsModule {
           provide: SqidsService,
           inject,
           async useFactory(...args) {
-            const opts = await useFactory(...args);
-            return new SqidsService(opts);
+            const opts = await useFactory(...args)
+            return new SqidsService(opts)
           },
         },
       ],
       exports: [SqidsService],
-    };
+    }
   }
 }
