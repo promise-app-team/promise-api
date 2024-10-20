@@ -1,15 +1,15 @@
-import { Injectable } from '@nestjs/common';
-import { sign, verify } from 'jsonwebtoken';
+import { Injectable } from '@nestjs/common'
+import { sign, verify } from 'jsonwebtoken'
 
-import { TypedConfigService } from '@/config/env';
+import { TypedConfigService } from '@/config/env'
 
 export interface JwtAuthTokenPayload {
-  sub: number;
+  sub: number
 }
 
-const algorithm = 'ES256';
-const audience = 'promise-app.com';
-const issuer = 'api.promise-app.com';
+const algorithm = 'ES256'
+const audience = 'promise-app.com'
+const issuer = 'api.promise-app.com'
 
 @Injectable()
 export class JwtAuthTokenService {
@@ -19,7 +19,7 @@ export class JwtAuthTokenService {
     return {
       accessToken: this.generateAccessToken(payload),
       refreshToken: this.generateRefreshToken(payload),
-    };
+    }
   }
 
   generateAccessToken(payload: JwtAuthTokenPayload, expiresIn?: number | string): string {
@@ -28,7 +28,7 @@ export class JwtAuthTokenService {
       algorithm,
       audience,
       issuer,
-    });
+    })
   }
 
   generateRefreshToken(payload: JwtAuthTokenPayload, expiresIn?: number | string): string {
@@ -37,7 +37,7 @@ export class JwtAuthTokenService {
       algorithm,
       audience,
       issuer: `${issuer}#refresh`,
-    });
+    })
   }
 
   verifyAccessToken(token: string): JwtAuthTokenPayload {
@@ -45,7 +45,7 @@ export class JwtAuthTokenService {
       algorithms: [algorithm],
       audience,
       issuer,
-    }) as unknown as JwtAuthTokenPayload;
+    }) as unknown as JwtAuthTokenPayload
   }
 
   verifyRefreshToken(token: string): JwtAuthTokenPayload {
@@ -53,6 +53,6 @@ export class JwtAuthTokenService {
       algorithms: [algorithm],
       audience,
       issuer: `${issuer}#refresh`,
-    }) as unknown as JwtAuthTokenPayload;
+    }) as unknown as JwtAuthTokenPayload
   }
 }

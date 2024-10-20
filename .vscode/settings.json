@@ -13,6 +13,7 @@
   "editor.codeActionsOnSave": {
     "source.fixAll": "explicit"
   },
+  "eslint.useFlatConfig": true,
   "editor.formatOnSave": true,
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.patterns": {

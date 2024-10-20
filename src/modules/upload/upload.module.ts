@@ -1,12 +1,12 @@
-import { Module } from '@nestjs/common';
+import { Module } from '@nestjs/common'
 
-import { TypedConfigService } from '@/config/env';
-import { S3ClientModule } from '@/customs/s3-client';
+import { TypedConfigService } from '@/config/env'
+import { S3ClientModule } from '@/customs/s3-client'
 
-import { UserModule } from '../user';
+import { UserModule } from '../user'
 
-import { FileUploadController } from './upload.controller';
-import { FileUploadService } from './upload.service';
+import { FileUploadController } from './upload.controller'
+import { FileUploadService } from './upload.service'
 
 @Module({
   imports: [
@@ -18,7 +18,7 @@ import { FileUploadService } from './upload.service';
           s3options: {
             region: config.get('aws.region'),
           },
-        };
+        }
       },
     }),
   ],

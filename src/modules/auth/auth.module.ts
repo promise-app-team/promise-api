@@ -1,10 +1,10 @@
-import { Global, Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common'
 
-import { UserService } from '../user/user.service';
+import { UserService } from '../user/user.service'
 
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
-import { JwtAuthTokenService } from './jwt-token.service';
+import { AuthController } from './auth.controller'
+import { AuthService } from './auth.service'
+import { JwtAuthTokenService } from './jwt-token.service'
 
 @Global()
 @Module({

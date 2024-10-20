@@ -1,26 +1,26 @@
-import { MiddlewareConsumer, Module, NestModule, Scope } from '@nestjs/common';
-import { ConditionalModule } from '@nestjs/config';
-import { PrismaClient } from '@prisma/client';
-import { mapValues } from 'remeda';
+import { MiddlewareConsumer, Module, NestModule, Scope } from '@nestjs/common'
+import { ConditionalModule } from '@nestjs/config'
+import { PrismaClient } from '@prisma/client'
+import { mapValues } from 'remeda'
 
-import { AppController } from '@/app/app.controller';
-import { LoggerMiddleware, TrimMiddleware } from '@/common/middlewares';
-import { TypedConfigService } from '@/config/env';
-import { schema } from '@/config/validation';
-import { CacheModule, InMemoryCacheService, RedisCacheService } from '@/customs/cache';
-import { IntHashModule } from '@/customs/inthash';
-import { LoggerModule, LoggerService } from '@/customs/logger';
-import { SqidsModule } from '@/customs/sqids/sqids.module';
-import { TypedConfigModule } from '@/customs/typed-config';
-import { WinstonLoggerService, createWinstonLogger } from '@/customs/winston-logger';
-import { AuthModule } from '@/modules/auth';
-import { DevModule } from '@/modules/dev';
-import { EventModule } from '@/modules/event';
-import { PromiseModule } from '@/modules/promise';
-import { ThemeModule } from '@/modules/theme';
-import { FileUploadModule } from '@/modules/upload';
-import { UserModule } from '@/modules/user';
-import { PrismaModule } from '@/prisma';
+import { AppController } from '@/app/app.controller'
+import { LoggerMiddleware, TrimMiddleware } from '@/common/middlewares'
+import { TypedConfigService } from '@/config/env'
+import { schema } from '@/config/validation'
+import { CacheModule, InMemoryCacheService, RedisCacheService } from '@/customs/cache'
+import { IntHashModule } from '@/customs/inthash'
+import { LoggerModule, LoggerService } from '@/customs/logger'
+import { SqidsModule } from '@/customs/sqids/sqids.module'
+import { TypedConfigModule } from '@/customs/typed-config'
+import { WinstonLoggerService, createWinstonLogger } from '@/customs/winston-logger'
+import { AuthModule } from '@/modules/auth'
+import { DevModule } from '@/modules/dev'
+import { EventModule } from '@/modules/event'
+import { PromiseModule } from '@/modules/promise'
+import { ThemeModule } from '@/modules/theme'
+import { FileUploadModule } from '@/modules/upload'
+import { UserModule } from '@/modules/user'
+import { PrismaModule } from '@/prisma'
 
 @Module({
   imports: [
@@ -44,13 +44,14 @@ import { PrismaModule } from '@/prisma';
               colorize: config.get('colorize'),
             }),
             filter(args) {
-              const context = args.metadata.context ?? '';
+              const context = args.metadata.context ?? ''
 
               switch (config.get('stage')) {
                 case 'test':
-                  return false;
+                  return false
                 case 'local':
                 // return true;
+                // eslint-disable-next-line no-fallthrough
                 case 'dev':
                 case 'prod':
                   if (
@@ -64,14 +65,14 @@ import { PrismaModule } from '@/prisma';
                       'ConditionalModule',
                     ].includes(context)
                   ) {
-                    return false;
+                    return false
                   }
               }
 
-              return true;
+              return true
             },
           }),
-        };
+        }
       },
     }),
     PrismaModule.registerAsync({
@@ -91,24 +92,24 @@ import { PrismaModule } from '@/prisma';
                 { level: 'warn', emit: 'event' },
                 { level: 'error', emit: 'event' },
               ],
-        });
+        })
 
-        const tableName = config.get('db.url').split('/').pop() ?? '';
+        const tableName = config.get('db.url').split('/').pop() ?? ''
         prisma.$on('query', ({ query, params, duration }) => {
-          if (query.includes('pm_mutation_log')) return;
+          if (query.includes('pm_mutation_log')) return
           const sanitizedQuery = query
             .replace(/^SELECT\s+(.*?)\s+FROM/, 'SELECT * FROM')
-            .replace(new RegExp(`\`${tableName}\`\.`, 'g'), '')
-            .replace(/\((?<table>`.+?`).(?<field>`.+?`)\)/g, '$<table>.$<field>');
-          const param = JSON.parse(params);
+            .replace(new RegExp(`\`${tableName}\`\\.`, 'g'), '')
+            .replace(/\((?<table>`.+?`).(?<field>`.+?`)\)/g, '$<table>.$<field>')
+          const param = JSON.parse(params)
           const injectedQuery = sanitizedQuery.replace(/\?/g, () => {
-            const value = param.shift();
-            return typeof value === 'string' ? `'${value}'` : value;
-          });
-          logger.log(undefined, { query: injectedQuery, ms: duration }, 'QUERY');
-        });
+            const value = param.shift()
+            return typeof value === 'string' ? `'${value}'` : value
+          })
+          logger.log(undefined, { query: injectedQuery, ms: duration }, 'QUERY')
+        })
 
-        return { prisma };
+        return { prisma }
       },
     }),
     CacheModule.registerAsync({
@@ -119,18 +120,18 @@ import { PrismaModule } from '@/prisma';
           service: config.get('is.test')
             ? new InMemoryCacheService()
             : new RedisCacheService({
-                host: config.get('redis.host'),
-                port: config.get('redis.port'),
-                password: config.get('redis.password'),
-              }),
-        };
+              host: config.get('redis.host'),
+              port: config.get('redis.port'),
+              password: config.get('redis.password'),
+            }),
+        }
       },
     }),
     IntHashModule.registerAsync({
       global: true,
       inject: [TypedConfigService],
       useFactory(config: TypedConfigService) {
-        return config.get('inthash');
+        return config.get('inthash')
       },
     }),
     SqidsModule.registerAsync({
@@ -139,7 +140,7 @@ import { PrismaModule } from '@/prisma';
       useFactory(config: TypedConfigService) {
         return {
           alphabet: config.get('sqids.key'),
-        };
+        }
       },
     }),
 
@@ -157,18 +158,18 @@ import { PrismaModule } from '@/prisma';
 export class AppModule implements NestModule {
   constructor(
     private readonly logger: LoggerService,
-    private readonly config: TypedConfigService
+    private readonly config: TypedConfigService,
   ) {
     if (this.config.get('debug.memory')) {
       setInterval(() => {
-        const memoryUsage = mapValues(process.memoryUsage(), (bytes) => `${(bytes / 1024 / 1024).toFixed(2)} MB`);
-        this.logger.debug(JSON.stringify(memoryUsage), 'MemoryUsage');
-      }, 60_000);
+        const memoryUsage = mapValues(process.memoryUsage(), bytes => `${(bytes / 1024 / 1024).toFixed(2)} MB`)
+        this.logger.debug(JSON.stringify(memoryUsage), 'MemoryUsage')
+      }, 60_000)
     }
   }
 
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(TrimMiddleware).forRoutes('*');
-    consumer.apply(LoggerMiddleware).forRoutes('*');
+    consumer.apply(TrimMiddleware).forRoutes('*')
+    consumer.apply(LoggerMiddleware).forRoutes('*')
   }
 }

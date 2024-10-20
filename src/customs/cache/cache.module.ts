@@ -1,7 +1,7 @@
-import { DynamicModule, Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common'
 
-import { CacheModuleAsyncOptions, CacheModuleOptions } from './cache.interface';
-import { CacheService } from './services';
+import { CacheModuleAsyncOptions, CacheModuleOptions } from './cache.interface'
+import { CacheService } from './services'
 
 @Module({})
 export class CacheModule {
@@ -17,7 +17,7 @@ export class CacheModule {
         },
       ],
       exports: [CacheService],
-    };
+    }
   }
 
   static registerAsync({ global, scope, inject, useFactory }: CacheModuleAsyncOptions): DynamicModule {
@@ -30,12 +30,12 @@ export class CacheModule {
           inject,
           provide: CacheService,
           async useFactory(...args) {
-            const opts = await useFactory(...args);
-            return opts.service;
+            const opts = await useFactory(...args)
+            return opts.service
           },
         },
       ],
       exports: [CacheService],
-    };
+    }
   }
 }

@@ -1,1 +1,1 @@
-export * from './http-api.decorator';
+export * from './http-api.decorator'

@@ -1,7 +1,7 @@
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
-import { map } from 'rxjs';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common'
+import { map } from 'rxjs'
 
-import { IntHashService } from '@/customs/inthash';
+import { IntHashService } from '@/customs/inthash'
 
 @Injectable()
 export class EncodePromiseID implements NestInterceptor {
@@ -9,18 +9,18 @@ export class EncodePromiseID implements NestInterceptor {
 
   #transform(data: any): any {
     if (Array.isArray(data)) {
-      return data.map((item) => this.#transform(item));
+      return data.map(item => this.#transform(item))
     }
 
     if (data && 'id' in data) {
-      data = { pid: this.hasher.encode(data.id), ...data };
-      delete data.id;
+      data = { pid: this.hasher.encode(data.id), ...data }
+      delete data.id
     }
 
-    return data;
+    return data
   }
 
-  intercept(context: ExecutionContext, next: CallHandler<any>) {
-    return next.handle().pipe(map(this.#transform.bind(this)));
+  intercept(_context: ExecutionContext, next: CallHandler<any>) {
+    return next.handle().pipe(map(this.#transform.bind(this)))
   }
 }

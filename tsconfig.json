@@ -21,7 +21,6 @@
       "@types/multer"
     ],
     "noImplicitAny": true,
-    "strictPropertyInitialization": false,
     "incremental": true,
     "skipLibCheck": true,
     "strict": true

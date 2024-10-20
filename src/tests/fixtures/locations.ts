@@ -1,14 +1,14 @@
-import { Prisma } from '@prisma/client';
-import { randomString } from 'remeda';
+import { Prisma } from '@prisma/client'
+import { randomString } from 'remeda'
 
-import { random } from '@/utils';
+import { random } from '@/utils'
 
-import { createModelBuilder } from './builder';
+import { createModelBuilder } from './builder'
 
-import type { LocationModel } from '@/prisma';
+import type { LocationModel } from '@/prisma'
 
 export function createLocationBuilder(initialId: number) {
-  return createModelBuilder<LocationModel>(initialId, (id) => ({
+  return createModelBuilder<LocationModel>(initialId, id => ({
     id,
     name: random() ? randomString(5) : null,
     city: randomString(5),
@@ -19,9 +19,9 @@ export function createLocationBuilder(initialId: number) {
     longitude: randomDecimal(-180, 180),
     createdAt: new Date(),
     updatedAt: new Date(),
-  }));
+  }))
 }
 
 function randomDecimal(min: number, max: number) {
-  return new Prisma.Decimal(Math.random() * (max - min) + min);
+  return new Prisma.Decimal(Math.random() * (max - min) + min)
 }

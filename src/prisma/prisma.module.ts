@@ -1,7 +1,7 @@
-import { DynamicModule, Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common'
 
-import { PrismaModuleAsyncOptions, PrismaModuleOptions } from './prisma.interface';
-import { PrismaService } from './prisma.service';
+import { PrismaModuleAsyncOptions, PrismaModuleOptions } from './prisma.interface'
+import { PrismaService } from './prisma.service'
 
 @Module({})
 export class PrismaModule {
@@ -17,7 +17,7 @@ export class PrismaModule {
         },
       ],
       exports: [PrismaService],
-    };
+    }
   }
 
   static registerAsync({ global, scope, inject, useFactory }: PrismaModuleAsyncOptions): DynamicModule {
@@ -30,12 +30,12 @@ export class PrismaModule {
           provide: PrismaService,
           inject,
           async useFactory(...args: any[]) {
-            const { prisma } = await useFactory(...args);
-            return prisma ?? new PrismaService();
+            const { prisma } = await useFactory(...args)
+            return prisma ?? new PrismaService()
           },
         },
       ],
       exports: [PrismaService],
-    };
+    }
   }
 }

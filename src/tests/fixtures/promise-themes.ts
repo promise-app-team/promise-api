@@ -1,6 +1,6 @@
-import { createModelBuilder } from './builder';
+import { createModelBuilder } from './builder'
 
-import type { PromiseThemeModel } from '@/prisma';
+import type { PromiseThemeModel } from '@/prisma'
 
 export function createPromiseThemeBuilder(initialId: number) {
   return createModelBuilder<PromiseThemeModel, 'promiseId' | 'themeId'>(initialId, () => ({
@@ -8,5 +8,5 @@ export function createPromiseThemeBuilder(initialId: number) {
     themeId: 0,
     createdAt: new Date(),
     updatedAt: new Date(),
-  }));
+  }))
 }

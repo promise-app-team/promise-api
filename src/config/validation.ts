@@ -1,4 +1,4 @@
-import Joi from 'joi';
+import Joi from 'joi'
 
 export const schema = Joi.object({
   TZ: Joi.string().required(),
@@ -19,4 +19,4 @@ export const schema = Joi.object({
   AWS_ACCESS_KEY_ID: Joi.string().allow(''),
   AWS_SECRET_ACCESS_KEY: Joi.string().allow(''),
   AWS_S3_BUCKET_NAME: Joi.string().allow(''),
-});
+})

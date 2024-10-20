@@ -1,8 +1,8 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { Module } from '@nestjs/common'
+import { ConfigModule, ConfigService } from '@nestjs/config'
 
-import type { TypedConfigModuleOptions } from './typed-config.interface';
-import type { DynamicModule } from '@nestjs/common';
+import type { TypedConfigModuleOptions } from './typed-config.interface'
+import type { DynamicModule } from '@nestjs/common'
 
 @Module({})
 export class TypedConfigModule {
@@ -22,11 +22,11 @@ export class TypedConfigModule {
           provide: provider,
           inject: [ConfigService],
           useFactory(config: ConfigService) {
-            return new provider(config);
+            return new provider(config)
           },
         },
       ],
       exports: [provider],
-    };
+    }
   }
 }

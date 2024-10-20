@@ -1,14 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import * as R from 'remeda';
+import { Injectable } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
+import * as R from 'remeda'
 
-import { PrismaService, LocationModel, PrismaClientError } from '@/prisma';
+import { LocationModel, PrismaClientError, PrismaService } from '@/prisma'
 
-import { InputLocationDTO } from '../location';
+import { InputLocationDTO } from '../location'
 
-import { InputCreatePromiseDTO, InputUpdatePromiseDTO } from './promise.dto';
-import { PromiseStatus, PromiseUserRole } from './promise.enum';
-import { isEqualLocation, makePromiseFilter, makeUniquePromiseFilter } from './promise.utils';
+import { InputCreatePromiseDTO, InputUpdatePromiseDTO } from './promise.dto'
+import { PromiseStatus, PromiseUserRole } from './promise.enum'
+import { isEqualLocation, makePromiseFilter, makeUniquePromiseFilter } from './promise.utils'
 
 export enum PromiseServiceError {
   NotFoundPromise = '약속을 찾을 수 없습니다.',
@@ -19,11 +19,11 @@ export enum PromiseServiceError {
 }
 
 type FilterOptions = {
-  id?: number;
-  status?: PromiseStatus;
-  role?: PromiseUserRole;
-  userId?: number;
-};
+  id?: number
+  status?: PromiseStatus
+  role?: PromiseUserRole
+  userId?: number
+}
 
 const promiseInclude: Prisma.PromiseInclude = {
   host: {
@@ -40,9 +40,9 @@ const promiseInclude: Prisma.PromiseInclude = {
     select: { theme: true },
   },
   destination: true,
-};
+}
 
-export type PromiseResult = Prisma.PromiseGetPayload<{ include: typeof promiseInclude }>;
+export type PromiseResult = Prisma.PromiseGetPayload<{ include: typeof promiseInclude }>
 
 @Injectable()
 export class PromiseService {
@@ -52,8 +52,8 @@ export class PromiseService {
     const exists = await this.prisma.promise.findFirst({
       where: makePromiseFilter(condition),
       select: { id: true },
-    });
-    return !!exists;
+    })
+    return !!exists
   }
 
   async findAll(condition: Pick<FilterOptions, 'role' | 'status' | 'userId'>): Promise<PromiseResult[]> {
@@ -61,7 +61,7 @@ export class PromiseService {
       where: makePromiseFilter(condition),
       include: promiseInclude,
       orderBy: { id: 'asc' },
-    });
+    })
   }
 
   /**
@@ -73,13 +73,13 @@ export class PromiseService {
       where: makePromiseFilter(condition),
       include: promiseInclude,
       orderBy: { id: 'asc' },
-    });
+    })
 
     if (!user) {
-      throw PromiseServiceError.NotFoundPromise;
+      throw PromiseServiceError.NotFoundPromise
     }
 
-    return user;
+    return user
   }
 
   async create(attendeeId: number, input: InputCreatePromiseDTO): Promise<PromiseResult> {
@@ -106,7 +106,7 @@ export class PromiseService {
         },
         themes: {
           createMany: {
-            data: input.themeIds.map((themeId) => ({ themeId })),
+            data: input.themeIds.map(themeId => ({ themeId })),
           },
         },
         destination: input.destination
@@ -116,7 +116,7 @@ export class PromiseService {
           : undefined,
       },
       include: promiseInclude,
-    });
+    })
   }
 
   /**
@@ -126,40 +126,40 @@ export class PromiseService {
   async update(
     id: number,
     hostId: number,
-    input: InputUpdatePromiseDTO & { refIds?: number[] }
+    input: InputUpdatePromiseDTO & { refIds?: number[] },
   ): Promise<PromiseResult> {
     const promise = await this.prisma.promise.findUnique({
       where: { id },
       select: { id: true, hostId: true, destinationId: true, destinationType: true },
-    });
+    })
 
     if (!promise) {
-      throw PromiseServiceError.NotFoundPromise;
+      throw PromiseServiceError.NotFoundPromise
     }
 
     if (promise.hostId !== hostId) {
-      throw PromiseServiceError.OnlyHostUpdatable;
+      throw PromiseServiceError.OnlyHostUpdatable
     }
 
     const themes = await this.prisma.promiseTheme.findMany({
       where: { promiseId: id },
-    });
+    })
 
     const destination = await this.prisma.location.findUnique({
       where: { id: promise.destinationId ?? 0 },
-    });
+    })
 
     return this.prisma.$transaction(async (prisma) => {
       await prisma.promiseUser.updateMany({
         where: { promiseId: id },
         data: { isMidpointCalculated: false },
-      });
+      })
 
       if (input.refIds?.length) {
         await prisma.promiseUser.updateMany({
           where: { attendeeId: { in: input.refIds }, promiseId: id },
           data: { isMidpointCalculated: true },
-        });
+        })
       }
 
       return prisma.promise.update({
@@ -180,16 +180,16 @@ export class PromiseService {
               themeId: {
                 in: R.pipe(
                   themes,
-                  R.map((theme) => theme.themeId),
-                  R.filter(R.isNot(R.isIncludedIn(input.themeIds)))
+                  R.map(theme => theme.themeId),
+                  R.filter(R.isNot(R.isIncludedIn(input.themeIds))),
                 ),
               },
             },
             createMany: {
               data: R.pipe(
                 input.themeIds,
-                R.filter(R.isNot(R.isIncludedIn(themes.map((theme) => theme.themeId)))),
-                R.map((themeId) => ({ themeId }))
+                R.filter(R.isNot(R.isIncludedIn(themes.map(theme => theme.themeId)))),
+                R.map(themeId => ({ themeId })),
               ),
             },
           },
@@ -205,8 +205,8 @@ export class PromiseService {
               },
         },
         include: promiseInclude,
-      });
-    });
+      })
+    })
   }
 
   /**
@@ -214,22 +214,22 @@ export class PromiseService {
    * @throws {PromiseServiceError.NotFoundStartLocation}
    */
   async getStartLocation(id: number, attendeeId: number): Promise<LocationModel> {
-    const promise = await this.findOne({ id, status: PromiseStatus.AVAILABLE });
+    const promise = await this.findOne({ id, status: PromiseStatus.AVAILABLE })
 
     const promiseUser = await this.prisma.promiseUser.findUnique({
       where: { identifier: { attendeeId, promiseId: promise.id } },
       include: { startLocation: true },
-    });
+    })
 
     if (!promiseUser) {
-      throw PromiseServiceError.NotFoundPromise;
+      throw PromiseServiceError.NotFoundPromise
     }
 
     if (!promiseUser.startLocation) {
-      throw PromiseServiceError.NotFoundStartLocation;
+      throw PromiseServiceError.NotFoundStartLocation
     }
 
-    return promiseUser.startLocation;
+    return promiseUser.startLocation
   }
 
   /**
@@ -239,12 +239,12 @@ export class PromiseService {
     try {
       const promise = await this.prisma.promise.findUniqueOrThrow({
         where: makeUniquePromiseFilter({ id, status: PromiseStatus.AVAILABLE }),
-      });
+      })
 
       const { startLocation } = await this.prisma.promiseUser.findUniqueOrThrow({
         where: { identifier: { attendeeId, promiseId: promise.id } },
         select: { startLocation: true },
-      });
+      })
 
       const promiseUser = await this.prisma.promiseUser.update({
         where: { identifier: { attendeeId, promiseId: promise.id } },
@@ -262,15 +262,16 @@ export class PromiseService {
           },
         },
         select: { startLocation: true },
-      });
+      })
 
-      return promiseUser.startLocation!;
-    } catch (error) {
+      return promiseUser.startLocation as LocationModel
+    }
+    catch (error) {
       switch (PrismaClientError.from(error)?.code) {
         case 'P2025':
-          throw PromiseServiceError.NotFoundPromise;
+          throw PromiseServiceError.NotFoundPromise
         default:
-          throw error;
+          throw error
       }
     }
   }
@@ -284,23 +285,24 @@ export class PromiseService {
       const promiseUser = await this.prisma.promiseUser.findUniqueOrThrow({
         where: { identifier: { attendeeId, promiseId: id } },
         select: { startLocationId: true },
-      });
+      })
 
       if (!promiseUser.startLocationId) {
-        throw PromiseServiceError.NotFoundStartLocation;
+        throw PromiseServiceError.NotFoundStartLocation
       }
 
       await this.prisma.location.deleteMany({
         where: { id: promiseUser.startLocationId },
-      });
+      })
 
-      return { id: promiseUser.startLocationId };
-    } catch (error) {
+      return { id: promiseUser.startLocationId }
+    }
+    catch (error) {
       switch (PrismaClientError.from(error)?.code) {
         case 'P2025':
-          throw PromiseServiceError.NotFoundPromise;
+          throw PromiseServiceError.NotFoundPromise
         default:
-          throw error;
+          throw error
       }
     }
   }
@@ -328,13 +330,13 @@ export class PromiseService {
       .catch((error) => {
         switch (PrismaClientError.from(error)?.code) {
           case 'P2002':
-            throw PromiseServiceError.AlreadyAttended;
+            throw PromiseServiceError.AlreadyAttended
           case 'P2025':
-            throw PromiseServiceError.NotFoundPromise;
+            throw PromiseServiceError.NotFoundPromise
           default:
-            throw error;
+            throw error
         }
-      });
+      })
   }
 
   async getAttendees(id: number, attendeeIds?: number[]) {
@@ -344,7 +346,7 @@ export class PromiseService {
         ...(attendeeIds?.length && { attendeeId: { in: attendeeIds } }),
       },
       include: { startLocation: true },
-    });
+    })
   }
 
   /**
@@ -356,24 +358,25 @@ export class PromiseService {
       const promise = await this.prisma.promise.findUniqueOrThrow({
         where: makeUniquePromiseFilter({ id, userId: attendeeId, status: PromiseStatus.AVAILABLE }),
         select: { id: true, hostId: true },
-      });
+      })
 
       if (promise.hostId === attendeeId) {
-        throw PromiseServiceError.HostCannotLeave;
+        throw PromiseServiceError.HostCannotLeave
       }
 
       await this.prisma.promiseUser.updateMany({
         data: { leavedAt: new Date() },
         where: { attendeeId, promiseId: promise.id },
-      });
+      })
 
-      return { id: promise.id };
-    } catch (error) {
+      return { id: promise.id }
+    }
+    catch (error) {
       switch (PrismaClientError.from(error)?.code) {
         case 'P2025':
-          throw PromiseServiceError.NotFoundPromise;
+          throw PromiseServiceError.NotFoundPromise
         default:
-          throw error;
+          throw error
       }
     }
   }
@@ -391,13 +394,14 @@ export class PromiseService {
         },
         data: { hostId: attendeeId },
         select: { id: true },
-      });
-    } catch (error) {
+      })
+    }
+    catch (error) {
       switch (PrismaClientError.from(error)?.code) {
         case 'P2025':
-          throw PromiseServiceError.NotFoundPromise;
+          throw PromiseServiceError.NotFoundPromise
         default:
-          throw error;
+          throw error
       }
     }
   }
@@ -413,13 +417,14 @@ export class PromiseService {
         }),
         data: { completedAt: new Date() },
         select: { id: true },
-      });
-    } catch (error) {
+      })
+    }
+    catch (error) {
       switch (PrismaClientError.from(error)?.code) {
         case 'P2025':
-          throw PromiseServiceError.NotFoundPromise;
+          throw PromiseServiceError.NotFoundPromise
         default:
-          throw error;
+          throw error
       }
     }
   }

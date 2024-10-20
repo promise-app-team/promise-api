@@ -1,7 +1,7 @@
-import { ConsoleLogger, DynamicModule, Module } from '@nestjs/common';
+import { ConsoleLogger, DynamicModule, Module } from '@nestjs/common'
 
-import { LoggerModuleAsyncOptions, LoggerModuleOptions } from './logger.interface';
-import { LoggerService } from './logger.service';
+import { LoggerModuleAsyncOptions, LoggerModuleOptions } from './logger.interface'
+import { LoggerService } from './logger.service'
 
 @Module({})
 export class LoggerModule {
@@ -17,7 +17,7 @@ export class LoggerModule {
         },
       ],
       exports: [LoggerService],
-    };
+    }
   }
 
   static registerAsync({ global, scope, inject, useFactory }: LoggerModuleAsyncOptions): DynamicModule {
@@ -31,8 +31,8 @@ export class LoggerModule {
               inject,
               provide: LoggerService,
               async useFactory(...args) {
-                const opts = await useFactory?.(...args);
-                return opts?.logger ?? new ConsoleLogger();
+                const opts = await useFactory?.(...args)
+                return opts?.logger ?? new ConsoleLogger()
               },
             }
           : {
@@ -42,6 +42,6 @@ export class LoggerModule {
             },
       ],
       exports: [LoggerService],
-    };
+    }
   }
 }

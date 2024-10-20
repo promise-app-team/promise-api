@@ -1,10 +1,10 @@
-import { Controller } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller } from '@nestjs/common'
+import { ApiTags } from '@nestjs/swagger'
 
-import { TypedConfigService } from '@/config/env';
-import { Get } from '@/customs/nest';
+import { TypedConfigService } from '@/config/env'
+import { Get } from '@/customs/nest'
 
-import { EntryDTO } from './app.dto';
+import { EntryDTO } from './app.dto'
 
 @ApiTags('App')
 @Controller()
@@ -21,6 +21,6 @@ export class AppController {
       stage: this.config.get('stage'),
       env: this.config.get('env'),
       tz: this.config.get('tz'),
-    };
+    }
   }
 }

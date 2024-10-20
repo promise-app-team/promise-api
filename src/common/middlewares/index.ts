@@ -1,2 +1,2 @@
-export * from './logger.middleware';
-export * from './trim.middleware';
+export * from './logger.middleware'
+export * from './trim.middleware'
