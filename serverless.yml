@@ -1,6 +1,6 @@
 service: promise-api
 
-frameworkVersion: '3'
+frameworkVersion: '4'
 
 plugins:
   - serverless-prune-plugin
