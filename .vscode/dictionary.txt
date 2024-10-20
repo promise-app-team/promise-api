@@ -26,6 +26,7 @@ predeploy
 probee
 remeda
 sqids
+tseslint
 typecheck
 uncolorize
 websocket

@@ -1,10 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken';
+import { Injectable } from '@nestjs/common'
+import { JsonWebTokenError, TokenExpiredError } from 'jsonwebtoken'
 
-import { UserService } from '../user/user.service';
+import { UserService } from '../user/user.service'
 
-import { AuthTokenDTO } from './auth.dto';
-import { JwtAuthTokenService } from './jwt-token.service';
+import { AuthTokenDTO } from './auth.dto'
+import { JwtAuthTokenService } from './jwt-token.service'
 
 export enum AuthServiceError {
   AuthTokenFailed = '토큰 생성에 실패했습니다.',
@@ -17,7 +17,7 @@ export enum AuthServiceError {
 export class AuthService {
   constructor(
     private readonly user: UserService,
-    private readonly jwt: JwtAuthTokenService
+    private readonly jwt: JwtAuthTokenService,
   ) {}
 
   /**
@@ -30,9 +30,10 @@ export class AuthService {
    */
   async authenticate(user: { id: number }): Promise<AuthTokenDTO> {
     try {
-      return this.jwt.generateTokens({ sub: user.id });
-    } catch (error) {
-      throw AuthServiceError.AuthTokenFailed;
+      return this.jwt.generateTokens({ sub: user.id })
+    }
+    catch {
+      throw AuthServiceError.AuthTokenFailed
     }
   }
 
@@ -48,13 +49,14 @@ export class AuthService {
    */
   async refresh(token: string): Promise<AuthTokenDTO> {
     try {
-      const payload = this.jwt.verifyRefreshToken(token);
-      const node = await this.user.findOneById(payload.sub);
-      return this.jwt.generateTokens({ sub: node.id });
-    } catch (error) {
-      if (error instanceof TokenExpiredError) throw AuthServiceError.AuthTokenExpired;
-      if (error instanceof JsonWebTokenError) throw AuthServiceError.AuthTokenInvalid;
-      throw error;
+      const payload = this.jwt.verifyRefreshToken(token)
+      const node = await this.user.findOneById(payload.sub)
+      return this.jwt.generateTokens({ sub: node.id })
+    }
+    catch (error) {
+      if (error instanceof TokenExpiredError) throw AuthServiceError.AuthTokenExpired
+      if (error instanceof JsonWebTokenError) throw AuthServiceError.AuthTokenInvalid
+      throw error
     }
   }
 }

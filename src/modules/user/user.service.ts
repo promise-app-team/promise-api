@@ -1,9 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { Injectable } from '@nestjs/common'
+import { User } from '@prisma/client'
 
-import { PrismaService, UserModel, PrismaClientError } from '@/prisma';
+import { PrismaClientError, PrismaService, UserModel } from '@/prisma'
 
-import { InputCreateUserDTO, InputUpdateUserDTO } from './user.dto';
+import { InputCreateUserDTO, InputUpdateUserDTO } from './user.dto'
 
 export enum UserServiceError {
   NotFoundUser = '사용자를 찾을 수 없습니다.',
@@ -16,13 +16,13 @@ export class UserService {
   async findOneById(id: number): Promise<User> {
     const user = await this.prisma.user.findUnique({
       where: { id, deletedAt: null },
-    });
+    })
 
     if (!user) {
-      throw UserServiceError.NotFoundUser;
+      throw UserServiceError.NotFoundUser
     }
 
-    return user;
+    return user
   }
 
   async findOneByProvider<P extends Pick<UserModel, 'provider' | 'providerId'>>({
@@ -39,25 +39,25 @@ export class UserService {
       .catch((error) => {
         switch (PrismaClientError.from(error)?.code) {
           case 'P2025':
-            throw UserServiceError.NotFoundUser;
+            throw UserServiceError.NotFoundUser
           default:
-            throw error;
+            throw error
         }
-      });
+      })
   }
 
   async upsert(input: InputCreateUserDTO) {
-    const { provider, providerId } = input;
-    input.profileUrl ||= `${~~(Math.random() * 10)}`;
+    const { provider, providerId } = input
+    input.profileUrl ||= `${~~(Math.random() * 10)}`
     return this.prisma.user.upsert({
       where: { identifier: { provider, providerId } },
       update: { lastSignedAt: new Date() },
       create: input,
-    });
+    })
   }
 
   async update(userId: number, input: InputUpdateUserDTO) {
-    input.profileUrl ||= `${~~(Math.random() * 10)}`;
+    input.profileUrl ||= `${~~(Math.random() * 10)}`
     return this.prisma.user
       .update({
         where: { id: userId },
@@ -66,11 +66,11 @@ export class UserService {
       .catch((error) => {
         switch (PrismaClientError.from(error)?.code) {
           case 'P2025':
-            throw UserServiceError.NotFoundUser;
+            throw UserServiceError.NotFoundUser
           default:
-            throw error;
+            throw error
         }
-      });
+      })
   }
 
   async delete(userId: number, reason: string) {
@@ -86,10 +86,10 @@ export class UserService {
       .catch((error) => {
         switch (PrismaClientError.from(error)?.code) {
           case 'P2025':
-            throw UserServiceError.NotFoundUser;
+            throw UserServiceError.NotFoundUser
           default:
-            throw error;
+            throw error
         }
-      });
+      })
   }
 }

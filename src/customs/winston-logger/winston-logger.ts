@@ -1,31 +1,31 @@
-import { formatISO } from 'date-fns';
-import { highlight } from 'sql-highlight';
-import { format, createLogger, transports } from 'winston';
+import { formatISO } from 'date-fns'
+import { highlight } from 'sql-highlight'
+import { createLogger, format, transports } from 'winston'
 
-import { ifs, memoize } from '@/utils';
+import { ifs, memoize } from '@/utils'
 
-import { createColorMap } from './color';
+import { createColorMap } from './color'
 
-import type { Logger } from 'winston';
+import type { Logger } from 'winston'
 
 export interface WinstonLoggerOptions {
-  colorize?: boolean;
+  colorize?: boolean
 }
 
-const colors = createColorMap(['sql'] as const);
+const colors = createColorMap(['sql'] as const)
 
 export const createWinstonLogger = memoize((options: WinstonLoggerOptions = {}): Logger => {
   function colorize(color: keyof typeof colors, message: string) {
     if (!options.colorize) {
-      return message;
+      return message
     }
 
     if (color === 'sql') {
-      const blue = '\x1b[34m';
-      const magenta = '\x1b[35m';
-      const yellow = '\x1b[33m';
-      const green = '\x1b[32m';
-      const defaultColor = '\x1b[0m';
+      const blue = '\x1b[34m'
+      const magenta = '\x1b[35m'
+      const yellow = '\x1b[33m'
+      const green = '\x1b[32m'
+      const defaultColor = '\x1b[0m'
       return highlight(message, {
         colors: {
           identifier: defaultColor,
@@ -38,10 +38,10 @@ export const createWinstonLogger = memoize((options: WinstonLoggerOptions = {}):
           comment: '\x1b[2m\x1b[90m',
           clear: '\x1b[0m',
         },
-      });
+      })
     }
 
-    return format.colorize({ colors }).colorize(color, message);
+    return format.colorize({ colors }).colorize(color, message)
   }
 
   function colorizeByLevel(level: string, message: string) {
@@ -54,8 +54,8 @@ export const createWinstonLogger = memoize((options: WinstonLoggerOptions = {}):
         [level.includes('FATAL'), 'magenta'],
         [level.includes('VERBOSE'), 'cyan'],
       ]) ?? 'black',
-      message
-    );
+      message,
+    )
   }
 
   return createLogger({
@@ -69,7 +69,7 @@ export const createWinstonLogger = memoize((options: WinstonLoggerOptions = {}):
                 ...info,
                 level: info.level.toUpperCase().padStart(7),
                 context: info.context ? `[${info.context}]` : '',
-              };
+              }
             },
           },
           format.timestamp({
@@ -77,62 +77,63 @@ export const createWinstonLogger = memoize((options: WinstonLoggerOptions = {}):
           }),
           // format.ms(),
           format.printf((args) => {
-            const { timestamp, level, request, response, error, ms, context, query, message, ...meta } = args;
-            const msg = [null, undefined, 'null', 'undefined'].includes(message) ? '' : message;
+            const { timestamp, level, request, response, error, ms, context, query, message, ...meta } = args
+            const msg = [null, undefined, 'null', 'undefined'].includes(message) ? '' : message
 
             function build(message: string, meta = '') {
-              const head = `${colorize('dim', `[${timestamp}]`)}`;
-              const label = context ? colorize('bold cyan', `${context} `) : '';
-              const footer = ` ${colorize('dim', `${ms ? `+${ms}ms` : ''}`)}`;
-              const lvl = colorizeByLevel(level, level);
-              const body = colorizeByLevel(level, message);
+              const head = `${colorize('dim', `[${timestamp}]`)}`
+              const label = context ? colorize('bold cyan', `${context} `) : ''
+              const footer = ` ${colorize('dim', `${ms ? `+${ms}ms` : ''}`)}`
+              const lvl = colorizeByLevel(level, level)
+              const body = colorizeByLevel(level, message)
 
-              return `${head} ${lvl} ${label}${body ?? ''}${footer} ${meta}`;
+              return `${head} ${lvl} ${label}${body ?? ''}${footer} ${meta}`
             }
 
             if (isRequest(request) && isResponse(response)) {
-              const method = colorize('blue', request.method);
-              const path = colorize('magenta', `${request.url}`);
-              const status = `${response.statusCode}`;
+              const method = colorize('blue', request.method)
+              const path = colorize('magenta', `${request.url}`)
+              const status = `${response.statusCode}`
               const color = ifs<keyof typeof colors>([
                 [status.startsWith('2'), 'green'],
                 [status.startsWith('3'), 'green'],
                 [status.startsWith('4'), 'yellow'],
                 [status.startsWith('5'), 'red'],
-              ]);
-              return build(`${method} ${path} ${colorize(color ?? 'gray', status)}`);
+              ])
+              return build(`${method} ${path} ${colorize(color ?? 'gray', status)}`)
             }
 
             if (error instanceof Error) {
-              const errorMessage = (error.stack ?? error.message) || `${error}`;
-              const color = level.includes('FATAL') ? 'red' : 'yellow';
-              const stack = colorize(color, errorMessage);
-              return msg ? build(msg, `\n${stack}`) : build(stack);
-            } else if (typeof error === 'string') {
-              const color = level.includes('FATAL') ? 'red' : 'yellow';
-              const stack = colorize(color, error);
-              return msg ? build(`${msg} ${stack}`) : build(stack);
+              const errorMessage = (error.stack ?? error.message) || `${error}`
+              const color = level.includes('FATAL') ? 'red' : 'yellow'
+              const stack = colorize(color, errorMessage)
+              return msg ? build(msg, `\n${stack}`) : build(stack)
+            }
+            else if (typeof error === 'string') {
+              const color = level.includes('FATAL') ? 'red' : 'yellow'
+              const stack = colorize(color, error)
+              return msg ? build(`${msg} ${stack}`) : build(stack)
             }
 
             if (query) {
-              const sql = colorize('sql', query);
-              return msg ? build(msg, `\n${sql}`) : build(sql);
+              const sql = colorize('sql', query)
+              return msg ? build(msg, `\n${sql}`) : build(sql)
             }
 
-            const metaString = JSON.stringify(meta, null, 2);
-            const metaStringified = metaString === '{}' ? '' : `\n${metaString}`;
-            return build(msg, metaStringified);
-          })
+            const metaString = JSON.stringify(meta, null, 2)
+            const metaStringified = metaString === '{}' ? '' : `\n${metaString}`
+            return build(msg, metaStringified)
+          }),
         ),
       }),
     ],
-  });
+  })
 
   function isRequest(request: any): boolean {
-    return request && request.method && request.url;
+    return request && request.method && request.url
   }
 
   function isResponse(response: any): boolean {
-    return response && response.statusCode;
+    return response && response.statusCode
   }
-});
+})

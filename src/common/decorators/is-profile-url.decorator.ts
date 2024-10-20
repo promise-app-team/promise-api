@@ -1,6 +1,6 @@
-import { registerDecorator, isURL, isNumberString } from 'class-validator';
+import { isNumberString, isURL, registerDecorator } from 'class-validator'
 
-import type { ValidationOptions } from 'class-validator';
+import type { ValidationOptions } from 'class-validator'
 
 export function IsProfileUrl(validationOptions?: ValidationOptions): PropertyDecorator {
   return function (object, propertyName) {
@@ -11,12 +11,12 @@ export function IsProfileUrl(validationOptions?: ValidationOptions): PropertyDec
       options: validationOptions,
       validator: {
         validate(value: string) {
-          return isURL(value) || isNumberString(value);
+          return isURL(value) || isNumberString(value)
         },
         defaultMessage(args) {
-          return `${args?.property} must be a URL or number string`;
+          return `${args?.property} must be a URL or number string`
         },
       },
-    });
-  };
+    })
+  }
 }

@@ -1,100 +1,100 @@
-import { ApiExtraModels, ApiProperty, getSchemaPath } from '@nestjs/swagger';
+import { ApiExtraModels, ApiProperty, getSchemaPath } from '@nestjs/swagger'
 
-import { PrismaService } from '@/prisma';
+import { PrismaService } from '@/prisma'
 
-import { ConnectionID } from '../../connections';
-import { AbstractEvent } from '../event.interface';
+import { ConnectionID } from '../../connections'
+import { AbstractEvent } from '../event.interface'
 
-export module ShareLocationEvent {
+export namespace ShareLocationEvent {
   export type Body = {
-    lat: number;
-    lng: number;
-  };
+    lat: number
+    lng: number
+  }
 
   export type Param = {
-    promiseIds: string[];
-    __promiseIds?: string[]; // decoded
-  };
+    promiseIds: string[]
+    __promiseIds?: string[] // decoded
+  }
 
   export type Data = {
-    param: Param;
-    body: Body;
-  };
+    param: Param
+    body: Body
+  }
 
   export type Payload = {
-    event: 'share-location';
-    data: Data;
-  };
+    event: 'share-location'
+    data: Data
+  }
 
   export type MessageData = {
-    lat: number;
-    lng: number;
-  };
+    lat: number
+    lng: number
+  }
 
   export type MessageError = {
-    error: string;
-  };
+    error: string
+  }
 
   export type Message<TData = MessageData, TError = MessageError> = {
-    from: number;
-    timestamp: number;
-    data: TData | TError;
-  };
+    from: number
+    timestamp: number
+    data: TData | TError
+  }
 
   export type Response = {
-    message: string;
-  };
+    message: string
+  }
 
   export type Type = {
-    share: [to: ConnectionID, data: Message];
-    error: [to: ConnectionID, data: Message<MessageError>];
-  };
+    share: [to: ConnectionID, data: Message]
+    error: [to: ConnectionID, data: Message<MessageError>]
+  }
 
   export type Context = {
-    prisma: PrismaService;
-  };
+    prisma: PrismaService
+  }
 
-  export module DTO {
+  export namespace DTO {
     export class ShareLocationEventParamDTO implements Param {
       @ApiProperty({ example: ['1234567890'] })
-      promiseIds: string[];
+      promiseIds!: string[]
     }
 
     export class ShareLocationEventBodyDTO implements Body {
       @ApiProperty({ example: 37.7749 })
-      lat: number;
+      lat!: number
 
       @ApiProperty({ example: 122.4194 })
-      lng: number;
+      lng!: number
     }
 
     export class ShareLocationEventDataDTO implements Data {
       @ApiProperty()
-      param: ShareLocationEventParamDTO;
+      param!: ShareLocationEventParamDTO
 
       @ApiProperty()
-      body: ShareLocationEventBodyDTO;
+      body!: ShareLocationEventBodyDTO
     }
 
     export class ShareLocationEventMessageDataDTO implements MessageData {
       @ApiProperty({ example: 37.7749, description: 'Latitude' })
-      lat: number;
+      lat!: number
 
       @ApiProperty({ example: 122.4194, description: 'Longitude' })
-      lng: number;
+      lng!: number
     }
 
     export class ShareLocationEventMessageErrorDTO implements MessageError {
       @ApiProperty({ example: 'error message', description: 'Error message' })
-      error: string;
+      error!: string
     }
 
     export class ShareLocationEventMessageDTO implements Message {
       @ApiProperty({ example: 1, description: 'User ID' })
-      from: number;
+      from!: number
 
       @ApiProperty({ example: 1633488000 })
-      timestamp: number;
+      timestamp!: number
 
       @ApiProperty({
         oneOf: [
@@ -102,27 +102,27 @@ export module ShareLocationEvent {
           { $ref: getSchemaPath(ShareLocationEventMessageErrorDTO) },
         ],
       })
-      data: ShareLocationEventMessageDataDTO | ShareLocationEventMessageErrorDTO;
+      data!: ShareLocationEventMessageDataDTO | ShareLocationEventMessageErrorDTO
     }
 
     @ApiExtraModels(ShareLocationEventMessageDTO, ShareLocationEventMessageDataDTO, ShareLocationEventMessageErrorDTO)
     export class ShareLocationEventPayloadDTO implements Payload {
       @ApiProperty({ example: 'share-location' })
-      event: 'share-location';
+      event!: 'share-location'
 
       @ApiProperty()
-      data: ShareLocationEventDataDTO;
+      data!: ShareLocationEventDataDTO
     }
   }
 }
 
 export interface ShareLocationEvent extends AbstractEvent {
-  Type: ShareLocationEvent.Type;
-  Param: ShareLocationEvent.Param;
-  Body: ShareLocationEvent.Body;
-  Data: ShareLocationEvent.Data;
-  Payload: ShareLocationEvent.Payload;
-  Message: ShareLocationEvent.Message;
-  Response: ShareLocationEvent.Response;
-  Context: ShareLocationEvent.Context;
+  Type: ShareLocationEvent.Type
+  Param: ShareLocationEvent.Param
+  Body: ShareLocationEvent.Body
+  Data: ShareLocationEvent.Data
+  Payload: ShareLocationEvent.Payload
+  Message: ShareLocationEvent.Message
+  Response: ShareLocationEvent.Response
+  Context: ShareLocationEvent.Context
 }

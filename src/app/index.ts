@@ -1,3 +1,3 @@
-export * from './app.module';
-export * from './app.controller';
-export * from './app.dto';
+export * from './app.module'
+export * from './app.controller'
+export * from './app.dto'

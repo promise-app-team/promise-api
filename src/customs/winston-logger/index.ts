@@ -1,3 +1,3 @@
-export * from './winston-logger.interface';
-export * from './winston-logger.service';
-export * from './winston-logger';
+export * from './winston-logger.interface'
+export * from './winston-logger.service'
+export * from './winston-logger'

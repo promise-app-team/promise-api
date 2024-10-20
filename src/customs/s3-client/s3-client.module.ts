@@ -1,7 +1,7 @@
-import { DynamicModule, Module } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common'
 
-import { S3ClientModuleAsyncOptions, S3ClientModuleOptions } from './s3-client.interface';
-import { S3ClientService } from './s3-client.service';
+import { S3ClientModuleAsyncOptions, S3ClientModuleOptions } from './s3-client.interface'
+import { S3ClientService } from './s3-client.service'
 
 @Module({})
 export class S3ClientModule {
@@ -17,7 +17,7 @@ export class S3ClientModule {
         },
       ],
       exports: [S3ClientService],
-    };
+    }
   }
 
   static forRootAsync({ global, scope, inject, useFactory }: S3ClientModuleAsyncOptions): DynamicModule {
@@ -30,12 +30,12 @@ export class S3ClientModule {
           inject,
           provide: S3ClientService,
           async useFactory(...args) {
-            const opts = await useFactory(...args);
-            return new S3ClientService(opts.s3options);
+            const opts = await useFactory(...args)
+            return new S3ClientService(opts.s3options)
           },
         },
       ],
       exports: [S3ClientService],
-    };
+    }
   }
 }

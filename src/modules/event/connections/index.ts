@@ -1,2 +1,2 @@
-export * from './connection.manager';
-export * from './connection.interface';
+export * from './connection.manager'
+export * from './connection.interface'
